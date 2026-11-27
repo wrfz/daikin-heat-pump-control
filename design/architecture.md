@@ -19,8 +19,9 @@ Nicht enthalten (vorerst): Vorlauf-Soll-Regelung (`supply_setpoint_regulated`), 
 Manifest für Fremdsysteme (diese lesen die Entities der Integration direkt).
 
 Rahmen: HA 2026.11, Python 3.14, HACS-fähig, Config-Flow, Diagnostics, Übersetzungen de/en/fr/it,
-Code und Kommentare englisch, README englisch + deutsch. Eine Wärmepumpe je HA-Instanz
-(`single_config_entry`). Kein Code aus den Quellprojekten; die Protokolle werden neu umgesetzt.
+Code und Kommentare englisch, README englisch + deutsch. Eine Wärmepumpe je HA-Instanz (ein
+Config-Entry, im Flow erzwungen; Abschnitt 4). Kein Code aus den Quellprojekten; die Protokolle
+werden neu umgesetzt.
 
 Namen: kein Präfix `hpsu`. Bezeichner in Code, Diensten, Firmware und Frontend beginnen mit `daikin`.
 
@@ -86,11 +87,32 @@ Aktionen der Bridge (Namen vorläufig):
 - Verbindungsabbruch: die Werte werden `unavailable`, Wiederverbindung mit Backoff; laufende Schreib-
   wünsche verfallen und werden im Log gemeldet.
 
-Die Bridge-Firmware wird als ESPHome-YAML im Repo mitgeliefert: Packages `bridge-base`, `bridge-can`,
-`bridge-uart` und daraus die Beispiele `daikin-can-bridge.yaml`, `daikin-uart-bridge.yaml` und
-`daikin-can-uart-bridge.yaml` (beide Busse auf einem ESP). Bei beiden Bussen laufen die Aktionen
-unabhängig voneinander (eigene Puffer, eigene Zeitregeln). Die Firmware enthält keine Sensoren für
-HA; Diagnosewerte liefert sie über `daikin_bridge_info`. Eigene Erweiterungen des Nutzers (z. B. ein
+Die Bridge-Firmware wird im Repo mitgeliefert: ESPHome-YAML plus eine kleine externe Komponente
+`esphome/components/daikin_bridge` (C++), eingebunden über `external_components` (aus dem
+GitHub-Repo, lokal per `type: local`). Die Komponente kennt kein Protokoll; sie enthält nur
+Ringpuffer, Zeitregel, die Aktionen und die Diagnose. Sie nutzt die Standard-Schnittstellen
+`canbus::Canbus` und `uart::UARTComponent`; für den Host-Test werden diese durch eine
+Socket-Anbindung an den Simulator ersetzt (Abschnitt 11). Packages (dünn) `bridge-base` (Board,
+WLAN, API, Komponente), `bridge-can`, `bridge-uart` und daraus die Beispiele
+`daikin-can-bridge.yaml`, `daikin-uart-bridge.yaml` und `daikin-can-uart-bridge.yaml` (beide Busse
+auf einem ESP). Bei beiden Bussen laufen die Aktionen unabhängig voneinander (eigene Puffer, eigene
+Zeitregeln). Die Firmware enthält keine Sensoren für HA; Diagnosewerte liefert sie über
+`daikin_bridge_info`.
+
+Datenformat (JSON in `response_data`, Zeitstempel `t` in ms seit Start des ESP, 32 Bit mit Überlauf):
+- `daikin_can_exchange(frames: string[])`: je Frame `"<id hex>#<daten hex>"`, z. B.
+  `"680#3100FAC0FC0000"`. Antwort `{"now": t, "rx": [[t, id, "daten"], …], "tx": [[t, id,
+  "daten"], …], "more": bool, "pending": n, "overflows": n, "dropped": n}`; `tx` = seit dem
+  letzten Aufruf tatsächlich gesendete Frames, `pending` = noch wartende, `dropped` = abgewiesene
+  (volle Sende-Warteschlange, 16 Frames). ESPHome begrenzt eine Aktions-Antwort auf 5120 Byte
+  JSON; daher höchstens 100 empfangene Frames je Antwort, `more` = weitere liegen im Puffer, die
+  Integration ruft sofort erneut auf.
+- `daikin_uart_exchange(data: string)`: zu sendende Bytes hex. Antwort `{"now": t, "rx_t": t,
+  "rx": "bytes hex", "tx_t": t, "overflows": n}`.
+- `daikin_bridge_info`: `{"bridge": version, "esphome": version, "buses": […], "uptime": s,
+  "heap_free": n, "heap_max_block": n, "reset_reason": text, "wifi": {"rssi", "ssid", "ip"},
+  "can": {"buffer", "overflows", "state", "tx_errors", "rx_errors", "arbitration_lost",
+  "bus_off"}, "uart": {"buffer", "overflows"}}`. Eigene Erweiterungen des Nutzers (z. B. ein
 Relais für Smart Grid) bleiben in seiner YAML und damit in der ESPHome-Integration. Die Firmware setzt
 `esphome.project` zur Erkennung: `wrfz.daikin_can_bridge`, `wrfz.daikin_uart_bridge`,
 `wrfz.daikin_can_uart_bridge` (in HA nur auf der ESPHome-Geräteseite als Hersteller/Modell sichtbar,
@@ -113,16 +135,34 @@ Config-Flow (ein Eintrag):
 4. UART: Außengerät wählen (13 Modelle, bestimmt Lüfterfaktor, Kältemittel R32/R410A, Lage von
    Kältemitteldruck und Sättigungstemperatur) und Protokoll (automatisch / I / S).
 
+Weitere Wege und Regeln:
+- Manuelle Eingabe (Host, Port Standard 6053, Schlüssel) als zusätzlicher Weg im Config-Flow und im
+  Reconfigure; der Knoten wird wie die gefundenen geprüft (Verbindung, Busse, Firmware).
+- Zeroconf im Manifest nur für `_esphomelib._tcp.local.` mit `project_name: wrfz.daikin_*`; der
+  Schritt prüft `project_name` trotzdem (sonst Abbruch `not_daikin_bridge`). Die bisherige Firmware
+  findet nur die Suche in den ESPHome-Einträgen (plus manuelle Eingabe).
+- Ein Eintrag je HA-Instanz, `unique_id` = Domain, im Flow erzwungen (kein `single_config_entry`, damit
+  Discovery-Flows den eigenen Schritt erreichen). Knoten werden über ihre MAC zugeordnet.
+- Zeroconf bei bestehendem Eintrag: bekannte MAC → Host nachführen, Abbruch `already_configured`;
+  unbekannte MAC → Discovery anbieten, der Nutzer weist den ESP je Bus zu (alten Knoten ersetzen / Bus
+  hinzufügen / ignorieren). Nicht mehr zugeordnete Knoten werden entfernt (stale devices). Dieselbe
+  Zuweisung im Reconfigure.
+- Host beim Verbinden: bevorzugt aus dem ESPHome-Eintrag mit gleicher MAC (samt Schlüssel), sonst
+  `<name>.local`, sonst die gespeicherte IP.
+
 Options-Flow: Knoten neu zuordnen, Außengerät/Protokoll, Abfrageintervalle (global und je Gruppe),
 Offsets für die Fehlererkennung (`tv`, `tvbh`, `tr`), Grenzwerte der Spreizungsprüfung, Panel in der
 Seitenleiste an/aus.
 
 ## 5. Paketaufbau
 
+Das Repo ist selbst der Integrationsordner (`config/custom_components/daikin_heat_pump_control`);
+die Integration liegt im Repo-Root.
+
 ```
-custom_components/daikin_heat_pump_control/
+(Repo-Root = Integration)
   __init__.py, manifest.json, config_flow.py, const.py, diagnostics.py, services.yaml,
-  strings.json, translations/
+  strings.json, translations/, icons.json, quality_scale.yaml, py.typed
   bridge/        Verbindung je Knoten (aioesphomeapi), exchange-Takt, Wiederverbindung
   can/           Frame-Kodierung, Entity-Tabelle (Daten), Abfrageplaner, Schreibwarteschlange
   uart/          Protokoll I/S, Erkennung, Rahmen-Parser, Konverter, Entity-Tabelle (Daten),
@@ -133,11 +173,15 @@ custom_components/daikin_heat_pump_control/
   websocket.py   API für Panel und Card
   frontend/      gebautes JS + SVG-Layouts (aus frontend-src/)
 frontend-src/    TypeScript/Lit: Card, Panel, Editor, gemeinsame Darstellung
-esphome/         Bridge-Firmware
-scripts/         Erzeugung der Dampfdrucktabellen (nur Entwicklung)
-tests/           pytest-homeassistant-custom-component, Protokoll-Simulator
+esphome/         Bridge-Firmware (Packages, Beispiele, components/daikin_bridge)
+scripts/         Erzeugung der Dampfdrucktabellen, Zip-Release (nur Entwicklung)
+tests/           pytest-homeassistant, Simulator unter tests/sim/, E2E unter tests/e2e/
 design/          dieses Dokument
 ```
+
+HACS über `zip_release`: das Zip enthält nur die Integrationsdateien und `frontend/`, nicht
+`tests/`, `frontend-src/`, `node_modules/`, `esphome/`, `scripts/`, `design/`. In `tests/` liegen
+keine `__init__.py` (pytest mit `--import-mode=importlib`), damit HA dort nichts als Paket lädt.
 
 Protokoll und Logik (`can/`, `uart/`, `logic/`) hängen nicht von Home Assistant ab und sind einzeln
 testbar.
@@ -288,7 +332,8 @@ Bausteine (unter `tests/sim/`, Teil des Repos):
 - **Echte Bridge-Firmware auf der ESPHome-Host-Plattform** (Ende-zu-Ende, eigene Markierung, läuft
   nicht bei jedem Testlauf): dieselbe Bridge-YAML, nur die Bus-Anbindung ist ein Test-Package, das die
   Frames über einen lokalen Socket mit dem Simulator austauscht. Prüft Aktionen, Zeitregel und Puffer
-  der echten Firmware.
+  der echten Firmware. Umsetzung: CAN über UDP (Test-Komponente `tests/e2e/components/daikin_sim_can`),
+  UART über ein Pseudo-Terminal (Host-UART von ESPHome); Markierung `e2e`, Aufruf `pytest -m e2e`.
 
 Testebenen:
 - Unit-Tests (ohne HA): CAN-Kodierung/-Dekodierung je Entity-Art, Planer (Intervalle, Busruhe,
@@ -296,7 +341,7 @@ Testebenen:
   Teilrahmen, CRC-Fehler, NAK, Erkennung), Konverter, Sättigung (Vergleich mit der bisherigen
   Tabelle), berechnete Werte, Glättung, Fehlererkennung, Abtauoptimierung – gegen den Simulator, wo es
   um Abläufe geht.
-- Integrationstests mit `pytest-homeassistant-custom-component` gegen simulierte ESPs: Config-Flow
+- Integrationstests mit `pytest-homeassistant` gegen simulierte ESPs: Config-Flow
   (Erkennung, Auswahl, bisherige Firmware; je ein ESP pro Bus und ein ESP mit beiden Bussen,
   Reconfigure), Entities, Schreiben, Wiederverbindung, Wechsel der Firmware (Abschnitt 9),
   WebSocket-API, Dienste, Diagnostics, Repairs, Entladen. Snapshot-Tests (syrupy) für Entities und
@@ -328,8 +373,11 @@ Integration – Ziel Quality Scale **Platinum**, mit `quality_scale.yaml` im Rep
   `SupportsResponse`.
 - Diagnostics mit Schwärzung (API-Schlüssel, IP, SSID).
 - Vollständig typisiert, `mypy --strict`, Ruff mit den Regeln von HA core, `py.typed`; asynchron
-  ohne blockierende Aufrufe im Event-Loop; Abhängigkeit nur `aioesphomeapi` (wie die ESPHome-
-  Integration, gleiche Version) über `manifest.json` (`dependencies: ["esphome"]` für die Einträge).
+  ohne blockierende Aufrufe im Event-Loop; Abhängigkeit nur `aioesphomeapi` über `manifest.json`,
+  als Mindestversion (`>=` die Version der ESPHome-Integration in 2026.11; hassfest verbietet eine
+  feste Version für Pakete, die HA selbst mitbringt). Die ESPHome-Einträge werden nur gelesen, daher
+  `after_dependencies: ["esphome"]` (keine harte Abhängigkeit, die ESPHome mit Bluetooth, Assist usw.
+  mitlädt) und `dependencies: ["zeroconf"]` für die mDNS-Auflösung.
 - Speicherung über `helpers.storage.Store` mit Versionen; Aufräumen über `entry.async_on_unload`.
 
 Frontend:
@@ -359,6 +407,9 @@ Tests und Frontend-Build.
 | Tests | gegen simulierte Wärmepumpe und simulierte ESPs, Mocks nur wo nötig |
 | Qualität | Quality Scale Platinum, Muster nach aktuellem HA core/frontend |
 | Projektname der Firmware | `wrfz.daikin_can_bridge` / `wrfz.daikin_uart_bridge` / `wrfz.daikin_can_uart_bridge` |
+| Firmware | YAML-Packages + kleine Komponente `daikin_bridge` (ohne Protokollwissen) |
+| Einrichtung | ESPHome-Einträge, Zeroconf (gefiltert) und manuelle Eingabe; ein Eintrag, Knoten per MAC |
+| Test-Umgebung | `pytest-homeassistant==2026.11.3` (offizieller Nachfolger von `pytest-homeassistant-custom-component`, das ab 2026.11 nicht mehr funktioniert) |
 
 ## 14. Umsetzung in Teilen (je Teil eine Session)
 

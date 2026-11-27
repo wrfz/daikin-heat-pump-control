@@ -1,0 +1,219 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Device is already configured",
+      "cannot_connect": "Failed to connect",
+      "no_changes": "The bridge was not assigned to any bus.",
+      "node_assigned": "The bridge was assigned; the integration reloads.",
+      "not_daikin_bridge": "The device does not run the Daikin bridge firmware.",
+      "reauth_successful": "Re-authentication was successful",
+      "reconfigure_successful": "Reconfiguration was successful",
+      "single_instance_allowed": "Already configured. Only a single configuration is possible."
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "invalid_auth": "The node rejected the API encryption key.",
+      "no_bus": "Assign a node to at least one bus.",
+      "no_nodes_found": "No node with the bridge or the previous firmware was found among the ESPHome devices. Enter a node manually.",
+      "not_daikin_node": "The node runs neither the Daikin bridge firmware nor the previous firmware."
+    },
+    "flow_title": "{name}",
+    "step": {
+      "assign": {
+        "data": {
+          "add_manual": "Add another node manually",
+          "can_node": "CAN bus",
+          "uart_node": "UART bus"
+        },
+        "data_description": {
+          "add_manual": "Enter host, port and key of a node that was not found.",
+          "can_node": "Node connected to the CAN bus of the RoCon controller.",
+          "uart_node": "Node connected to the X10A connector of the indoor unit."
+        },
+        "description": "Assign a node to each bus. Nodes marked with * still run the previous firmware; their buses start as soon as the bridge firmware is flashed.",
+        "title": "Assign nodes"
+      },
+      "discovery_assign": {
+        "data": {
+          "can_node": "CAN bus (currently: {can})",
+          "uart_node": "UART bus (currently: {uart})"
+        },
+        "description": "The bridge {name} ({host}) was found. Choose the buses it should serve from now on. A node that serves no bus any more is removed.",
+        "title": "Assign bridge"
+      },
+      "discovery_confirm": {
+        "description": "Set up the bridge {name} ({host}) with the bus(es) {buses}?",
+        "title": "Daikin bridge found"
+      },
+      "discovery_key": {
+        "data": {
+          "noise_psk": "API encryption key"
+        },
+        "data_description": {
+          "noise_psk": "The `api: encryption: key` of the node."
+        },
+        "description": "Enter the API encryption key of {name}.",
+        "title": "Encryption key"
+      },
+      "manual": {
+        "data": {
+          "host": "Host",
+          "noise_psk": "API encryption key",
+          "port": "Port"
+        },
+        "data_description": {
+          "host": "Host name or IP address of the node.",
+          "noise_psk": "The `api: encryption: key` of the node; empty for a node without encryption.",
+          "port": "Port of the ESPHome API."
+        },
+        "title": "Add node"
+      },
+      "reauth_confirm": {
+        "data": {
+          "noise_psk": "API encryption key"
+        },
+        "data_description": {
+          "noise_psk": "The `api: encryption: key` of the node."
+        },
+        "description": "The node {name} ({host}) rejected the stored API encryption key. Enter the current key.",
+        "title": "New encryption key"
+      },
+      "reconfigure": {
+        "menu_options": {
+          "manual": "Enter a node manually",
+          "search": "Search the ESPHome devices"
+        },
+        "title": "Reassign nodes"
+      },
+      "uart": {
+        "data": {
+          "outdoor_unit": "Outdoor unit",
+          "uart_protocol": "Protocol"
+        },
+        "data_description": {
+          "outdoor_unit": "Model of the outdoor unit; selects the refrigerant and the register layout.",
+          "uart_protocol": "Protocol of the indoor unit; automatic detection works for most devices."
+        },
+        "title": "UART"
+      },
+      "user": {
+        "menu_options": {
+          "manual": "Enter a node manually",
+          "search": "Search the ESPHome devices"
+        },
+        "title": "Daikin Heat Pump Control"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "connected": {
+        "name": "Connection"
+      }
+    },
+    "sensor": {
+      "bridge_version": {
+        "name": "Bridge version"
+      },
+      "can_arbitration_lost": {
+        "name": "CAN arbitration lost"
+      },
+      "can_bus_off": {
+        "name": "CAN bus off"
+      },
+      "can_bus_state": {
+        "name": "CAN bus state",
+        "state": {
+          "bus_off": "Bus off",
+          "error_active": "Error active",
+          "error_passive": "Error passive",
+          "stopped": "Stopped",
+          "unknown": "Unknown"
+        }
+      },
+      "can_overflows": {
+        "name": "CAN buffer overflows"
+      },
+      "can_rx_errors": {
+        "name": "CAN receive errors"
+      },
+      "can_tx_errors": {
+        "name": "CAN transmit errors"
+      },
+      "esphome_version": {
+        "name": "ESPHome version"
+      },
+      "heap_free": {
+        "name": "Free heap"
+      },
+      "heap_max_block": {
+        "name": "Largest free block"
+      },
+      "ip_address": {
+        "name": "IP address"
+      },
+      "last_restart": {
+        "name": "Last restart"
+      },
+      "reset_reason": {
+        "name": "Reset reason"
+      },
+      "ssid": {
+        "name": "SSID"
+      },
+      "uart_overflows": {
+        "name": "UART buffer overflows"
+      },
+      "wifi_signal": {
+        "name": "Wi-Fi signal"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Cannot connect to the bridge {name}: {error}"
+    },
+    "invalid_auth": {
+      "message": "The bridge {name} rejected the API encryption key."
+    }
+  },
+  "issues": {
+    "no_bridge_firmware": {
+      "description": "The node {name} ({host}) does not run the Daikin bridge firmware; its buses stay unavailable. Flash one of the bridge firmware examples. The integration checks again on every reconnection.",
+      "title": "{name} does not run the bridge firmware"
+    }
+  },
+  "options": {
+    "abort": {
+      "no_options": "There are no options without a UART bus."
+    },
+    "step": {
+      "init": {
+        "data": {
+          "outdoor_unit": "Outdoor unit",
+          "uart_protocol": "Protocol"
+        },
+        "data_description": {
+          "outdoor_unit": "Model of the outdoor unit; selects the refrigerant and the register layout.",
+          "uart_protocol": "Protocol of the indoor unit; automatic detection works for most devices."
+        },
+        "title": "Options"
+      }
+    }
+  },
+  "selector": {
+    "discovery_assign": {
+      "options": {
+        "keep": "Keep the current node",
+        "use_new": "Use the new bridge"
+      }
+    },
+    "uart_protocol": {
+      "options": {
+        "auto": "Automatic",
+        "i": "Protocol I",
+        "s": "Protocol S"
+      }
+    }
+  }
+}

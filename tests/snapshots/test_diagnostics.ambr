@@ -1,0 +1,1586 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'entry': dict({
+      'data': dict({
+        'can_node': 'aa:bb:cc:00:00:01',
+        'nodes': dict({
+          'aa:bb:cc:00:00:01': dict({
+            'host': '**REDACTED**',
+            'name': 'daikin-can',
+            'noise_psk': '**REDACTED**',
+          }),
+          'aa:bb:cc:00:00:02': dict({
+            'host': '**REDACTED**',
+            'name': 'daikin-uart',
+            'noise_psk': '**REDACTED**',
+          }),
+        }),
+        'uart_node': 'aa:bb:cc:00:00:02',
+      }),
+      'options': dict({
+        'outdoor_unit': 'RRLQ008CAV3',
+        'uart_protocol': 'auto',
+      }),
+    }),
+    'nodes': dict({
+      'aa:bb:cc:00:00:01': dict({
+        'assigned_buses': list([
+          'can',
+        ]),
+        'channels': dict({
+          'can': dict({
+            'available': True,
+            'errors': 0,
+            'exchanges': 2,
+            'history': list([
+              dict({
+                'now': 0,
+                'rx': list([
+                ]),
+                'tx': list([
+                  list([
+                    0,
+                    '680#3100FAC0FC0000',
+                  ]),
+                ]),
+              }),
+              dict({
+                'now': 200,
+                'rx': list([
+                  list([
+                    15,
+                    '180#D200FAC0FC012C',
+                  ]),
+                ]),
+                'tx': list([
+                ]),
+              }),
+            ]),
+            'overflows': 0,
+          }),
+        }),
+        'connected_via': 'stored',
+        'identity': dict({
+          'buses': list([
+            'can',
+          ]),
+          'esphome_version': '2026.11.0',
+          'firmware': 'bridge',
+          'project_name': 'wrfz.daikin_can_bridge',
+          'project_version': '1.0.0',
+        }),
+        'info': dict({
+          'bridge': '1.0.0',
+          'buses': list([
+            'can',
+          ]),
+          'can': dict({
+            'arbitration_lost': 0,
+            'buffer': 256,
+            'bus_off': 0,
+            'overflows': 0,
+            'rx_errors': 0,
+            'state': 'error_active',
+            'tx_errors': 0,
+          }),
+          'esphome': '2026.11.0',
+          'heap_free': 182000,
+          'heap_max_block': 110000,
+          'reset_reason': 'Power on',
+          'uptime': 0,
+          'wifi': dict({
+            'ip': '**REDACTED**',
+            'rssi': -61,
+            'ssid': '**REDACTED**',
+          }),
+        }),
+        'last_error': None,
+        'name': 'daikin-can',
+        'state': 'connected',
+      }),
+      'aa:bb:cc:00:00:02': dict({
+        'assigned_buses': list([
+          'uart',
+        ]),
+        'channels': dict({
+          'uart': dict({
+            'available': True,
+            'errors': 0,
+            'exchanges': 2,
+            'history': list([
+              dict({
+                'rx': '40610E000102030405060708090A0B0E',
+                't': 40,
+              }),
+            ]),
+            'overflows': 0,
+          }),
+        }),
+        'connected_via': 'stored',
+        'identity': dict({
+          'buses': list([
+            'uart',
+          ]),
+          'esphome_version': '2026.11.0',
+          'firmware': 'bridge',
+          'project_name': 'wrfz.daikin_uart_bridge',
+          'project_version': '1.0.0',
+        }),
+        'info': dict({
+          'bridge': '1.0.0',
+          'buses': list([
+            'uart',
+          ]),
+          'esphome': '2026.11.0',
+          'heap_free': 182000,
+          'heap_max_block': 110000,
+          'reset_reason': 'Power on',
+          'uart': dict({
+            'buffer': 1024,
+            'overflows': 0,
+          }),
+          'uptime': 0,
+          'wifi': dict({
+            'ip': '**REDACTED**',
+            'rssi': -61,
+            'ssid': '**REDACTED**',
+          }),
+        }),
+        'last_error': None,
+        'name': 'daikin-uart',
+        'state': 'connected',
+      }),
+    }),
+  })
+# ---
+# name: test_entities[binary_sensor][binary_sensor.daikin_bridge_daikin_can_connection-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('daikin_heat_pump_control', 'bridge_aa:bb:cc:00:00:01')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.daikin_bridge_daikin_can_connection',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Connection',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_icon': None,
+    'original_name': 'Connection',
+    'platform': 'daikin_heat_pump_control',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'connected',
+    'unique_id': '01JDAIKINTESTENTRY00000000_aa:bb:cc:00:00:01_connected',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[binary_sensor][binary_sensor.daikin_bridge_daikin_can_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin Bridge daikin-can Connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.daikin_bridge_daikin_can_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_entities[binary_sensor][binary_sensor.daikin_bridge_daikin_uart_connection-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('daikin_heat_pump_control', 'bridge_aa:bb:cc:00:00:02')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.daikin_bridge_daikin_uart_connection',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Connection',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_icon': None,
+    'original_name': 'Connection',
+    'platform': 'daikin_heat_pump_control',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'connected',
+    'unique_id': '01JDAIKINTESTENTRY00000000_aa:bb:cc:00:00:02_connected',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[binary_sensor][binary_sensor.daikin_bridge_daikin_uart_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin Bridge daikin-uart Connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.daikin_bridge_daikin_uart_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_can_bridge_version-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('daikin_heat_pump_control', 'bridge_aa:bb:cc:00:00:01')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.daikin_bridge_daikin_can_bridge_version',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Bridge version',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Bridge version',
+    'platform': 'daikin_heat_pump_control',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'bridge_version',
+    'unique_id': '01JDAIKINTESTENTRY00000000_aa:bb:cc:00:00:01_bridge_version',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_can_bridge_version-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin Bridge daikin-can Bridge version',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.daikin_bridge_daikin_can_bridge_version',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.0.0',
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_can_can_arbitration_lost-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('daikin_heat_pump_control', 'bridge_aa:bb:cc:00:00:01')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.daikin_bridge_daikin_can_can_arbitration_lost',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'CAN arbitration lost',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'CAN arbitration lost',
+    'platform': 'daikin_heat_pump_control',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'can_arbitration_lost',
+    'unique_id': '01JDAIKINTESTENTRY00000000_aa:bb:cc:00:00:01_can_arbitration_lost',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_can_can_arbitration_lost-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin Bridge daikin-can CAN arbitration lost',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.daikin_bridge_daikin_can_can_arbitration_lost',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_can_can_buffer_overflows-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('daikin_heat_pump_control', 'bridge_aa:bb:cc:00:00:01')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.daikin_bridge_daikin_can_can_buffer_overflows',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'CAN buffer overflows',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'CAN buffer overflows',
+    'platform': 'daikin_heat_pump_control',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'can_overflows',
+    'unique_id': '01JDAIKINTESTENTRY00000000_aa:bb:cc:00:00:01_can_overflows',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_can_can_buffer_overflows-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin Bridge daikin-can CAN buffer overflows',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.daikin_bridge_daikin_can_can_buffer_overflows',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_can_can_bus_off-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('daikin_heat_pump_control', 'bridge_aa:bb:cc:00:00:01')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.daikin_bridge_daikin_can_can_bus_off',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'CAN bus off',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'CAN bus off',
+    'platform': 'daikin_heat_pump_control',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'can_bus_off',
+    'unique_id': '01JDAIKINTESTENTRY00000000_aa:bb:cc:00:00:01_can_bus_off',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_can_can_bus_off-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin Bridge daikin-can CAN bus off',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.daikin_bridge_daikin_can_can_bus_off',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_can_can_bus_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'error_active',
+        'error_passive',
+        'bus_off',
+        'stopped',
+        'unknown',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('daikin_heat_pump_control', 'bridge_aa:bb:cc:00:00:01')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.daikin_bridge_daikin_can_can_bus_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'CAN bus state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'CAN bus state',
+    'platform': 'daikin_heat_pump_control',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'can_bus_state',
+    'unique_id': '01JDAIKINTESTENTRY00000000_aa:bb:cc:00:00:01_can_bus_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_can_can_bus_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin Bridge daikin-can CAN bus state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'error_active',
+        'error_passive',
+        'bus_off',
+        'stopped',
+        'unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.daikin_bridge_daikin_can_can_bus_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'error_active',
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_can_can_receive_errors-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('daikin_heat_pump_control', 'bridge_aa:bb:cc:00:00:01')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.daikin_bridge_daikin_can_can_receive_errors',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'CAN receive errors',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'CAN receive errors',
+    'platform': 'daikin_heat_pump_control',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'can_rx_errors',
+    'unique_id': '01JDAIKINTESTENTRY00000000_aa:bb:cc:00:00:01_can_rx_errors',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_can_can_receive_errors-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin Bridge daikin-can CAN receive errors',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.daikin_bridge_daikin_can_can_receive_errors',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_can_can_transmit_errors-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('daikin_heat_pump_control', 'bridge_aa:bb:cc:00:00:01')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.daikin_bridge_daikin_can_can_transmit_errors',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'CAN transmit errors',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'CAN transmit errors',
+    'platform': 'daikin_heat_pump_control',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'can_tx_errors',
+    'unique_id': '01JDAIKINTESTENTRY00000000_aa:bb:cc:00:00:01_can_tx_errors',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_can_can_transmit_errors-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin Bridge daikin-can CAN transmit errors',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.daikin_bridge_daikin_can_can_transmit_errors',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_can_esphome_version-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('daikin_heat_pump_control', 'bridge_aa:bb:cc:00:00:01')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.daikin_bridge_daikin_can_esphome_version',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'ESPHome version',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'ESPHome version',
+    'platform': 'daikin_heat_pump_control',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'esphome_version',
+    'unique_id': '01JDAIKINTESTENTRY00000000_aa:bb:cc:00:00:01_esphome_version',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_can_esphome_version-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin Bridge daikin-can ESPHome version',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.daikin_bridge_daikin_can_esphome_version',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026.11.0',
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_can_free_heap-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('daikin_heat_pump_control', 'bridge_aa:bb:cc:00:00:01')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.daikin_bridge_daikin_can_free_heap',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Free heap',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Free heap',
+    'platform': 'daikin_heat_pump_control',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'heap_free',
+    'unique_id': '01JDAIKINTESTENTRY00000000_aa:bb:cc:00:00:01_heap_free',
+    'unit_of_measurement': <UnitOfInformation.BYTES: 'B'>,
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_can_free_heap-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin Bridge daikin-can Free heap',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.BYTES: 'B'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.daikin_bridge_daikin_can_free_heap',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '182000',
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_can_ip_address-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('daikin_heat_pump_control', 'bridge_aa:bb:cc:00:00:01')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.daikin_bridge_daikin_can_ip_address',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'IP address',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'IP address',
+    'platform': 'daikin_heat_pump_control',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ip_address',
+    'unique_id': '01JDAIKINTESTENTRY00000000_aa:bb:cc:00:00:01_ip_address',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_can_ip_address-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin Bridge daikin-can IP address',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.daikin_bridge_daikin_can_ip_address',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '192.168.0.50',
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_can_largest_free_block-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('daikin_heat_pump_control', 'bridge_aa:bb:cc:00:00:01')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.daikin_bridge_daikin_can_largest_free_block',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Largest free block',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Largest free block',
+    'platform': 'daikin_heat_pump_control',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'heap_max_block',
+    'unique_id': '01JDAIKINTESTENTRY00000000_aa:bb:cc:00:00:01_heap_max_block',
+    'unit_of_measurement': <UnitOfInformation.BYTES: 'B'>,
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_can_largest_free_block-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin Bridge daikin-can Largest free block',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.BYTES: 'B'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.daikin_bridge_daikin_can_largest_free_block',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '110000',
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_can_last_restart-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('daikin_heat_pump_control', 'bridge_aa:bb:cc:00:00:01')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.daikin_bridge_daikin_can_last_restart',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Last restart',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last restart',
+    'platform': 'daikin_heat_pump_control',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_restart',
+    'unique_id': '01JDAIKINTESTENTRY00000000_aa:bb:cc:00:00:01_last_restart',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_can_last_restart-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin Bridge daikin-can Last restart',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.daikin_bridge_daikin_can_last_restart',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-11-26T12:00:00+00:00',
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_can_reset_reason-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('daikin_heat_pump_control', 'bridge_aa:bb:cc:00:00:01')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.daikin_bridge_daikin_can_reset_reason',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reset reason',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reset reason',
+    'platform': 'daikin_heat_pump_control',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reset_reason',
+    'unique_id': '01JDAIKINTESTENTRY00000000_aa:bb:cc:00:00:01_reset_reason',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_can_reset_reason-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin Bridge daikin-can Reset reason',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.daikin_bridge_daikin_can_reset_reason',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Power on',
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_can_ssid-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('daikin_heat_pump_control', 'bridge_aa:bb:cc:00:00:01')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.daikin_bridge_daikin_can_ssid',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'SSID',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'SSID',
+    'platform': 'daikin_heat_pump_control',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ssid',
+    'unique_id': '01JDAIKINTESTENTRY00000000_aa:bb:cc:00:00:01_ssid',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_can_ssid-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin Bridge daikin-can SSID',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.daikin_bridge_daikin_can_ssid',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'home',
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_can_wi_fi_signal-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('daikin_heat_pump_control', 'bridge_aa:bb:cc:00:00:01')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.daikin_bridge_daikin_can_wi_fi_signal',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wi-Fi signal',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
+    'original_icon': None,
+    'original_name': 'Wi-Fi signal',
+    'platform': 'daikin_heat_pump_control',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wifi_signal',
+    'unique_id': '01JDAIKINTESTENTRY00000000_aa:bb:cc:00:00:01_wifi_signal',
+    'unit_of_measurement': 'dBm',
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_can_wi_fi_signal-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin Bridge daikin-can Wi-Fi signal',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dBm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.daikin_bridge_daikin_can_wi_fi_signal',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-61',
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_uart_bridge_version-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('daikin_heat_pump_control', 'bridge_aa:bb:cc:00:00:02')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.daikin_bridge_daikin_uart_bridge_version',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Bridge version',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Bridge version',
+    'platform': 'daikin_heat_pump_control',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'bridge_version',
+    'unique_id': '01JDAIKINTESTENTRY00000000_aa:bb:cc:00:00:02_bridge_version',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_uart_bridge_version-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin Bridge daikin-uart Bridge version',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.daikin_bridge_daikin_uart_bridge_version',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.0.0',
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_uart_esphome_version-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('daikin_heat_pump_control', 'bridge_aa:bb:cc:00:00:02')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.daikin_bridge_daikin_uart_esphome_version',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'ESPHome version',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'ESPHome version',
+    'platform': 'daikin_heat_pump_control',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'esphome_version',
+    'unique_id': '01JDAIKINTESTENTRY00000000_aa:bb:cc:00:00:02_esphome_version',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_uart_esphome_version-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin Bridge daikin-uart ESPHome version',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.daikin_bridge_daikin_uart_esphome_version',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026.11.0',
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_uart_free_heap-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('daikin_heat_pump_control', 'bridge_aa:bb:cc:00:00:02')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.daikin_bridge_daikin_uart_free_heap',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Free heap',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Free heap',
+    'platform': 'daikin_heat_pump_control',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'heap_free',
+    'unique_id': '01JDAIKINTESTENTRY00000000_aa:bb:cc:00:00:02_heap_free',
+    'unit_of_measurement': <UnitOfInformation.BYTES: 'B'>,
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_uart_free_heap-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin Bridge daikin-uart Free heap',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.BYTES: 'B'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.daikin_bridge_daikin_uart_free_heap',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '182000',
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_uart_ip_address-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('daikin_heat_pump_control', 'bridge_aa:bb:cc:00:00:02')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.daikin_bridge_daikin_uart_ip_address',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'IP address',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'IP address',
+    'platform': 'daikin_heat_pump_control',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ip_address',
+    'unique_id': '01JDAIKINTESTENTRY00000000_aa:bb:cc:00:00:02_ip_address',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_uart_ip_address-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin Bridge daikin-uart IP address',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.daikin_bridge_daikin_uart_ip_address',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '192.168.0.50',
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_uart_largest_free_block-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('daikin_heat_pump_control', 'bridge_aa:bb:cc:00:00:02')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.daikin_bridge_daikin_uart_largest_free_block',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Largest free block',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Largest free block',
+    'platform': 'daikin_heat_pump_control',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'heap_max_block',
+    'unique_id': '01JDAIKINTESTENTRY00000000_aa:bb:cc:00:00:02_heap_max_block',
+    'unit_of_measurement': <UnitOfInformation.BYTES: 'B'>,
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_uart_largest_free_block-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin Bridge daikin-uart Largest free block',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.BYTES: 'B'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.daikin_bridge_daikin_uart_largest_free_block',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '110000',
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_uart_last_restart-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('daikin_heat_pump_control', 'bridge_aa:bb:cc:00:00:02')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.daikin_bridge_daikin_uart_last_restart',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Last restart',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last restart',
+    'platform': 'daikin_heat_pump_control',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_restart',
+    'unique_id': '01JDAIKINTESTENTRY00000000_aa:bb:cc:00:00:02_last_restart',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_uart_last_restart-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin Bridge daikin-uart Last restart',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.daikin_bridge_daikin_uart_last_restart',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-11-26T12:00:00+00:00',
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_uart_reset_reason-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('daikin_heat_pump_control', 'bridge_aa:bb:cc:00:00:02')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.daikin_bridge_daikin_uart_reset_reason',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reset reason',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reset reason',
+    'platform': 'daikin_heat_pump_control',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reset_reason',
+    'unique_id': '01JDAIKINTESTENTRY00000000_aa:bb:cc:00:00:02_reset_reason',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_uart_reset_reason-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin Bridge daikin-uart Reset reason',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.daikin_bridge_daikin_uart_reset_reason',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Power on',
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_uart_ssid-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('daikin_heat_pump_control', 'bridge_aa:bb:cc:00:00:02')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.daikin_bridge_daikin_uart_ssid',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'SSID',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'SSID',
+    'platform': 'daikin_heat_pump_control',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ssid',
+    'unique_id': '01JDAIKINTESTENTRY00000000_aa:bb:cc:00:00:02_ssid',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_uart_ssid-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin Bridge daikin-uart SSID',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.daikin_bridge_daikin_uart_ssid',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'home',
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_uart_uart_buffer_overflows-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('daikin_heat_pump_control', 'bridge_aa:bb:cc:00:00:02')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.daikin_bridge_daikin_uart_uart_buffer_overflows',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'UART buffer overflows',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'UART buffer overflows',
+    'platform': 'daikin_heat_pump_control',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'uart_overflows',
+    'unique_id': '01JDAIKINTESTENTRY00000000_aa:bb:cc:00:00:02_uart_overflows',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_uart_uart_buffer_overflows-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin Bridge daikin-uart UART buffer overflows',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.daikin_bridge_daikin_uart_uart_buffer_overflows',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_uart_wi_fi_signal-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('daikin_heat_pump_control', 'bridge_aa:bb:cc:00:00:02')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.daikin_bridge_daikin_uart_wi_fi_signal',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wi-Fi signal',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
+    'original_icon': None,
+    'original_name': 'Wi-Fi signal',
+    'platform': 'daikin_heat_pump_control',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wifi_signal',
+    'unique_id': '01JDAIKINTESTENTRY00000000_aa:bb:cc:00:00:02_wifi_signal',
+    'unit_of_measurement': 'dBm',
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_bridge_daikin_uart_wi_fi_signal-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin Bridge daikin-uart Wi-Fi signal',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dBm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.daikin_bridge_daikin_uart_wi_fi_signal',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-61',
+  })
+# ---

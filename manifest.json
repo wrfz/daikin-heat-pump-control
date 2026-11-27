@@ -1,0 +1,24 @@
+{
+  "domain": "daikin_heat_pump_control",
+  "name": "Daikin Heat Pump Control",
+  "after_dependencies": ["esphome"],
+  "codeowners": ["@wrfz"],
+  "config_flow": true,
+  "dependencies": ["zeroconf"],
+  "documentation": "https://github.com/wrfz/DaikinHeatPumpControl",
+  "integration_type": "hub",
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/wrfz/DaikinHeatPumpControl/issues",
+  "loggers": ["aioesphomeapi"],
+  "quality_scale": "platinum",
+  "requirements": ["aioesphomeapi>=46.25.0"],
+  "version": "0.1.0",
+  "zeroconf": [
+    {
+      "type": "_esphomelib._tcp.local.",
+      "properties": {
+        "project_name": "wrfz.daikin_*"
+      }
+    }
+  ]
+}

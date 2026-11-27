@@ -1,0 +1,28 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: config/custom_components/daikin_heat_pump_control
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.14"
+      - name: Install
+        working-directory: config/custom_components/daikin_heat_pump_control
+        run: uv venv && uv pip install -r requirements_test.txt
+      - name: Ruff
+        working-directory: config/custom_components/daikin_heat_pump_control
+        run: uv run --no-project ruff check . && uv run --no-project ruff format --check .
+      - name: Mypy
+        working-directory: config
+        run: custom_components/daikin_heat_pump_control/.venv/bin/mypy --config-file custom_components/daikin_heat_pump_control/pyproject.toml -p custom_components.daikin_heat_pump_control
+      - name: Pytest
+        working-directory: config/custom_components/daikin_heat_pump_control
+        run: uv run --no-project pytest --cov=custom_components.daikin_heat_pump_control --timeout 60 -m "not e2e"

@@ -1,0 +1,19 @@
+"""Runtime data of a config entry."""
+
+from dataclasses import dataclass
+
+from homeassistant.config_entries import ConfigEntry
+
+from .bridge.node import BridgeNode, BusChannel
+from .const import Bus
+
+
+@dataclass(slots=True, kw_only=True)
+class DaikinRuntimeData:
+    """Objects shared by the platforms of a config entry."""
+
+    nodes: dict[str, BridgeNode]
+    channels: dict[Bus, BusChannel]
+
+
+type DaikinConfigEntry = ConfigEntry[DaikinRuntimeData]

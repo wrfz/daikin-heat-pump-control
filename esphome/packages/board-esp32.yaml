@@ -1,0 +1,28 @@
+# ESP32 board with Wi-Fi, encrypted API and OTA.
+# Substitutions: name, friendly_name, project_name, board, api_key,
+# ota_password; Wi-Fi credentials come from secrets.yaml.
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+  project:
+    name: ${project_name}
+    version: "1.0.0"
+
+esp32:
+  board: ${board}
+  framework:
+    type: esp-idf
+
+logger:
+
+api:
+  encryption:
+    key: ${api_key}
+
+ota:
+  - platform: esphome
+    password: ${ota_password}
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password

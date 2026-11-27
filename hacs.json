@@ -1,0 +1,8 @@
+{
+  "name": "Daikin Heat Pump Control",
+  "homeassistant": "2026.11.0",
+  "render_readme": true,
+  "content_in_root": true,
+  "zip_release": true,
+  "filename": "daikin_heat_pump_control.zip"
+}

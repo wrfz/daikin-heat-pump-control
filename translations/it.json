@@ -1,0 +1,219 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Il dispositivo è già configurato",
+      "cannot_connect": "Impossibile connettersi",
+      "no_changes": "Il bridge non è stato assegnato ad alcun bus.",
+      "node_assigned": "Il bridge è stato assegnato; l'integrazione viene ricaricata.",
+      "not_daikin_bridge": "Il dispositivo non usa il firmware bridge Daikin.",
+      "reauth_successful": "La riautenticazione è riuscita",
+      "reconfigure_successful": "La riconfigurazione è riuscita",
+      "single_instance_allowed": "Già configurato. È possibile una sola configurazione."
+    },
+    "error": {
+      "cannot_connect": "Impossibile connettersi",
+      "invalid_auth": "Il nodo ha rifiutato la chiave di crittografia API.",
+      "no_bus": "Assegna un nodo ad almeno un bus.",
+      "no_nodes_found": "Tra i dispositivi ESPHome non è stato trovato alcun nodo con il firmware bridge o quello precedente. Inserisci un nodo manualmente.",
+      "not_daikin_node": "Il nodo non usa né il firmware bridge Daikin né quello precedente."
+    },
+    "flow_title": "{name}",
+    "step": {
+      "assign": {
+        "data": {
+          "add_manual": "Aggiungi un altro nodo manualmente",
+          "can_node": "Bus CAN",
+          "uart_node": "Bus UART"
+        },
+        "data_description": {
+          "add_manual": "Inserisci host, porta e chiave di un nodo non trovato.",
+          "can_node": "Nodo collegato al bus CAN del regolatore RoCon.",
+          "uart_node": "Nodo collegato al connettore X10A dell'unità interna."
+        },
+        "description": "Assegna un nodo a ciascun bus. I nodi contrassegnati con * usano ancora il firmware precedente; i loro bus si avviano non appena viene installato il firmware bridge.",
+        "title": "Assegna nodi"
+      },
+      "discovery_assign": {
+        "data": {
+          "can_node": "Bus CAN (attuale: {can})",
+          "uart_node": "Bus UART (attuale: {uart})"
+        },
+        "description": "È stato trovato il bridge {name} ({host}). Scegli i bus che dovrà servire d'ora in poi. Un nodo che non serve più alcun bus viene rimosso.",
+        "title": "Assegna bridge"
+      },
+      "discovery_confirm": {
+        "description": "Configurare il bridge {name} ({host}) con i bus {buses}?",
+        "title": "Bridge Daikin trovato"
+      },
+      "discovery_key": {
+        "data": {
+          "noise_psk": "Chiave di crittografia API"
+        },
+        "data_description": {
+          "noise_psk": "Il valore `api: encryption: key` del nodo."
+        },
+        "description": "Inserisci la chiave di crittografia API di {name}.",
+        "title": "Chiave di crittografia"
+      },
+      "manual": {
+        "data": {
+          "host": "Host",
+          "noise_psk": "Chiave di crittografia API",
+          "port": "Porta"
+        },
+        "data_description": {
+          "host": "Nome host o indirizzo IP del nodo.",
+          "noise_psk": "Il valore `api: encryption: key` del nodo; vuoto per un nodo senza crittografia.",
+          "port": "Porta dell'API ESPHome."
+        },
+        "title": "Aggiungi nodo"
+      },
+      "reauth_confirm": {
+        "data": {
+          "noise_psk": "Chiave di crittografia API"
+        },
+        "data_description": {
+          "noise_psk": "Il valore `api: encryption: key` del nodo."
+        },
+        "description": "Il nodo {name} ({host}) ha rifiutato la chiave di crittografia salvata. Inserisci la chiave attuale.",
+        "title": "Nuova chiave di crittografia"
+      },
+      "reconfigure": {
+        "menu_options": {
+          "manual": "Inserisci un nodo manualmente",
+          "search": "Cerca tra i dispositivi ESPHome"
+        },
+        "title": "Riassegna i nodi"
+      },
+      "uart": {
+        "data": {
+          "outdoor_unit": "Unità esterna",
+          "uart_protocol": "Protocollo"
+        },
+        "data_description": {
+          "outdoor_unit": "Modello dell'unità esterna; determina il refrigerante e la disposizione dei registri.",
+          "uart_protocol": "Protocollo dell'unità interna; il rilevamento automatico funziona per la maggior parte dei dispositivi."
+        },
+        "title": "UART"
+      },
+      "user": {
+        "menu_options": {
+          "manual": "Inserisci un nodo manualmente",
+          "search": "Cerca tra i dispositivi ESPHome"
+        },
+        "title": "Daikin Heat Pump Control"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "connected": {
+        "name": "Connessione"
+      }
+    },
+    "sensor": {
+      "bridge_version": {
+        "name": "Versione bridge"
+      },
+      "can_arbitration_lost": {
+        "name": "Arbitraggio CAN perso"
+      },
+      "can_bus_off": {
+        "name": "CAN bus-off"
+      },
+      "can_bus_state": {
+        "name": "Stato bus CAN",
+        "state": {
+          "bus_off": "Bus spento",
+          "error_active": "Errore attivo",
+          "error_passive": "Errore passivo",
+          "stopped": "Fermato",
+          "unknown": "Sconosciuto"
+        }
+      },
+      "can_overflows": {
+        "name": "Overflow buffer CAN"
+      },
+      "can_rx_errors": {
+        "name": "Errori di ricezione CAN"
+      },
+      "can_tx_errors": {
+        "name": "Errori di trasmissione CAN"
+      },
+      "esphome_version": {
+        "name": "Versione ESPHome"
+      },
+      "heap_free": {
+        "name": "Heap libero"
+      },
+      "heap_max_block": {
+        "name": "Blocco libero più grande"
+      },
+      "ip_address": {
+        "name": "Indirizzo IP"
+      },
+      "last_restart": {
+        "name": "Ultimo riavvio"
+      },
+      "reset_reason": {
+        "name": "Motivo del reset"
+      },
+      "ssid": {
+        "name": "SSID"
+      },
+      "uart_overflows": {
+        "name": "Overflow buffer UART"
+      },
+      "wifi_signal": {
+        "name": "Segnale Wi-Fi"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Impossibile connettersi al bridge {name}: {error}"
+    },
+    "invalid_auth": {
+      "message": "Il bridge {name} ha rifiutato la chiave di crittografia API."
+    }
+  },
+  "issues": {
+    "no_bridge_firmware": {
+      "description": "Il nodo {name} ({host}) non usa il firmware bridge Daikin; i suoi bus restano non disponibili. Installa uno degli esempi di firmware bridge. L'integrazione ricontrolla a ogni riconnessione.",
+      "title": "{name} non usa il firmware bridge"
+    }
+  },
+  "options": {
+    "abort": {
+      "no_options": "Senza bus UART non ci sono opzioni."
+    },
+    "step": {
+      "init": {
+        "data": {
+          "outdoor_unit": "Unità esterna",
+          "uart_protocol": "Protocollo"
+        },
+        "data_description": {
+          "outdoor_unit": "Modello dell'unità esterna; determina il refrigerante e la disposizione dei registri.",
+          "uart_protocol": "Protocollo dell'unità interna; il rilevamento automatico funziona per la maggior parte dei dispositivi."
+        },
+        "title": "Opzioni"
+      }
+    }
+  },
+  "selector": {
+    "discovery_assign": {
+      "options": {
+        "keep": "Mantieni il nodo attuale",
+        "use_new": "Usa il nuovo bridge"
+      }
+    },
+    "uart_protocol": {
+      "options": {
+        "auto": "Automatico",
+        "i": "Protocollo I",
+        "s": "Protocollo S"
+      }
+    }
+  }
+}

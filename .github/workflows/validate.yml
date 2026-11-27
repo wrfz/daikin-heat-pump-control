@@ -1,0 +1,33 @@
+name: Validate
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "0 3 * * 1"
+
+jobs:
+  hassfest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: integration
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.14"
+      - name: Fetch hassfest of the minimum Home Assistant version
+        run: |
+          mkdir core
+          curl -sL https://codeload.github.com/home-assistant/core/tar.gz/refs/tags/2026.11.3 \
+            | tar xz -C core --strip-components=1 core-2026.11.3/script core-2026.11.3/packages
+          uv venv && uv pip install homeassistant==2026.11.3
+      - name: Hassfest
+        working-directory: core
+        run: PYTHONPATH=packages/hassfest ../.venv/bin/python -m script.hassfest --integration-path ../integration
+  hacs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: hacs/action@main
+        with:
+          category: integration

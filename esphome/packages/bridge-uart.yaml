@@ -1,0 +1,14 @@
+# UART part of the bridge. Expects a uart with the id `daikin_uart`.
+daikin_bridge:
+  uart:
+    uart_id: daikin_uart
+
+api:
+  actions:
+    - action: daikin_uart_exchange
+      supports_response: only
+      variables:
+        data: string
+      then:
+        - api.respond:
+            data: !lambda "id(daikin_bridge_id).uart_exchange(data, root);"

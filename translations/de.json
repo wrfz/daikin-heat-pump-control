@@ -1,0 +1,219 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Gerät ist bereits eingerichtet",
+      "cannot_connect": "Verbindung fehlgeschlagen",
+      "no_changes": "Die Bridge wurde keinem Bus zugewiesen.",
+      "node_assigned": "Die Bridge wurde zugewiesen; die Integration wird neu geladen.",
+      "not_daikin_bridge": "Auf dem Gerät läuft nicht die Daikin-Bridge-Firmware.",
+      "reauth_successful": "Die erneute Authentifizierung war erfolgreich",
+      "reconfigure_successful": "Die Neukonfiguration war erfolgreich",
+      "single_instance_allowed": "Bereits eingerichtet. Es ist nur eine Konfiguration möglich."
+    },
+    "error": {
+      "cannot_connect": "Verbindung fehlgeschlagen",
+      "invalid_auth": "Der Knoten hat den API-Verschlüsselungsschlüssel abgelehnt.",
+      "no_bus": "Mindestens einem Bus einen Knoten zuweisen.",
+      "no_nodes_found": "Unter den ESPHome-Geräten wurde kein Knoten mit der Bridge- oder der bisherigen Firmware gefunden. Knoten manuell eingeben.",
+      "not_daikin_node": "Auf dem Knoten läuft weder die Daikin-Bridge-Firmware noch die bisherige Firmware."
+    },
+    "flow_title": "{name}",
+    "step": {
+      "assign": {
+        "data": {
+          "add_manual": "Weiteren Knoten manuell hinzufügen",
+          "can_node": "CAN-Bus",
+          "uart_node": "UART-Bus"
+        },
+        "data_description": {
+          "add_manual": "Host, Port und Schlüssel eines nicht gefundenen Knotens eingeben.",
+          "can_node": "Knoten am CAN-Bus des RoCon-Reglers.",
+          "uart_node": "Knoten am X10A-Stecker des Innengeräts."
+        },
+        "description": "Jedem Bus einen Knoten zuweisen. Mit * markierte Knoten laufen noch mit der bisherigen Firmware; ihre Busse starten, sobald die Bridge-Firmware geflasht ist.",
+        "title": "Knoten zuweisen"
+      },
+      "discovery_assign": {
+        "data": {
+          "can_node": "CAN-Bus (bisher: {can})",
+          "uart_node": "UART-Bus (bisher: {uart})"
+        },
+        "description": "Die Bridge {name} ({host}) wurde gefunden. Wähle die Busse, die sie ab jetzt bedienen soll. Ein Knoten ohne Bus wird entfernt.",
+        "title": "Bridge zuweisen"
+      },
+      "discovery_confirm": {
+        "description": "Bridge {name} ({host}) mit Bus {buses} einrichten?",
+        "title": "Daikin-Bridge gefunden"
+      },
+      "discovery_key": {
+        "data": {
+          "noise_psk": "API-Verschlüsselungsschlüssel"
+        },
+        "data_description": {
+          "noise_psk": "Der `api: encryption: key` des Knotens."
+        },
+        "description": "API-Verschlüsselungsschlüssel von {name} eingeben.",
+        "title": "Verschlüsselungsschlüssel"
+      },
+      "manual": {
+        "data": {
+          "host": "Host",
+          "noise_psk": "API-Verschlüsselungsschlüssel",
+          "port": "Port"
+        },
+        "data_description": {
+          "host": "Hostname oder IP-Adresse des Knotens.",
+          "noise_psk": "Der `api: encryption: key` des Knotens; leer bei einem Knoten ohne Verschlüsselung.",
+          "port": "Port der ESPHome-API."
+        },
+        "title": "Knoten hinzufügen"
+      },
+      "reauth_confirm": {
+        "data": {
+          "noise_psk": "API-Verschlüsselungsschlüssel"
+        },
+        "data_description": {
+          "noise_psk": "Der `api: encryption: key` des Knotens."
+        },
+        "description": "Der Knoten {name} ({host}) hat den gespeicherten API-Verschlüsselungsschlüssel abgelehnt. Aktuellen Schlüssel eingeben.",
+        "title": "Neuer Verschlüsselungsschlüssel"
+      },
+      "reconfigure": {
+        "menu_options": {
+          "manual": "Knoten manuell eingeben",
+          "search": "ESPHome-Geräte durchsuchen"
+        },
+        "title": "Knoten neu zuordnen"
+      },
+      "uart": {
+        "data": {
+          "outdoor_unit": "Außengerät",
+          "uart_protocol": "Protokoll"
+        },
+        "data_description": {
+          "outdoor_unit": "Modell des Außengeräts; bestimmt Kältemittel und Registeraufbau.",
+          "uart_protocol": "Protokoll des Innengeräts; die automatische Erkennung passt für die meisten Geräte."
+        },
+        "title": "UART"
+      },
+      "user": {
+        "menu_options": {
+          "manual": "Knoten manuell eingeben",
+          "search": "ESPHome-Geräte durchsuchen"
+        },
+        "title": "Daikin Heat Pump Control"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "connected": {
+        "name": "Verbindung"
+      }
+    },
+    "sensor": {
+      "bridge_version": {
+        "name": "Bridge-Version"
+      },
+      "can_arbitration_lost": {
+        "name": "CAN-Arbitrierung verloren"
+      },
+      "can_bus_off": {
+        "name": "CAN Bus-Off"
+      },
+      "can_bus_state": {
+        "name": "CAN-Busstatus",
+        "state": {
+          "bus_off": "Bus aus",
+          "error_active": "Fehler aktiv",
+          "error_passive": "Fehler passiv",
+          "stopped": "Gestoppt",
+          "unknown": "Unbekannt"
+        }
+      },
+      "can_overflows": {
+        "name": "CAN-Pufferüberläufe"
+      },
+      "can_rx_errors": {
+        "name": "CAN-Empfangsfehler"
+      },
+      "can_tx_errors": {
+        "name": "CAN-Sendefehler"
+      },
+      "esphome_version": {
+        "name": "ESPHome-Version"
+      },
+      "heap_free": {
+        "name": "Freier Heap"
+      },
+      "heap_max_block": {
+        "name": "Größter freier Block"
+      },
+      "ip_address": {
+        "name": "IP-Adresse"
+      },
+      "last_restart": {
+        "name": "Letzter Neustart"
+      },
+      "reset_reason": {
+        "name": "Reset-Grund"
+      },
+      "ssid": {
+        "name": "SSID"
+      },
+      "uart_overflows": {
+        "name": "UART-Pufferüberläufe"
+      },
+      "wifi_signal": {
+        "name": "WLAN-Signal"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Keine Verbindung zur Bridge {name}: {error}"
+    },
+    "invalid_auth": {
+      "message": "Die Bridge {name} hat den API-Verschlüsselungsschlüssel abgelehnt."
+    }
+  },
+  "issues": {
+    "no_bridge_firmware": {
+      "description": "Auf dem Knoten {name} ({host}) läuft nicht die Daikin-Bridge-Firmware; seine Busse bleiben nicht verfügbar. Eines der Bridge-Firmware-Beispiele flashen. Die Integration prüft bei jeder Wiederverbindung erneut.",
+      "title": "Auf {name} läuft nicht die Bridge-Firmware"
+    }
+  },
+  "options": {
+    "abort": {
+      "no_options": "Ohne UART-Bus gibt es keine Optionen."
+    },
+    "step": {
+      "init": {
+        "data": {
+          "outdoor_unit": "Außengerät",
+          "uart_protocol": "Protokoll"
+        },
+        "data_description": {
+          "outdoor_unit": "Modell des Außengeräts; bestimmt Kältemittel und Registeraufbau.",
+          "uart_protocol": "Protokoll des Innengeräts; die automatische Erkennung passt für die meisten Geräte."
+        },
+        "title": "Optionen"
+      }
+    }
+  },
+  "selector": {
+    "discovery_assign": {
+      "options": {
+        "keep": "Bisherigen Knoten behalten",
+        "use_new": "Neue Bridge verwenden"
+      }
+    },
+    "uart_protocol": {
+      "options": {
+        "auto": "Automatisch",
+        "i": "Protokoll I",
+        "s": "Protokoll S"
+      }
+    }
+  }
+}

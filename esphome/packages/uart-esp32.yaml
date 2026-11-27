@@ -1,0 +1,10 @@
+# X10A connector of the indoor unit, 9600 8E1.
+# Substitutions: uart_tx_pin, uart_rx_pin.
+uart:
+  - id: daikin_uart
+    tx_pin: ${uart_tx_pin}
+    rx_pin: ${uart_rx_pin}
+    baud_rate: 9600
+    data_bits: 8
+    parity: EVEN
+    stop_bits: 1

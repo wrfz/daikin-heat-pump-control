@@ -1,0 +1,52 @@
+{
+  "entity": {
+    "sensor": {
+      "bridge_version": {
+        "default": "mdi:chip"
+      },
+      "can_arbitration_lost": {
+        "default": "mdi:swap-horizontal"
+      },
+      "can_bus_off": {
+        "default": "mdi:lan-disconnect"
+      },
+      "can_bus_state": {
+        "default": "mdi:lan",
+        "state": {
+          "bus_off": "mdi:lan-disconnect",
+          "error_passive": "mdi:lan-pending"
+        }
+      },
+      "can_overflows": {
+        "default": "mdi:tray-full"
+      },
+      "can_rx_errors": {
+        "default": "mdi:alert-circle-outline"
+      },
+      "can_tx_errors": {
+        "default": "mdi:alert-circle-outline"
+      },
+      "esphome_version": {
+        "default": "mdi:chip"
+      },
+      "heap_free": {
+        "default": "mdi:memory"
+      },
+      "heap_max_block": {
+        "default": "mdi:memory"
+      },
+      "ip_address": {
+        "default": "mdi:ip-network"
+      },
+      "reset_reason": {
+        "default": "mdi:restart-alert"
+      },
+      "ssid": {
+        "default": "mdi:wifi"
+      },
+      "uart_overflows": {
+        "default": "mdi:tray-full"
+      }
+    }
+  }
+}

@@ -1,0 +1,32 @@
+# Daikin bridge firmware (can). Copy this file and the packages folder next to
+# your ESPHome configuration, adjust the substitutions and add your own
+# components below if needed.
+substitutions:
+  name: daikin-can
+  friendly_name: Daikin CAN Bridge
+  project_name: wrfz.daikin_can_bridge
+  board: esp32-s3-devkitc-1
+  api_key: !secret daikin_api_key
+  ota_password: !secret daikin_ota_password
+  can_tx_pin: GPIO5
+  can_rx_pin: GPIO6
+
+external_components:
+  - source:
+      type: git
+      url: https://github.com/wrfz/DaikinHeatPumpControl
+      ref: main
+      path: esphome/components
+    components: [daikin_bridge]
+    refresh: 1d
+  # For a local checkout use instead:
+  # - source:
+  #     type: local
+  #     path: components
+  #   components: [daikin_bridge]
+
+packages:
+  board: !include packages/board-esp32.yaml
+  core: !include packages/bridge-core.yaml
+  can_hw: !include packages/can-esp32.yaml
+  bridge_can: !include packages/bridge-can.yaml
