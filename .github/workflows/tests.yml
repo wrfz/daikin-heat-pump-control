@@ -2,6 +2,7 @@ name: Tests
 
 on:
   push:
+    branches: [main]
   pull_request:
 
 jobs:
@@ -9,20 +10,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          path: config/custom_components/daikin_heat_pump_control
       - uses: astral-sh/setup-uv@v5
         with:
           python-version: "3.14"
       - name: Install
-        working-directory: config/custom_components/daikin_heat_pump_control
         run: uv venv && uv pip install -r requirements_test.txt
       - name: Ruff
-        working-directory: config/custom_components/daikin_heat_pump_control
         run: uv run --no-project ruff check . && uv run --no-project ruff format --check .
       - name: Mypy
-        working-directory: config
-        run: custom_components/daikin_heat_pump_control/.venv/bin/mypy --config-file custom_components/daikin_heat_pump_control/pyproject.toml -p custom_components.daikin_heat_pump_control
+        run: uv run --no-project mypy -p custom_components.daikin_heat_pump_control
+      - name: Translations
+        run: |
+          uv run --no-project python - <<'PY'
+          import json, sys
+          base = "custom_components/daikin_heat_pump_control/"
+          strings = json.load(open(base + "strings.json"))
+          english = json.load(open(base + "translations/en.json"))
+          sys.exit("translations/en.json differs from strings.json" if strings != english else 0)
+          PY
       - name: Pytest
-        working-directory: config/custom_components/daikin_heat_pump_control
-        run: uv run --no-project pytest --cov=custom_components.daikin_heat_pump_control --timeout 60 -m "not e2e"
+        run: uv run --no-project pytest --cov --timeout 60 -m "not e2e"

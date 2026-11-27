@@ -2,29 +2,21 @@
 
 from pathlib import Path
 import sys
-import tempfile
 from typing import Any
 
-# The repository is the integration package itself. Expose it as
-# `custom_components.daikin_heat_pump_control` from a temporary directory so
-# that Home Assistant's loader finds it independent of the checkout location.
-_REPO = Path(__file__).resolve().parent.parent
-_ROOT = Path(tempfile.mkdtemp(prefix="dhpc-"))
-(_ROOT / "custom_components").mkdir()
-(_ROOT / "custom_components" / "__init__.py").write_text("")
-(_ROOT / "custom_components" / "daikin_heat_pump_control").symlink_to(_REPO)
-sys.path.insert(0, str(_ROOT))
+# Make `custom_components.daikin_heat_pump_control` importable from the checkout.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-import asyncio  # noqa: E402
+import asyncio
 
-from pytest_homeassistant.common import MockConfigEntry  # noqa: E402
+from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.config_entries import ConfigEntryDisabler  # noqa: E402
-from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback  # noqa: E402
-from homeassistant.helpers.event import async_track_state_change_event  # noqa: E402
-from homeassistant.util import dt as dt_util  # noqa: E402
+from homeassistant.config_entries import ConfigEntryDisabler
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.util import dt as dt_util
 
-from sim.esp import SimulatedEsp  # noqa: E402
+from sim.esp import SimulatedEsp
 
 DOMAIN = "daikin_heat_pump_control"
 MAC_CAN = "aa:bb:cc:00:00:01"

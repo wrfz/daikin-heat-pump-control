@@ -9,15 +9,13 @@ repos:
     hooks:
       - id: mypy
         name: mypy
-        # The repository is the integration package; mypy runs from the
-        # directory that contains custom_components/.
-        entry: bash -c 'cd ../.. && mypy --config-file custom_components/daikin_heat_pump_control/pyproject.toml -p custom_components.daikin_heat_pump_control'
+        entry: mypy -p custom_components.daikin_heat_pump_control
         language: system
         types: [python]
         pass_filenames: false
       - id: translations
         name: translations match strings.json
-        entry: python3 -c "import json,sys; a=json.load(open('strings.json')); b=json.load(open('translations/en.json')); sys.exit(a != b)"
+        entry: python3 -c "import json,sys; d='custom_components/daikin_heat_pump_control/'; a=json.load(open(d+'strings.json')); b=json.load(open(d+'translations/en.json')); sys.exit(a != b)"
         language: system
-        files: ^(strings\.json|translations/en\.json)$
+        files: ^custom_components/daikin_heat_pump_control/(strings\.json|translations/en\.json)$
         pass_filenames: false

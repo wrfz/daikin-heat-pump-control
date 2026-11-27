@@ -162,11 +162,12 @@ Betriebsmodus 5 s), sonst das globale Intervall (Standard 30 s).
 
 ## 5. Paketaufbau
 
-Das Repo ist selbst der Integrationsordner (`config/custom_components/daikin_heat_pump_control`);
-die Integration liegt im Repo-Root.
+Standardaufbau einer eigenen Integration: die Integration liegt im Repo unter
+`custom_components/daikin_heat_pump_control/`, alles andere daneben. Der Marketplace installiert
+diesen Ordner direkt aus dem Release-Tag (kein Zip, kein Build-Schritt).
 
 ```
-(Repo-Root = Integration)
+custom_components/daikin_heat_pump_control/
   __init__.py, manifest.json, config_flow.py, const.py, diagnostics.py, services.yaml,
   strings.json, translations/, icons.json, quality_scale.yaml, py.typed
   bridge/        Verbindung je Knoten (aioesphomeapi), exchange-Takt, Wiederverbindung
@@ -177,17 +178,24 @@ die Integration liegt im Repo-Root.
   coordinator.py Zustand aller Werte, Verteilung an die Entities
   sensor.py, binary_sensor.py, number.py, select.py, switch.py, button.py
   websocket.py   API für Panel und Card
-  frontend/      gebautes JS + SVG-Layouts (aus frontend-src/)
+  frontend/      gebautes JS + SVG-Layouts (aus frontend-src/, eingecheckt)
 frontend-src/    TypeScript/Lit: Card, Panel, Editor, gemeinsame Darstellung
 esphome/         Bridge-Firmware (Packages, Beispiele, components/daikin_bridge)
-scripts/         Erzeugung der Dampfdrucktabellen, Zip-Release (nur Entwicklung)
+scripts/         Erzeugung der Dampfdrucktabellen (nur Entwicklung)
 tests/           pytest-homeassistant, Simulator unter tests/sim/, E2E unter tests/e2e/
 design/          dieses Dokument
+hacs.json, pyproject.toml, requirements_test.txt, .github/workflows/
 ```
 
-HACS über `zip_release`: das Zip enthält nur die Integrationsdateien und `frontend/`, nicht
-`tests/`, `frontend-src/`, `node_modules/`, `esphome/`, `scripts/`, `design/`. In `tests/` liegen
-keine `__init__.py` (pytest mit `--import-mode=importlib`), damit HA dort nichts als Paket lädt.
+Ablauf: Push/PR auf `main` → Workflows prüfen (Ruff, mypy, pytest mit Abdeckung ≥ 95 %,
+Übersetzungen, hassfest, HACS). Veröffentlichen: `version` in `manifest.json` erhöhen, Tag `vX.Y.Z`
+und GitHub-Release; der Workflow `release.yml` prüft, dass Tag und Manifest-Version gleich sind. Der
+Marketplace zeigt das Release den Nutzern als Update an. Das gebaute Frontend (`frontend/`) wird
+eingecheckt, damit der Ordner ohne Build-Schritt vollständig ist.
+
+In `tests/` liegen keine `__init__.py` (pytest mit `--import-mode=importlib`). `custom_components/`
+hat keine `__init__.py` (Namespace-Paket wie in HA). Entwicklung: der Ordner der Integration ist
+per Symlink in `config/custom_components/` der HA-core-Dev-Instanz eingebunden.
 
 Protokoll und Logik (`can/`, `uart/`, `logic/`) hängen nicht von Home Assistant ab und sind einzeln
 testbar.
@@ -453,6 +461,7 @@ Tests und Frontend-Build.
 | Projektname der Firmware | `wrfz.daikin_can_bridge` / `wrfz.daikin_uart_bridge` / `wrfz.daikin_can_uart_bridge` |
 | Firmware | YAML-Packages + kleine Komponente `daikin_bridge` (ohne Protokollwissen) |
 | Einrichtung | ESPHome-Einträge, Zeroconf (gefiltert) und manuelle Eingabe; ein Eintrag, Knoten per MAC |
+| Repo-Aufbau | Standard `custom_components/<domain>/`, Releases über Tags, kein Zip |
 | Test-Umgebung | `pytest-homeassistant==2026.11.3` (offizieller Nachfolger von `pytest-homeassistant-custom-component`, das ab 2026.11 nicht mehr funktioniert) |
 | Schreiben aus HA | Dienstaufruf wartet auf das Rücklesen, Fehler übersetzt |
 | Zusatzbefunde Fehlercode | wie bisher: nur der erste, Attribut `finding` |

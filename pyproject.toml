@@ -1,7 +1,7 @@
 [tool.ruff]
 required-version = ">=0.17.5"
 target-version = "py314"
-extend-exclude = ["frontend-src", "frontend", "esphome"]
+extend-exclude = ["frontend-src", "custom_components/daikin_heat_pump_control/frontend", "esphome"]
 
 [tool.ruff.lint]
 select = [
@@ -185,7 +185,6 @@ split-on-trailing-comma = false
 "**/*.py" = ["TID252"]
 # Tests and the simulator are not packages HA may load
 "tests/**" = ["INP001", "SLF001", "S108"]
-"scripts/**" = ["INP001", "T20"]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 25
@@ -226,10 +225,6 @@ extra_checks = true
 module = ["custom_components.daikin_heat_pump_control.*", "homeassistant.*"]
 no_implicit_reexport = true
 
-[[tool.mypy.overrides]]
-module = ["custom_components.daikin_heat_pump_control.tests.*"]
-ignore_errors = true
-
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["tests"]
@@ -241,7 +236,6 @@ markers = ["e2e: end-to-end tests against the real bridge firmware on the ESPHom
 
 [tool.coverage.run]
 source = ["custom_components.daikin_heat_pump_control"]
-omit = ["*/tests/*", "*/scripts/*"]
 
 [tool.coverage.report]
 fail_under = 95

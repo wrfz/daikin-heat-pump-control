@@ -1,32 +1,28 @@
 name: Release
 
+# The Marketplace installs a release straight from the repository; nothing is
+# built or uploaded. This only checks that the tag matches the version in
+# manifest.json, which Home Assistant shows as installed version.
+
 on:
+  push:
+    tags: ["v*"]
   release:
     types: [published]
 
-permissions:
-  contents: write
-
 jobs:
-  zip:
+  version:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.14"
-      - name: Set version
+      - name: Tag matches manifest version
         run: |
-          python - <<'PY'
-          import json, os
-          version = os.environ["GITHUB_REF_NAME"].lstrip("v")
-          manifest = json.load(open("manifest.json"))
-          manifest["version"] = version
-          json.dump(manifest, open("manifest.json", "w"), indent=2)
+          python3 - <<'PY'
+          import json, os, sys
+          ref = os.environ["GITHUB_REF_NAME"]
+          tag = ref.removeprefix("v")
+          manifest = json.load(open("custom_components/daikin_heat_pump_control/manifest.json"))
+          if manifest["version"] != tag:
+              sys.exit(f"Tag {ref} does not match manifest version {manifest['version']}")
+          print(f"Version {tag} ok")
           PY
-      - name: Build zip
-        run: python scripts/build_zip.py --output dist/daikin_heat_pump_control.zip
-      - name: Upload
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh release upload "$GITHUB_REF_NAME" dist/daikin_heat_pump_control.zip

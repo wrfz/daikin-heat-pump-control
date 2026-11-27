@@ -2,6 +2,7 @@ name: Validate
 
 on:
   push:
+    branches: [main]
   pull_request:
   schedule:
     - cron: "0 3 * * 1"
@@ -12,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          path: integration
+          path: repo
       - uses: astral-sh/setup-uv@v5
         with:
           python-version: "3.14"
@@ -24,10 +25,15 @@ jobs:
           uv venv && uv pip install homeassistant==2026.11.3
       - name: Hassfest
         working-directory: core
-        run: PYTHONPATH=packages/hassfest ../.venv/bin/python -m script.hassfest --integration-path ../integration
+        run: >-
+          PYTHONPATH=packages/hassfest ../.venv/bin/python -m script.hassfest
+          --integration-path ../repo/custom_components/daikin_heat_pump_control
+
   hacs:
     runs-on: ubuntu-latest
     steps:
       - uses: hacs/action@main
         with:
           category: integration
+          # brands: icon not submitted yet; information: README follows in part 6.
+          ignore: brands information
