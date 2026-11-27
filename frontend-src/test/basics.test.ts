@@ -66,10 +66,14 @@ describe("appearance", () => {
     const config = {
       type: "custom:daikin-heat-pump-card",
       layout: "dark",
+      animations: false,
       background: { show: false, opacity: 40 },
       box: { fill: [1, 2, 3] },
     };
     expect(validateAppearance(config)).toBe(config);
+    expect(() => validateAppearance({ animations: "off" })).toThrow(
+      "Invalid option: animations",
+    );
     expect(() => validateAppearance({ layout: "neon" })).toThrow("layout");
     expect(() => validateAppearance({ entities: {} })).toThrow(
       "Unknown option: entities",
@@ -88,15 +92,21 @@ describe("appearance", () => {
     expect(
       cleanAppearance({
         layout: "auto",
+        animations: true,
         background: { show: true, color: undefined },
         box: { fill: [1, 2, 3], border: undefined },
         text: {},
       }),
     ).toEqual({ box: { fill: [1, 2, 3] } });
     expect(
-      cleanAppearance({ layout: "dark", background: { show: false } }),
+      cleanAppearance({
+        layout: "dark",
+        animations: false,
+        background: { show: false },
+      }),
     ).toEqual({
       layout: "dark",
+      animations: false,
       background: { show: false },
     });
   });

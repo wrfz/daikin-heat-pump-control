@@ -177,14 +177,17 @@ describe("editor", () => {
     const schema = editorSchema("de");
     expect(schema.map((item) => item.name)).toEqual([
       "layout",
+      "animations",
       "background",
       "box",
       "text",
     ]);
     expect(formData({})).toEqual({
       layout: "auto",
+      animations: true,
       background: { show: true },
     });
+    expect(formData({ animations: false }).animations).toBe(false);
   });
 
   it("stores only changes and can reset", async () => {

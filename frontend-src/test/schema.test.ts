@@ -227,6 +227,9 @@ describe("schema", () => {
     expect(schema.svg.style.getPropertyValue("--bg-opacity")).toBe("0.3");
     const off = render(STATES, [], { background: { show: false } });
     expect(off.svg.getAttribute("data-bg")).toBe("off");
+    expect(schema.svg.getAttribute("data-animations")).toBe("on");
+    const still = render(STATES, [], { animations: false });
+    expect(still.svg.getAttribute("data-animations")).toBe("off");
   });
 
   it("marks unavailable values", () => {

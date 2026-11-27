@@ -37,6 +37,8 @@ export type Rgb = [number, number, number];
 /** Appearance of the dashboard; the card configuration and the panel share it. */
 export interface Appearance {
   layout?: "auto" | "light" | "dark" | "petrol";
+  /** False stops the animations of the layout. */
+  animations?: boolean;
   background?: { show?: boolean; color?: Rgb; opacity?: number };
   box?: {
     fill?: Rgb;

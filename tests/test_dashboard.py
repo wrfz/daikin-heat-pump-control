@@ -275,6 +275,7 @@ async def test_panel_config(
     assert response["result"] == {"config": {}}
     config = {
         "layout": "petrol",
+        "animations": False,
         "background": {"show": False},
         "box": {"fill": [10, 20, 30], "fill_opacity": 80},
         "text": {"label_color": [1, 2, 3]},
@@ -304,6 +305,7 @@ async def test_panel_config(
     "config",
     [
         {"layout": "neon"},
+        {"animations": "off"},
         {"box": {"fill": [1, 2]}},
         {"background": {"opacity": 101}},
         {"text": {"value_color": [0, 0, 256]}},

@@ -104,6 +104,12 @@ export function validateAppearance(
       }
       continue;
     }
+    if (key === "animations") {
+      if (typeof value !== "boolean") {
+        throw new Error(`Invalid option: ${key}`);
+      }
+      continue;
+    }
     const fields = SECTIONS[key];
     if (!fields) throw new Error(`Unknown option: ${key}`);
     if (typeof value !== "object" || value === null || Array.isArray(value)) {
@@ -121,13 +127,14 @@ export function validateAppearance(
 
 /**
  * Keep only what differs from the layout: no empty values, no empty sections,
- * no default layout and no shown background.
+ * no default layout, no running animations and no shown background.
  */
 export function cleanAppearance<T extends Appearance>(config: T): T {
   const result: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(config)) {
     if (value === undefined || value === null || value === "") continue;
     if (key === "layout" && value === "auto") continue;
+    if (key === "animations" && value === true) continue;
     if (key in SECTIONS && typeof value === "object") {
       const section = Object.fromEntries(
         Object.entries(value as Record<string, unknown>).filter(

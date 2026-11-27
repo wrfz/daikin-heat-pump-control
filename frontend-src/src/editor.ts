@@ -40,6 +40,7 @@ export function editorSchema(language: string): SchemaItem[] {
         },
       },
     },
+    { name: "animations", selector: { boolean: {} } },
     {
       name: "background",
       type: "expandable",
@@ -78,6 +79,7 @@ export function formData(appearance: Appearance): Record<string, unknown> {
   return {
     ...appearance,
     layout: appearance.layout ?? "auto",
+    animations: appearance.animations !== false,
     background: { show: true, ...appearance.background },
   };
 }

@@ -44,6 +44,7 @@ _PERCENT = probatio.All(probatio.Coerce(float), probatio.Range(min=0, max=100))
 APPEARANCE_SCHEMA: Final = probatio.Schema(
     {
         probatio.Optional("layout"): probatio.In(LAYOUTS),
+        probatio.Optional("animations"): bool,
         probatio.Optional("background"): {
             probatio.Optional("show"): bool,
             probatio.Optional("color"): _COLOR,

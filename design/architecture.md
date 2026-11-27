@@ -396,7 +396,7 @@ Während der Tests wechselt der Nutzer zwischen Bridge-Firmware und bisheriger F
     Geräteklasse eingeschränkt).
   - Info-Box (welche Werte, Reihenfolge): ebenfalls im Options-Flow, Schritt „Dashboard“.
 - Card-Editor nur für die Darstellung: Layout hell/dunkel/petrol oder automatisch nach Dark-Mode,
-  Hintergrund/Box/Text.
+  Animationen an/aus, Hintergrund/Box/Text.
 - Inhalt wie heute: Schema mit allen Werten, Info-Box, Animationen (Lüfter, Verdichter,
   Pumpe, Kältemittel- und Wasserfluss, 4-Wege-Ventil, Mischer/Bypass-Klappen), Farben nach Temperatur,
   Layouts hell/dunkel/petrol, Hintergrund/Box/Text anpassbar, Klick → More-Info.
@@ -450,7 +450,8 @@ Umsetzung (Teil 5):
   Zeile von Vorlauf, Vorlauf-BH und Rücklauf trägt `tv_uart`/`tvbh_uart`/`tr_uart`; fehlende Werte
   werden ausgeblendet. Ein Test prüft: jede Wert-ID kommt in jedem SVG vor und umgekehrt.
 - Darstellung (Card und Panel gleich): Layout `auto` (Standard; hell/dunkel nach `hass.themes.darkMode`),
-  `light`, `dark`, `petrol`; `background {show, color [r,g,b], opacity 0–100}`, `box {fill, fill_opacity,
+  `light`, `dark`, `petrol`; `animations` (Standard an; `false` hält alle Animationen an, das Layout
+  pausiert sie über `svg[data-animations="off"]`); `background {show, color [r,g,b], opacity 0–100}`, `box {fill, fill_opacity,
   border, border_opacity}`, `text {value_color, label_color}`. Gespeichert werden nur Abweichungen vom
   Layout. Der Card-Editor (ha-form) bearbeitet genau diese Felder.
 - Panel: `panel_custom.async_register_panel`, URL `daikin-heat-pump`, Icon `mdi:heat-pump`, Titel in

@@ -47,6 +47,7 @@
     "layout_light": "Glass, light",
     "layout_dark": "Glass, dark",
     "layout_petrol": "Glass, petrol",
+    "animations": "Animations",
     "background": "Background",
     "show": "Show background",
     "color": "Colour",

@@ -644,6 +644,10 @@ function He(e) {
 			if (!Ie.includes(n)) throw Error(`Invalid layout: ${String(n)}`);
 			continue;
 		}
+		if (t === "animations") {
+			if (typeof n != "boolean") throw Error(`Invalid option: ${t}`);
+			continue;
+		}
 		let e = Ve[t];
 		if (!e) throw Error(`Unknown option: ${t}`);
 		if (typeof n != "object" || !n || Array.isArray(n)) throw Error(`Invalid option: ${t}`);
@@ -657,7 +661,7 @@ function He(e) {
 }
 function Ue(e) {
 	let t = {};
-	for (let [n, r] of Object.entries(e)) if (r != null && r !== "" && (n !== "layout" || r !== "auto")) {
+	for (let [n, r] of Object.entries(e)) if (r != null && r !== "" && (n !== "layout" || r !== "auto") && (n !== "animations" || r !== !0)) {
 		if (n in Ve && typeof r == "object") {
 			let e = Object.fromEntries(Object.entries(r).filter(([e, t]) => t != null && t !== "" && (n !== "background" || e !== "show" || t !== !0)));
 			Object.keys(e).length > 0 && (t[n] = e);
@@ -759,6 +763,7 @@ var qe = {
 		layout_light: "Glas, hell",
 		layout_dark: "Glas, dunkel",
 		layout_petrol: "Glas, Petrol",
+		animations: "Animationen",
 		background: "Hintergrund",
 		show: "Hintergrund anzeigen",
 		color: "Farbe",
@@ -835,6 +840,7 @@ var qe = {
 		layout_light: "Glass, light",
 		layout_dark: "Glass, dark",
 		layout_petrol: "Glass, petrol",
+		animations: "Animations",
 		background: "Background",
 		show: "Show background",
 		color: "Colour",
@@ -914,6 +920,7 @@ var qe = {
 			layout_light: "Verre, clair",
 			layout_dark: "Verre, sombre",
 			layout_petrol: "Verre, pétrole",
+			animations: "Animations",
 			background: "Arrière-plan",
 			show: "Afficher l'arrière-plan",
 			color: "Couleur",
@@ -991,6 +998,7 @@ var qe = {
 			layout_light: "Vetro, chiaro",
 			layout_dark: "Vetro, scuro",
 			layout_petrol: "Vetro, petrolio",
+			animations: "Animazioni",
 			background: "Sfondo",
 			show: "Mostra sfondo",
 			color: "Colore",
@@ -1048,6 +1056,10 @@ function Xe(e) {
 					label: t(`layout_${e}`)
 				}))
 			} }
+		},
+		{
+			name: "animations",
+			selector: { boolean: {} }
 		},
 		{
 			name: "background",
@@ -1109,6 +1121,7 @@ function Ze(e) {
 	return {
 		...e,
 		layout: e.layout ?? "auto",
+		animations: e.animations !== !1,
 		background: {
 			show: !0,
 			...e.background
@@ -1493,7 +1506,7 @@ var U = { framed: !0 }, lt = [
 		this.language = n, this.groups = [];
 		let r = new DOMParser().parseFromString(e, "image/svg+xml").documentElement;
 		if (r.tagName.toLowerCase() !== "svg") throw Error("Not an SVG layout");
-		this.svg = document.importNode(r, !0), this.svg.setAttribute("preserveAspectRatio", "xMidYMid meet"), this.svg.setAttribute("data-animations", "on"), this.style = this.layoutStyle(t), this.runMap = pt(this.svg, "data-run-map"), this.tempVars = pt(this.svg, "data-temp-vars");
+		this.svg = document.importNode(r, !0), this.svg.setAttribute("preserveAspectRatio", "xMidYMid meet"), this.svg.setAttribute("data-animations", t.animations === !1 ? "off" : "on"), this.style = this.layoutStyle(t), this.runMap = pt(this.svg, "data-run-map"), this.tempVars = pt(this.svg, "data-temp-vars");
 		for (let e of lt) {
 			let t = this.find(e.id);
 			t && this.groups.push(this.buildGroup(e, t));

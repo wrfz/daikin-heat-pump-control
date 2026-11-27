@@ -123,7 +123,10 @@ export class Schema {
       throw new Error("Not an SVG layout");
     this.svg = document.importNode(root, true) as unknown as SVGSVGElement;
     this.svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
-    this.svg.setAttribute("data-animations", "on");
+    this.svg.setAttribute(
+      "data-animations",
+      appearance.animations === false ? "off" : "on",
+    );
     this.style = this.layoutStyle(appearance);
     this.runMap = parseJson<RunRule>(this.svg, "data-run-map");
     this.tempVars = parseJson<TempRule>(this.svg, "data-temp-vars");
