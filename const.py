@@ -90,3 +90,16 @@ DEFAULT_SCAN_INTERVAL: Final = 30.0
 MIN_SCAN_INTERVAL: Final = 1.0
 MAX_SCAN_INTERVAL: Final = 3600.0
 TV_MAX_POLL_INTERVAL: Final = 2.0
+
+# Checks of the error code: sensor offsets (K) and spread limits (K).
+CONF_TV_OFFSET: Final = "tv_offset"
+CONF_TVBH_OFFSET: Final = "tvbh_offset"
+CONF_TR_OFFSET: Final = "tr_offset"
+CONF_MAX_SPREAD_TVBH_TV: Final = "max_spread_tvbh_tv"
+CONF_MAX_SPREAD_TVBH_TR: Final = "max_spread_tvbh_tr"
+DEFAULT_MAX_SPREAD: Final = 0.3
+
+# Service to send a raw CAN frame.
+SERVICE_SEND_RAW_CAN: Final = "send_raw_can"
+ATTR_DATA: Final = "data"
+ATTR_CONFIG_ENTRY_ID: Final = "config_entry_id"

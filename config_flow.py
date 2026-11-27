@@ -46,13 +46,19 @@ from .can.table import Group
 from .const import (
     BUS_CONF,
     CONF_CAN_NODE,
+    CONF_MAX_SPREAD_TVBH_TR,
+    CONF_MAX_SPREAD_TVBH_TV,
     CONF_NODE_NAME,
     CONF_NODES,
     CONF_NOISE_PSK,
     CONF_OUTDOOR_UNIT,
     CONF_SCAN_INTERVAL,
+    CONF_TR_OFFSET,
+    CONF_TV_OFFSET,
+    CONF_TVBH_OFFSET,
     CONF_UART_NODE,
     CONF_UART_PROTOCOL,
+    DEFAULT_MAX_SPREAD,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
@@ -699,6 +705,32 @@ def _interval_schema(options: Mapping[str, Any]) -> dict[Any, Any]:
     return fields
 
 
+def _kelvin_selector(minimum: float, maximum: float) -> NumberSelector:
+    return NumberSelector(
+        NumberSelectorConfig(
+            min=minimum,
+            max=maximum,
+            step=0.1,
+            mode=NumberSelectorMode.BOX,
+            unit_of_measurement="K",
+        )
+    )
+
+
+def _error_check_schema(options: Mapping[str, Any]) -> dict[Any, Any]:
+    """Return the offsets and limits of the error code checks."""
+    fields: dict[Any, Any] = {}
+    for key in (CONF_TV_OFFSET, CONF_TVBH_OFFSET, CONF_TR_OFFSET):
+        fields[probatio.Required(key, default=options.get(key, 0.0))] = (
+            _kelvin_selector(-5.0, 5.0)
+        )
+    for key in (CONF_MAX_SPREAD_TVBH_TV, CONF_MAX_SPREAD_TVBH_TR):
+        fields[probatio.Required(key, default=options.get(key, DEFAULT_MAX_SPREAD))] = (
+            _kelvin_selector(0.0, 5.0)
+        )
+    return fields
+
+
 class DaikinOptionsFlow(OptionsFlowWithReload):
     """Options of the integration."""
 
@@ -715,6 +747,7 @@ class DaikinOptionsFlow(OptionsFlowWithReload):
         fields: dict[Any, Any] = {}
         if data.get(CONF_CAN_NODE) is not None:
             fields.update(_interval_schema(options))
+            fields.update(_error_check_schema(options))
         if data.get(CONF_UART_NODE) is not None:
             fields.update(_uart_schema(options).schema)
         return self.async_show_form(step_id="init", data_schema=probatio.Schema(fields))

@@ -11,6 +11,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 
 from .bridge.node import BridgeNode
+from .can.table import CAN_VALUES_BY_KEY, StateValue
 from .const import DOMAIN, Bus
 from .coordinator import CanCoordinator, CanState
 
@@ -159,6 +160,13 @@ class CanEntity(Entity):
             translation_key="write_not_supported",
             translation_placeholders={"entity": self.entity_id},
         )
+
+    async def _async_write(self, state: StateValue) -> None:
+        """Write the setting and wait for the read-back of the heat pump."""
+        key = self.entity_description.key
+        if not CAN_VALUES_BY_KEY[key].can_write:
+            self._raise_read_only()
+        await self.coordinator.async_write(key, state)
 
 
 @callback

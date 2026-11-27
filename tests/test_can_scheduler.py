@@ -23,8 +23,8 @@ def _answer(key: str) -> CanFrame:
     return CanFrame(can_id=0x180, data=bytes.fromhex(ANSWERS[key]))
 
 
-def _key_of(frame: CanFrame | None) -> str:
-    assert frame is not None
+def _key_of(frames: list[CanFrame]) -> str:
+    [frame] = frames
     for key in KEYS:
         if CAN_VALUES_BY_KEY[key].command == frame.data:
             return key
@@ -36,7 +36,7 @@ def test_one_request_at_a_time_in_table_order() -> None:
     scheduler = _scheduler()
     first = scheduler.next_request(0)
     assert _key_of(first) == "tv"
-    assert scheduler.next_request(100) is None
+    assert scheduler.next_request(100) == []
     match = scheduler.handle_frame(300, _answer("tv"))
     assert match is not None
     value, decoded = match
@@ -47,7 +47,7 @@ def test_one_request_at_a_time_in_table_order() -> None:
     scheduler.handle_frame(600, _answer("tr"))
     assert _key_of(scheduler.next_request(600)) == "operating_mode"
     scheduler.handle_frame(900, _answer("operating_mode"))
-    assert scheduler.next_request(900) is None
+    assert scheduler.next_request(900) == []
     assert scheduler.requests == 3
 
 
@@ -57,7 +57,7 @@ def test_most_overdue_first() -> None:
     for time, key in ((0, "tv"), (300, "tr"), (600, "operating_mode")):
         scheduler.next_request(time)
         scheduler.handle_frame(time + 50, _answer(key))
-    assert scheduler.next_request(5000) is None
+    assert scheduler.next_request(5000) == []
     assert _key_of(scheduler.next_request(5700)) == "operating_mode"
     scheduler.handle_frame(5750, _answer("operating_mode"))
     # operating_mode is overdue by 20 s, tv by 0.95 s and tr by 0.65 s.
@@ -76,12 +76,11 @@ def test_heard_answers_postpone_the_request() -> None:
 def test_timeout_counts_from_transmission(caplog: pytest.LogCaptureFixture) -> None:
     """A request is lost 3 s after it was sent and asked again after its interval."""
     scheduler = _scheduler(tv=10.0)
-    frame = scheduler.next_request(0)
-    assert frame is not None
+    [frame] = scheduler.next_request(0)
     scheduler.handle_sent(500, CanFrame(can_id=0x680, data=bytes(7)))
     scheduler.handle_sent(1000, frame)
     scheduler.handle_sent(1200, frame)
-    assert scheduler.next_request(3900) is None
+    assert scheduler.next_request(3900) == []
     assert scheduler.diagnostics()["open_request"] == {
         "key": "tv",
         "handed_at": 0,
@@ -93,10 +92,10 @@ def test_timeout_counts_from_transmission(caplog: pytest.LogCaptureFixture) -> N
     assert _key_of(scheduler.next_request(4100)) == "operating_mode"
     scheduler.handle_frame(4200, _answer("operating_mode"))
     # tv was asked at 0: due again after its interval of 10 s.
-    assert scheduler.next_request(9000) is None
+    assert scheduler.next_request(9000) == []
     assert _key_of(scheduler.next_request(10100)) == "tv"
     caplog.clear()
-    assert scheduler.next_request(13000) is None
+    assert scheduler.next_request(13000) == []
     scheduler.next_request(13200)
     assert "No answer" not in caplog.text
     scheduler.handle_frame(23300, _answer("tv"))

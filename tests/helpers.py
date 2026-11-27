@@ -116,3 +116,94 @@ async def wait_for_state(
             await future
     finally:
         unsub()
+
+
+# ------------------------------------------------------------------ CAN bus
+
+FULL_POLL = 30  # s of bus time to read every polled value once
+
+
+async def _block_till_done_except(
+    hass: HomeAssistant, waiting: set[asyncio.Future[Any]]
+) -> None:
+    """Wait for Home Assistant's tasks except those of a pending service call."""
+    if not waiting:
+        await hass.async_block_till_done()
+        return
+    await asyncio.sleep(0)
+    current = asyncio.current_task()
+    while tasks := [
+        task
+        for task in hass._tasks
+        if task is not current and task not in waiting and not task.done()
+    ]:
+        await asyncio.wait(tasks)
+
+
+async def run_bus(
+    hass: HomeAssistant,
+    freezer: Any,
+    seconds: float,
+    step: float = 0.2,
+    *,
+    waiting: set[asyncio.Future[Any]] | None = None,
+) -> None:
+    """Let the exchange cycle run for a while in steps of 200 ms by default.
+
+    `waiting` are tasks of a service call that waits for the bus; they are
+    not waited for between the steps.
+    """
+    from datetime import timedelta  # noqa: PLC0415
+
+    from pytest_homeassistant.common import async_fire_time_changed  # noqa: PLC0415
+
+    for _ in range(round(seconds / step)):
+        freezer.tick(timedelta(seconds=step))
+        async_fire_time_changed(hass)
+        await _block_till_done_except(hass, waiting or set())
+
+
+async def setup_can(
+    hass: HomeAssistant, esp: SimulatedEsp, **kwargs: Any
+) -> MockConfigEntry:
+    """Set up the integration with a CAN node."""
+    entry = daikin_entry(hass, can=esp, **kwargs)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    return entry
+
+
+def state_of(hass: HomeAssistant, entity_id: str) -> str:
+    """Return the state of an entity, which must exist."""
+    state = hass.states.get(entity_id)
+    assert state is not None, entity_id
+    return state.state
+
+
+def requested(esp: SimulatedEsp, register: tuple[int, ...], kind: int = 1) -> int:
+    """Return how often the integration sent a frame of a kind for a register."""
+    assert esp.can is not None
+    return sum(
+        1
+        for _, frame in esp.can.sent
+        if frame.data[0] & 0x0F == kind
+        and frame.data[2 : 2 + len(register)] == bytes(register)
+    )
+
+
+async def call_with_bus(
+    hass: HomeAssistant,
+    freezer: Any,
+    awaitable: Any,
+    seconds: float = 2.0,
+) -> Any:
+    """Await a service call while the bus runs; return its result."""
+    before = set(hass._tasks)
+    task = asyncio.ensure_future(awaitable)
+    await asyncio.sleep(0)
+    waiting: set[asyncio.Future[Any]] = {task}
+    for item in set(hass._tasks) - before:
+        if "async_exchange" not in item.get_coro().__qualname__:  # type: ignore[union-attr]
+            waiting.add(item)
+    await run_bus(hass, freezer, seconds, waiting=waiting)
+    return await task

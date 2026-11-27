@@ -62,6 +62,8 @@ class HeatPump:
         default_factory=dict
     )
     can_silent: set[tuple[int, tuple[int, ...]]] = field(default_factory=set)
+    # Registers that ignore writes.
+    can_read_only: set[tuple[int, tuple[int, ...]]] = field(default_factory=set)
     uart_protocol: str = "I"
     uart_registers: dict[int, bytes] = field(default_factory=dict)
     uart_bad_checksum: set[int] = field(default_factory=set)
@@ -87,7 +89,7 @@ class HeatPump:
         key = (target, register)
         if kind == KIND_WRITE:
             value = data[5:7] if register[0] == CAN_LONG_REGISTER else data[3:5]
-            if key in self.can_registers:
+            if key in self.can_registers and key not in self.can_read_only:
                 self.can_registers[key] = bytes(value)
                 self.can_writes.append(frame)
                 if self.on_can_write is not None:

@@ -8,6 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .can.table import CAN_VALUES, Platform
+from .coordinator import OPTIMIZED_DEFROSTING
 from .entity import CanEntity, enum_or_none
 from .runtime import DaikinConfigEntry
 
@@ -24,6 +25,12 @@ CAN_SWITCHES: tuple[SwitchEntityDescription, ...] = tuple(
     if value.platform is Platform.SWITCH
 )
 
+OPTIMIZED_DEFROSTING_SWITCH = SwitchEntityDescription(
+    key=OPTIMIZED_DEFROSTING,
+    translation_key=OPTIMIZED_DEFROSTING,
+    entity_category=EntityCategory.CONFIG,
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -33,9 +40,11 @@ async def async_setup_entry(
     """Set up the switches."""
     if (coordinator := entry.runtime_data.can) is None:
         return
-    async_add_entities(
+    entities: list[SwitchEntity] = [
         CanSwitch(coordinator, description) for description in CAN_SWITCHES
-    )
+    ]
+    entities.append(OptimizedDefrostingSwitch(coordinator, OPTIMIZED_DEFROSTING_SWITCH))
+    async_add_entities(entities)
 
 
 class CanSwitch(CanEntity, SwitchEntity):
@@ -51,9 +60,29 @@ class CanSwitch(CanEntity, SwitchEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the setting on."""
-        self._raise_read_only()
+        await self._async_write(True)
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the setting off."""
-        self._raise_read_only()
+        await self._async_write(False)
+
+
+class OptimizedDefrostingSwitch(CanEntity, SwitchEntity):
+    """Switch of the defrost optimization; the state is kept by the integration."""
+
+    @property
+    @override
+    def is_on(self) -> bool:
+        """Return True while the optimization is on."""
+        return self.coordinator.optimized_defrosting
+
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the optimization on; this sets the antifreeze temperature to off."""
+        await self.coordinator.async_set_optimized_defrosting(True)
+
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the optimization off."""
+        await self.coordinator.async_set_optimized_defrosting(False)

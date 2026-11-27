@@ -1,8 +1,6 @@
 rules:
   # Bronze
-  action-setup:
-    status: exempt
-    comment: The integration has no actions yet.
+  action-setup: done
   appropriate-polling:
     status: exempt
     comment: Values are pushed by the bridge exchange; nothing is polled by entities.
@@ -11,9 +9,7 @@ rules:
   config-flow: done
   config-flow-test-coverage: done
   dependency-transparency: done
-  docs-actions:
-    status: exempt
-    comment: The integration has no actions yet.
+  docs-actions: todo
   docs-conditions:
     status: exempt
     comment: The integration provides no conditions.

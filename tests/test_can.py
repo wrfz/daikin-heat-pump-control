@@ -1,76 +1,30 @@
 """Tests for the CAN values against the simulated heat pump."""
 
-from datetime import timedelta
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.number import (
-    ATTR_VALUE,
-    DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
-)
-from homeassistant.components.select import (
-    ATTR_OPTION,
-    DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
-)
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_ON,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from helpers import daikin_entry, wait_for_state
+from helpers import (
+    FULL_POLL,
+    requested as _requested,
+    run_bus as _run_bus,
+    setup_can as _setup,
+    state_of as _state,
+    wait_for_state,
+)
 from sim.esp import SimulatedEsp
 from sim.heat_pump import HeatPump
 
 TV = "sensor.daikin_can_tv"
 TV_REGISTER = (0xFA, 0xC0, 0xFC)
 OPERATING_MODE = "select.daikin_can_operating_mode"
-# Enough bus time to read every polled value once.
-FULL_POLL = 30
-
-
-async def _run_bus(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, seconds: float
-) -> None:
-    """Let the exchange cycle run for a while in 200 ms steps."""
-    for _ in range(round(seconds / 0.2)):
-        freezer.tick(timedelta(seconds=0.2))
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
-
-
-async def _setup(hass: HomeAssistant, esp: SimulatedEsp, **kwargs: object):  # type: ignore[no-untyped-def]
-    entry = daikin_entry(hass, can=esp, **kwargs)  # type: ignore[arg-type]
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    return entry
-
-
-def _requested(esp: SimulatedEsp, register: tuple[int, ...]) -> int:
-    assert esp.can is not None
-    return sum(
-        1
-        for _, frame in esp.can.sent
-        if frame.data[2 : 2 + len(register)] == bytes(register)
-    )
-
-
-def _state(hass: HomeAssistant, entity_id: str) -> str:
-    state = hass.states.get(entity_id)
-    assert state is not None, entity_id
-    return state.state
 
 
 async def test_values_read(
@@ -122,6 +76,7 @@ async def test_values_read(
     "platform",
     [
         Platform.BINARY_SENSOR,
+        Platform.BUTTON,
         Platform.NUMBER,
         Platform.SELECT,
         Platform.SENSOR,
@@ -307,36 +262,3 @@ async def test_connection_loss_resets_values(
     await _run_bus(hass, freezer, FULL_POLL)
     assert _state(hass, TV) == "30.0"
     assert _state(hass, OPERATING_MODE) == "heating"
-
-
-@pytest.mark.parametrize(
-    ("domain", "service", "entity_id", "data"),
-    [
-        (
-            NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            "number.daikin_can_room_setpoint_1",
-            {ATTR_VALUE: 22},
-        ),
-        (SELECT_DOMAIN, SERVICE_SELECT_OPTION, OPERATING_MODE, {ATTR_OPTION: "summer"}),
-        (SWITCH_DOMAIN, SERVICE_TURN_ON, "switch.daikin_can_1x_hot_water", {}),
-        (SWITCH_DOMAIN, "turn_off", "switch.daikin_can_1x_hot_water", {}),
-    ],
-)
-async def test_writing_not_supported_yet(
-    hass: HomeAssistant,
-    can_esp: SimulatedEsp,
-    freezer: FrozenDateTimeFactory,
-    domain: str,
-    service: str,
-    entity_id: str,
-    data: dict[str, object],
-) -> None:
-    """Settings are read-only until writing is implemented."""
-    await _setup(hass, can_esp)
-    await _run_bus(hass, freezer, FULL_POLL)
-    with pytest.raises(HomeAssistantError) as err:
-        await hass.services.async_call(
-            domain, service, {ATTR_ENTITY_ID: entity_id, **data}, blocking=True
-        )
-    assert err.value.translation_key == "write_not_supported"

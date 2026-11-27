@@ -68,4 +68,4 @@ class CanNumber(CanEntity, NumberEntity):
     @override
     async def async_set_native_value(self, value: float) -> None:
         """Change the value."""
-        self._raise_read_only()
+        await self._async_write(value)

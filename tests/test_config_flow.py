@@ -526,12 +526,26 @@ async def test_options_polling_intervals(
         "interval_state",
         "interval_setting",
         "interval_counter",
+        "tv_offset",
+        "tvbh_offset",
+        "tr_offset",
+        "max_spread_tvbh_tv",
+        "max_spread_tvbh_tr",
     }
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"scan_interval": 60, "interval_setting": 300}
+        result["flow_id"],
+        {"scan_interval": 60, "interval_setting": 300, "tv_offset": -0.5},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert entry.options == {"scan_interval": 60, "interval_setting": 300}
+    assert entry.options == {
+        "scan_interval": 60,
+        "interval_setting": 300,
+        "tv_offset": -0.5,
+        "tvbh_offset": 0.0,
+        "tr_offset": 0.0,
+        "max_spread_tvbh_tv": 0.3,
+        "max_spread_tvbh_tr": 0.3,
+    }
 
 
 async def test_options_both_buses(hass: HomeAssistant, both_esp: SimulatedEsp) -> None:

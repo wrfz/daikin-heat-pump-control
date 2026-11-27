@@ -126,6 +126,11 @@
         "name": "Verdichter"
       }
     },
+    "button": {
+      "dhw_run": {
+        "name": "Warmwasser bereiten"
+      }
+    },
     "number": {
       "antileg_temp": {
         "name": "Antilegionellen-Temperatur"
@@ -611,6 +616,20 @@
           "unknown": "Unbekannter Fehler",
           "w8006": "W8006 Warnung Druckverlust",
           "w8007": "W8007 Wasserdruck in Anlage zu hoch"
+        },
+        "state_attributes": {
+          "code": {
+            "name": "Code"
+          },
+          "finding": {
+            "name": "Befund",
+            "state": {
+              "dhw_valve_defect": "3-Wege-Ventil Warmwasser defekt",
+              "bypass_valve_defect": "Bypassventil defekt",
+              "low_temperature_spread": "Zu geringe Spreizung",
+              "missing_flow": "Fehlender Durchfluss"
+            }
+          }
         }
       },
       "esphome_version": {
@@ -752,6 +771,9 @@
       },
       "wifi_signal": {
         "name": "WLAN-Signal"
+      },
+      "writes_today": {
+        "name": "Schreibvorgänge heute"
       }
     },
     "switch": {
@@ -767,6 +789,9 @@
       "heating_curve_adaptation": {
         "name": "Heizkurvenadaption"
       },
+      "optimized_defrosting": {
+        "name": "Abtau-Optimierung"
+      },
       "room_therm": {
         "name": "Raumthermostat"
       },
@@ -776,14 +801,50 @@
     }
   },
   "exceptions": {
+    "bus_unavailable": {
+      "message": "Der CAN-Bus ist nicht verfügbar."
+    },
     "cannot_connect": {
       "message": "Keine Verbindung zur Bridge {name}: {error}"
+    },
+    "entry_not_found": {
+      "message": "Es gibt keinen Eintrag von Daikin Heat Pump Control mit der ID {entry_id}."
+    },
+    "entry_not_loaded": {
+      "message": "Daikin Heat Pump Control ist nicht geladen."
     },
     "invalid_auth": {
       "message": "Die Bridge {name} hat den API-Verschlüsselungsschlüssel abgelehnt."
     },
+    "invalid_raw_frame": {
+      "message": "Ungültiger CAN-Frame {data}: erwartet werden 1 bis 7 Bytes hex, z. B. 31 00 FA C0 FC."
+    },
+    "invalid_value": {
+      "message": "{value} ist kein gültiger Wert für {key}."
+    },
+    "no_can_bus": {
+      "message": "Es ist kein CAN-Bus eingerichtet."
+    },
+    "raw_not_sent": {
+      "message": "Der CAN-Frame wurde nicht gesendet."
+    },
+    "value_not_polled": {
+      "message": "{key} wird nicht von der Wärmepumpe gelesen."
+    },
+    "value_unknown": {
+      "message": "Der aktuelle Wert von {key} ist noch nicht bekannt."
+    },
+    "write_not_confirmed": {
+      "message": "Die Wärmepumpe hat den neuen Wert von {key} nicht bestätigt."
+    },
+    "write_not_sent": {
+      "message": "Schreiben von {key} fehlgeschlagen: der Frame wurde nicht gesendet."
+    },
     "write_not_supported": {
-      "message": "{entity} kann noch nicht geändert werden; Schreiben an die Wärmepumpe wird in dieser Version nicht unterstützt."
+      "message": "{entity} kann nicht geändert werden: Schreiben dieser Einstellung wird noch nicht unterstützt."
+    },
+    "write_rejected": {
+      "message": "Die Wärmepumpe hat {value} für {key} nicht übernommen; sie meldet {actual}."
     }
   },
   "issues": {
@@ -800,8 +861,13 @@
           "interval_measurement": "Intervall Messwerte",
           "interval_setting": "Intervall Einstellungen",
           "interval_state": "Intervall Zustände",
+          "max_spread_tvbh_tr": "Max. Differenz TVBH − TR",
+          "max_spread_tvbh_tv": "Max. Differenz TVBH − TV",
           "outdoor_unit": "Außengerät",
           "scan_interval": "Abfrageintervall",
+          "tr_offset": "Offset TR",
+          "tv_offset": "Offset TV",
+          "tvbh_offset": "Offset TVBH",
           "uart_protocol": "Protokoll"
         },
         "data_description": {
@@ -809,8 +875,13 @@
           "interval_measurement": "Temperaturen, Druck, Durchfluss, Pumpe und Ventile. Leer: Standard.",
           "interval_setting": "Zahlen, Auswahlen und Schalter. Änderungen am Bedienteil kommen ohne Abfrage an. Leer: Standard.",
           "interval_state": "Binäre Werte, Betriebsart, Fehlercode und Smart-Grid-Zustand. Leer: Standard.",
+          "max_spread_tvbh_tr": "Bei Bypassventil 100 % und mehr als 600 L/h meldet eine größere Differenz über 10 Minuten das Bypassventil als defekt.",
+          "max_spread_tvbh_tv": "Bei Mischer Warmwasser 0 % und mehr als 600 L/h meldet eine größere Differenz über 10 Minuten das 3-Wege-Ventil als defekt.",
           "outdoor_unit": "Modell des Außengeräts; bestimmt Kältemittel und Registeraufbau.",
           "scan_interval": "Intervall in Sekunden für alle CAN-Werte ohne Gruppenintervall.",
+          "tr_offset": "Korrektur von TR für die Ventilprüfungen des Fehlercodes.",
+          "tv_offset": "Korrektur von TV für die Ventilprüfungen des Fehlercodes.",
+          "tvbh_offset": "Korrektur von TVBH für die Ventilprüfungen des Fehlercodes.",
           "uart_protocol": "Protokoll des Innengeräts; die automatische Erkennung passt für die meisten Geräte."
         },
         "title": "Optionen"
@@ -829,6 +900,22 @@
         "auto": "Automatisch",
         "i": "Protokoll I",
         "s": "Protokoll S"
+      }
+    }
+  },
+  "services": {
+    "send_raw_can": {
+      "name": "CAN-Rohframe senden",
+      "description": "Sendet einen CAN-Frame mit der ID 0x680 an die Wärmepumpe. Bei einer Leseanfrage wird die Antwort der Wärmepumpe zurückgegeben.",
+      "fields": {
+        "data": {
+          "name": "Daten",
+          "description": "1 bis 7 Datenbytes hex, z. B. 31 00 FA C0 FC."
+        },
+        "config_entry_id": {
+          "name": "Integrationseintrag",
+          "description": "Eintrag der Integration; kann entfallen."
+        }
       }
     }
   }

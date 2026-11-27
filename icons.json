@@ -17,6 +17,11 @@
         "default": "mdi:heat-pump"
       }
     },
+    "button": {
+      "dhw_run": {
+        "default": "mdi:water-boiler"
+      }
+    },
     "number": {
       "antileg_temp": {
         "default": "mdi:bacteria-outline"
@@ -283,6 +288,9 @@
       },
       "vorlauf_soll_tv_delta": {
         "default": "mdi:thermometer-lines"
+      },
+      "writes_today": {
+        "default": "mdi:counter"
       }
     },
     "switch": {
@@ -298,12 +306,20 @@
       "heating_curve_adaptation": {
         "default": "mdi:chart-bell-curve-cumulative"
       },
+      "optimized_defrosting": {
+        "default": "mdi:snowflake-melt"
+      },
       "room_therm": {
         "default": "mdi:thermostat"
       },
       "smart_grid": {
         "default": "mdi:transmission-tower"
       }
+    }
+  },
+  "services": {
+    "send_raw_can": {
+      "service": "mdi:send"
     }
   }
 }

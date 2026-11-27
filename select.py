@@ -52,4 +52,4 @@ class CanSelect(CanEntity, SelectEntity):
     @override
     async def async_select_option(self, option: str) -> None:
         """Change the option."""
-        self._raise_read_only()
+        await self._async_write(option)

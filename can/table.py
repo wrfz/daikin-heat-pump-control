@@ -11,7 +11,7 @@ from enum import StrEnum
 import math
 from typing import Any, Final
 
-from .protocol import CONTROLLER_ID, Register, parse_command, raw_value, signed16
+from .protocol import CONTROLLER_ID, Kind, Register, parse_command, raw_value, signed16
 
 # Units and classes, written as Home Assistant expects them.
 CELSIUS: Final = "°C"
@@ -115,6 +115,8 @@ class CanValue:
     precision: int | None = None
     category: str | None = None
     enabled_default: bool = True
+    # Settings are written unless this is False.
+    writable: bool = True
     register: Register = field(init=False, compare=False)
 
     def __post_init__(self) -> None:
@@ -168,6 +170,96 @@ class CanValue:
     def nearest_option(self, number: float) -> str:
         """Return the option whose value is closest to a number."""
         return min(self.options, key=lambda item: abs(item[0] - number))[1]
+
+    @property
+    def can_write(self) -> bool:
+        """Return True for settings that are written to the controller."""
+        return self.writable and self.platform in (
+            Platform.NUMBER,
+            Platform.SELECT,
+            Platform.SWITCH,
+        )
+
+    def normalize(self, state: StateValue) -> StateValue:
+        """Return the state the controller would store for a requested state.
+
+        Numbers are moved to the nearest allowed value, or to the step grid
+        within the limits. Raises TypeError or ValueError for states the value
+        cannot take.
+        """
+        match self.platform:
+            case Platform.NUMBER:
+                if isinstance(state, bool) or not isinstance(state, int | float):
+                    raise TypeError(f"{self.key} needs a number, not {state!r}")
+                return self._snap(float(state))
+            case Platform.SELECT:
+                if state not in {key for _, key in self.options}:
+                    raise ValueError(f"{state!r} is no option of {self.key}")
+                return state
+            case Platform.SWITCH:
+                if not isinstance(state, bool):
+                    raise TypeError(f"{self.key} needs True or False, not {state!r}")
+                return state
+            case _:
+                raise ValueError(f"{self.key} is not a setting")
+
+    def _snap(self, number: float) -> float:
+        if self.allowed:
+            return min(self.allowed, key=lambda value: abs(value - number))
+        assert self.minimum is not None
+        assert self.maximum is not None
+        assert self.step is not None
+        number = max(self.minimum, min(self.maximum, number))
+        steps = round((number - self.minimum) / self.step)
+        return round(min(self.maximum, self.minimum + steps * self.step), 6)
+
+    def option_value(self, option: str) -> float:
+        """Return the value of an option."""
+        for value, key in self.options:
+            if key == option:
+                return value
+        raise ValueError(f"{option!r} is no option of {self.key}")
+
+    def _raw_of(self, state: StateValue) -> int:
+        match state:
+            case bool():
+                return int(state)
+            case str():
+                return round(self.option_value(state) * self.divider)
+            case float() | int():
+                return round(state * self.divider)
+        raise ValueError(f"Cannot encode {state!r} for {self.key}")
+
+    def encode(self, state: StateValue) -> bytes:
+        """Return the data bytes of the frame that writes a normalized state.
+
+        The frame is the read command with the kind set to write and the raw
+        value at the data position; the other data bytes are zero.
+        """
+        data = bytearray(self.command)
+        data[0] = (data[0] & 0xF0) | Kind.WRITE
+        data[1] = 0x00
+        if self.decoder is Decoder.HEATER_STAGES:
+            assert isinstance(state, str)
+            kilowatts = self.option_value(state)
+            byte = 0x01
+            for threshold, bit in ((3, 0x08), (6, 0x04), (9, 0x02)):
+                if kilowatts >= threshold:
+                    byte |= bit
+            data[self.offset] = byte
+            return bytes(data)
+        raw = self._raw_of(state)
+        limit = 1 << (8 * self.size)
+        lowest, highest = (-(limit // 2), limit // 2) if self.signed else (0, limit)
+        if not lowest <= raw < highest:
+            raise ValueError(f"{state!r} does not fit into {self.key}")
+        raw %= limit
+        if self.size == 2:
+            data[self.offset] = raw >> 8
+            data[self.offset + 1] = raw & 0xFF
+        else:
+            data[self.offset] = raw
+        return bytes(data)
 
 
 # ----------------------------------------------------------------- helpers
@@ -831,6 +923,8 @@ CAN_VALUES: Final[tuple[CanValue, ...]] = (
         command=parse_command("61 00 FA 01 15"),
         responder=RESPONDER_300,
         category=CONFIG,
+        # Read only: which node takes writes of this register is not known yet.
+        writable=False,
     ),
     _date_part("system_date_day", "31 00 FA 01 22"),
     _date_part("system_date_month", "31 00 FA 01 23"),

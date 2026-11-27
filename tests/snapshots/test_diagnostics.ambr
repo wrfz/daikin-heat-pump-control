@@ -3,12 +3,17 @@
   dict({
     'can': dict({
       'available': True,
+      'defrost_saved_mode': 'standby',
+      'finding': None,
       'scheduler': dict({
         'open_request': dict({
           'handed_at': 0,
           'key': '1_dhw',
           'sent_at': None,
         }),
+        'queued': list([
+        ]),
+        'raw_frames': 0,
         'requests': 1,
         'unhandled_frames': 0,
         'values': dict({
@@ -612,6 +617,13 @@
             'last_answer': None,
             'lost': 0,
           }),
+        }),
+        'write_failures': 0,
+        'writes': 0,
+      }),
+      'storage': dict({
+        'optimized_defrosting': False,
+        'writes_today': dict({
         }),
       }),
       'values': dict({
@@ -2228,5 +2240,59 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-61',
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_can_writes_today-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('daikin_heat_pump_control', '01JDAIKINTESTENTRY00000000_can')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.daikin_can_writes_today',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Writes today',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Writes today',
+    'platform': 'daikin_heat_pump_control',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'writes_today',
+    'unique_id': '01JDAIKINTESTENTRY00000000_can_writes_today',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_can_writes_today-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin CAN Writes today',
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2026-11-26T00:00:00-08:00',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.daikin_can_writes_today',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
   })
 # ---

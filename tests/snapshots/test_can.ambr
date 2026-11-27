@@ -302,6 +302,56 @@
     'state': 'on',
   })
 # ---
+# name: test_entities[button][button.daikin_can_hot_water_run-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('daikin_heat_pump_control', '01JDAIKINTESTENTRY00000000_can')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.daikin_can_hot_water_run',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Hot water run',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Hot water run',
+    'platform': 'daikin_heat_pump_control',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'dhw_run',
+    'unique_id': '01JDAIKINTESTENTRY00000000_can_dhw_run',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[button][button.daikin_can_hot_water_run-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin CAN Hot water run',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.daikin_can_hot_water_run',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_entities[number][number.daikin_can_anti_legionella_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -4655,6 +4705,7 @@
     'attributes': ReadOnlyDict({
       'code': 0,
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      'finding': None,
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin CAN Error code',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'no_error',
@@ -6590,6 +6641,60 @@
     'state': '1.8',
   })
 # ---
+# name: test_entities[sensor][sensor.daikin_can_writes_today-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('daikin_heat_pump_control', '01JDAIKINTESTENTRY00000000_can')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.daikin_can_writes_today',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Writes today',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Writes today',
+    'platform': 'daikin_heat_pump_control',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'writes_today',
+    'unique_id': '01JDAIKINTESTENTRY00000000_can_writes_today',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor][sensor.daikin_can_writes_today-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin CAN Writes today',
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2026-11-27T00:00:00-08:00',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.daikin_can_writes_today',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
 # name: test_entities[switch][switch.daikin_can_1x_hot_water-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -6788,6 +6893,56 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
+  })
+# ---
+# name: test_entities[switch][switch.daikin_can_optimized_defrosting-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('daikin_heat_pump_control', '01JDAIKINTESTENTRY00000000_can')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.daikin_can_optimized_defrosting',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Optimized defrosting',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Optimized defrosting',
+    'platform': 'daikin_heat_pump_control',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'optimized_defrosting',
+    'unique_id': '01JDAIKINTESTENTRY00000000_can_optimized_defrosting',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[switch][switch.daikin_can_optimized_defrosting-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin CAN Optimized defrosting',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.daikin_can_optimized_defrosting',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---
 # name: test_entities[switch][switch.daikin_can_room_thermostat-entry]

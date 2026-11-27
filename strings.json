@@ -126,6 +126,11 @@
         "name": "Compressor"
       }
     },
+    "button": {
+      "dhw_run": {
+        "name": "Hot water run"
+      }
+    },
     "number": {
       "antileg_temp": {
         "name": "Anti-legionella temperature"
@@ -611,6 +616,20 @@
           "unknown": "Unknown error",
           "w8006": "W8006 Pressure Loss Warning",
           "w8007": "W8007 Water Pressure in System Too High"
+        },
+        "state_attributes": {
+          "code": {
+            "name": "Code"
+          },
+          "finding": {
+            "name": "Finding",
+            "state": {
+              "dhw_valve_defect": "3-way valve hot water defective",
+              "bypass_valve_defect": "Bypass valve defective",
+              "low_temperature_spread": "Temperature spread too low",
+              "missing_flow": "Missing flow"
+            }
+          }
         }
       },
       "esphome_version": {
@@ -752,6 +771,9 @@
       },
       "wifi_signal": {
         "name": "Wi-Fi signal"
+      },
+      "writes_today": {
+        "name": "Writes today"
       }
     },
     "switch": {
@@ -767,6 +789,9 @@
       "heating_curve_adaptation": {
         "name": "Heating curve adaptation"
       },
+      "optimized_defrosting": {
+        "name": "Optimized defrosting"
+      },
       "room_therm": {
         "name": "Room thermostat"
       },
@@ -776,14 +801,50 @@
     }
   },
   "exceptions": {
+    "bus_unavailable": {
+      "message": "The CAN bus is not available."
+    },
     "cannot_connect": {
       "message": "Cannot connect to the bridge {name}: {error}"
+    },
+    "entry_not_found": {
+      "message": "There is no Daikin Heat Pump Control entry with the id {entry_id}."
+    },
+    "entry_not_loaded": {
+      "message": "Daikin Heat Pump Control is not loaded."
     },
     "invalid_auth": {
       "message": "The bridge {name} rejected the API encryption key."
     },
+    "invalid_raw_frame": {
+      "message": "Invalid CAN frame {data}: 1 to 7 bytes in hex are expected, e.g. 31 00 FA C0 FC."
+    },
+    "invalid_value": {
+      "message": "{value} is not a valid value for {key}."
+    },
+    "no_can_bus": {
+      "message": "No CAN bus is configured."
+    },
+    "raw_not_sent": {
+      "message": "The CAN frame was not sent."
+    },
+    "value_not_polled": {
+      "message": "{key} is not read from the heat pump."
+    },
+    "value_unknown": {
+      "message": "The current value of {key} is not known yet."
+    },
+    "write_not_confirmed": {
+      "message": "The heat pump did not confirm the new value of {key}."
+    },
+    "write_not_sent": {
+      "message": "Writing {key} failed: the frame was not sent."
+    },
     "write_not_supported": {
-      "message": "{entity} cannot be changed yet; writing to the heat pump is not supported in this version."
+      "message": "{entity} cannot be changed: writing this setting is not supported yet."
+    },
+    "write_rejected": {
+      "message": "The heat pump did not take {value} for {key}; it reports {actual}."
     }
   },
   "issues": {
@@ -800,8 +861,13 @@
           "interval_measurement": "Interval measurements",
           "interval_setting": "Interval settings",
           "interval_state": "Interval states",
+          "max_spread_tvbh_tr": "Max. difference TVBH − TR",
+          "max_spread_tvbh_tv": "Max. difference TVBH − TV",
           "outdoor_unit": "Outdoor unit",
           "scan_interval": "Polling interval",
+          "tr_offset": "Offset TR",
+          "tv_offset": "Offset TV",
+          "tvbh_offset": "Offset TVBH",
           "uart_protocol": "Protocol"
         },
         "data_description": {
@@ -809,8 +875,13 @@
           "interval_measurement": "Temperatures, pressure, flow, pump and valves. Empty: default.",
           "interval_setting": "Numbers, selects and switches. Changes on the control panel arrive without polling. Empty: default.",
           "interval_state": "Binary values, operating state, error code and Smart Grid state. Empty: default.",
+          "max_spread_tvbh_tr": "With the bypass valve at 100 % and more than 600 L/h, a larger difference for 10 minutes reports the bypass valve as defective.",
+          "max_spread_tvbh_tv": "With the hot water mixer at 0 % and more than 600 L/h, a larger difference for 10 minutes reports the 3-way valve as defective.",
           "outdoor_unit": "Model of the outdoor unit; selects the refrigerant and the register layout.",
           "scan_interval": "Interval in seconds for all CAN values without a group interval.",
+          "tr_offset": "Correction of TR for the valve checks of the error code.",
+          "tv_offset": "Correction of TV for the valve checks of the error code.",
+          "tvbh_offset": "Correction of TVBH for the valve checks of the error code.",
           "uart_protocol": "Protocol of the indoor unit; automatic detection works for most devices."
         },
         "title": "Options"
@@ -829,6 +900,22 @@
         "auto": "Automatic",
         "i": "Protocol I",
         "s": "Protocol S"
+      }
+    }
+  },
+  "services": {
+    "send_raw_can": {
+      "name": "Send raw CAN frame",
+      "description": "Sends a CAN frame with the id 0x680 to the heat pump. For a read request the answer of the heat pump is returned.",
+      "fields": {
+        "data": {
+          "name": "Data",
+          "description": "1 to 7 data bytes in hex, e.g. 31 00 FA C0 FC."
+        },
+        "config_entry_id": {
+          "name": "Integration entry",
+          "description": "Entry of the integration; may be left out."
+        }
       }
     }
   }

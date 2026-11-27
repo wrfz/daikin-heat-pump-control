@@ -8,10 +8,12 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
+    config_validation as cv,
     device_registry as dr,
     entity_registry as er,
     issue_registry as ir,
 )
+from homeassistant.helpers.typing import ConfigType
 
 from .bridge.client import BridgeAuthError, BridgeConnectionError
 from .bridge.node import BridgeNode, CanChannel
@@ -25,7 +27,12 @@ from .const import (
     ISSUE_NO_BRIDGE_FIRMWARE,
     Bus,
 )
-from .coordinator import CanCoordinator, entity_defaults, polling_intervals
+from .coordinator import (
+    CanCoordinator,
+    entity_defaults,
+    error_settings,
+    polling_intervals,
+)
 from .entity import (
     async_register_devices,
     async_update_bridge_device,
@@ -34,11 +41,16 @@ from .entity import (
     can_unique_id,
 )
 from .runtime import DaikinConfigEntry, DaikinRuntimeData
+from .services import async_setup_services
+from .storage import CanStorage
 
 _LOGGER = logging.getLogger(__name__)
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
@@ -79,6 +91,12 @@ async def _async_stop_nodes(nodes: dict[str, BridgeNode]) -> None:
     await asyncio.gather(*(node.async_stop() for node in nodes.values()))
 
 
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the services of the integration."""
+    async_setup_services(hass)
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: DaikinConfigEntry) -> bool:
     """Set up Daikin Heat Pump Control from a config entry."""
     nodes = _create_nodes(hass, entry)
@@ -112,11 +130,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaikinConfigEntry) -> bo
     }
     can = None
     if isinstance(channel := channels.get(Bus.CAN), CanChannel):
+        storage = CanStorage(hass, entry.entry_id)
+        await storage.async_load()
         can = CanCoordinator(
             hass,
             channel,
             active=_active_can_keys(hass, entry),
             intervals=polling_intervals(entry.options),
+            storage=storage,
+            settings=error_settings(entry.options),
         )
         entry.async_on_unload(can.async_start())
     entry.runtime_data = DaikinRuntimeData(nodes=nodes, channels=channels, can=can)
@@ -186,6 +208,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: DaikinConfigEntry) -> b
     if unloaded:
         await _async_stop_nodes(entry.runtime_data.nodes)
     return unloaded
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: DaikinConfigEntry) -> None:
+    """Remove the stored state of a removed config entry."""
+    await CanStorage(hass, entry.entry_id).async_remove()
 
 
 async def async_remove_config_entry_device(

@@ -21,17 +21,16 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util import dt as dt_util
 
 from .bridge.node import BridgeNode
 from .can.table import CAN_VALUES, CanValue, Platform
 from .const import Bus
-from .coordinator import COMPUTED_DISABLED_BY_DEFAULT
+from .coordinator import COMPUTED_DISABLED_BY_DEFAULT, ERROR_CODE, WRITES_TODAY
 from .entity import BridgeEntity, CanEntity, enum_or_none
 from .runtime import DaikinConfigEntry
 
 PARALLEL_UPDATES = 0
-
-ERROR_CODE = "error_code"
 
 CAN_STATES = ["error_active", "error_passive", "bus_off", "stopped", "unknown"]
 
@@ -260,6 +259,13 @@ COMPUTED_SENSORS: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
+WRITES_TODAY_SENSOR = SensorEntityDescription(
+    key=WRITES_TODAY,
+    translation_key=WRITES_TODAY,
+    state_class=SensorStateClass.TOTAL,
+    entity_category=EntityCategory.DIAGNOSTIC,
+)
+
 CAN_SENSORS: tuple[SensorEntityDescription, ...] = (
     *(
         _can_description(value)
@@ -289,6 +295,7 @@ async def async_setup_entry(
             else CanSensor(coordinator, description)
             for description in CAN_SENSORS
         )
+        entities.append(WritesTodaySensor(coordinator, WRITES_TODAY_SENSOR))
     async_add_entities(entities)
 
 
@@ -303,13 +310,39 @@ class CanSensor(CanEntity, SensorEntity):
 
 
 class CanErrorCodeSensor(CanSensor):
-    """Error code with the numeric code as attribute."""
+    """Error code with the numeric code and the finding of the checks."""
 
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the numeric code."""
-        return {"code": self.coordinator.raw(ERROR_CODE)}
+        """Return the numeric code and the finding of the checks."""
+        finding = self.coordinator.finding
+        return {
+            "code": self.coordinator.raw(ERROR_CODE),
+            "finding": None if finding is None else str(finding),
+        }
+
+
+class WritesTodaySensor(CanEntity, SensorEntity):
+    """Number of writes to the heat pump on the current day."""
+
+    @property
+    @override
+    def native_value(self) -> int:
+        """Return the number of writes."""
+        return self.coordinator.storage.writes_today()
+
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, int]:
+        """Return the writes per value."""
+        return self.coordinator.storage.writes_by_key()
+
+    @property
+    @override
+    def last_reset(self) -> datetime:
+        """Return the start of the current day."""
+        return dt_util.start_of_local_day()
 
 
 class BridgeSensor(BridgeEntity, SensorEntity):

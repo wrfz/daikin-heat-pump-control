@@ -219,8 +219,15 @@ testbar.
 - Fehlercode: Grundtext aus der Tabelle, ergänzt um die erkannten Zusatzbefunde (3-Wege-Ventil
   Warmwasser defekt, Bypassventil defekt, zu geringe Spreizung, fehlender Durchfluss) mit den Haltezeiten
   10/10/20/5 min und der Mindestspreizung abhängig von Tv.
+  Wie bisher läuft die Prüfung bei jedem Lesen von `error_code`; die erste Prüfung, deren Haltezeit
+  abgelaufen ist, ergibt den Befund, die folgenden Prüfungen laufen dann nicht. Attribut `finding`
+  (`dhw_valve_defect`, `bypass_valve_defect`, `low_temperature_spread`, `missing_flow` oder leer),
+  der Zustand bleibt der Fehlercode. Offsets und Grenzwerte im Options-Flow.
 - Fehlersuche ohne Entities: Dienst `daikin_heat_pump_control.send_raw_can` (1–7 Bytes, empfangene
   Antwort als Dienstantwort), Diagnose-Download mit allen Werten und Rohdaten, Log-Level über HA.
+  Der Frame geht unverändert (ohne Auffüllen) mit ID 0x680 über die Warteschlange; Antwort ist der
+  erste Antwort-Frame eines anderen Teilnehmers mit demselben Register (höchstens 3 s, sonst `null`).
+  Frames ohne Leseanfrage kehren nach dem Senden zurück. Optional `config_entry_id`.
 
 ### 6.2 UART (nur lesen)
 
@@ -272,6 +279,23 @@ Integration schreibt wie die Komponente heute und sperrt nichts; ein Budget legt
 - Schreibwünsche von HA gehen in dieselbe Warteschlange wie die Abfragen (Busruhe gilt auch für sie);
 - Diagnose-Sensor „Schreibvorgänge heute“ am CAN-Gerät (Kalendertag in der HA-Zeitzone, Zeitpunkte im
   Store, übersteht Neustarts; Attribute: Anzahl je Entity).
+
+Umsetzung (Teil 3):
+- Ein Schreibauftrag geht der Abfrage vor; die Bridge bekommt den Schreib-Frame (Byte 0 = Ziel des
+  Lesebefehls mit Art 0, Byte 1 = 0, übrige Datenbytes 0) zusammen mit dem Lesen desselben Registers.
+  Bestätigt ist er durch die Antwort auf dieses Register, die nach dem Senden des Schreib-Frames
+  eintrifft (mitgehört oder auf die eigene Anfrage).
+- Der Dienstaufruf (number/select/switch) wartet auf diese Bestätigung. Fehler als
+  `HomeAssistantError` mit übersetztem Text: nicht gesendet (`write_not_sent`), keine Rückmeldung
+  nach 3 s (`write_not_confirmed`), anderer Wert gemeldet (`write_rejected`, mit dem gemeldeten Wert),
+  Bus nicht verfügbar (`bus_unavailable`). Unerlaubte Werte: `ServiceValidationError`.
+- Gezählt wird jeder tatsächlich gesendete Schreib-Frame: aus HA, aus der Logik (Abtauoptimierung,
+  Warmwasser-Taste) und über `send_raw_can` (Attribut `raw`).
+- Store `daikin_heat_pump_control.<entry_id>`: Zeitpunkte der Schreibvorgänge des Tages und der
+  Schalter „Abtau-Optimierung“; wird mit dem Eintrag entfernt.
+- `heating_curve_adaptation` (gelesen von 0x300) bleibt vorerst nur lesbar: die Komponente schreibt
+  mit Byte 0 = 0x30 (Ziel 0x180), konsistent wäre 0x60 (Ziel 0x300). Wird am Ende mit der echten
+  Anlage geprüft und dann umgesetzt (Teil 6).
 
 ## 8. Entities und Namen
 
@@ -430,6 +454,11 @@ Tests und Frontend-Build.
 | Firmware | YAML-Packages + kleine Komponente `daikin_bridge` (ohne Protokollwissen) |
 | Einrichtung | ESPHome-Einträge, Zeroconf (gefiltert) und manuelle Eingabe; ein Eintrag, Knoten per MAC |
 | Test-Umgebung | `pytest-homeassistant==2026.11.3` (offizieller Nachfolger von `pytest-homeassistant-custom-component`, das ab 2026.11 nicht mehr funktioniert) |
+| Schreiben aus HA | Dienstaufruf wartet auf das Rücklesen, Fehler übersetzt |
+| Zusatzbefunde Fehlercode | wie bisher: nur der erste, Attribut `finding` |
+| Zähler Schreibvorgänge | alle gesendeten Schreib-Frames, auch Logik und `send_raw_can` |
+| `send_raw_can` | erste passende Antwort (gleiches Register), höchstens 3 s |
+| Heizkurvenadaption schreiben | zurückgestellt bis zum Test an der Anlage (Teil 6) |
 
 ## 14. Umsetzung in Teilen (je Teil eine Session)
 
@@ -441,4 +470,5 @@ Tests und Frontend-Build.
    `send_raw_can`.
 4. UART: Protokolle I/S, Erkennung, Konverter, Dampfdrucktabellen, Entities, Kältekreiswerte.
 5. Frontend: gemeinsame Darstellung, Panel, Card, Editor, WebSocket-API.
-6. README de/en, HACS, Feinschliff, Hardware-Inbetriebnahme durch den Nutzer.
+6. README de/en, HACS, Feinschliff, Hardware-Inbetriebnahme durch den Nutzer; dabei Schreiben von
+   `heating_curve_adaptation` an der Anlage prüfen (Ziel 0x180 oder 0x300) und umsetzen.

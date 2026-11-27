@@ -126,6 +126,11 @@
         "name": "Compressore"
       }
     },
+    "button": {
+      "dhw_run": {
+        "name": "Produzione ACS"
+      }
+    },
     "number": {
       "antileg_temp": {
         "name": "Temperatura anti-legionella"
@@ -611,6 +616,20 @@
           "unknown": "Errore sconosciuto",
           "w8006": "W8006 Avviso di Perdita di Pressione",
           "w8007": "W8007 Pressione dell'Acqua nel Sistema Troppo Alta"
+        },
+        "state_attributes": {
+          "code": {
+            "name": "Codice"
+          },
+          "finding": {
+            "name": "Rilevamento",
+            "state": {
+              "dhw_valve_defect": "Valvola a 3 vie ACS guasta",
+              "bypass_valve_defect": "Valvola di bypass guasta",
+              "low_temperature_spread": "Differenza di temperatura troppo bassa",
+              "missing_flow": "Assenza di circolazione"
+            }
+          }
         }
       },
       "esphome_version": {
@@ -752,6 +771,9 @@
       },
       "wifi_signal": {
         "name": "Segnale Wi-Fi"
+      },
+      "writes_today": {
+        "name": "Scritture oggi"
       }
     },
     "switch": {
@@ -767,6 +789,9 @@
       "heating_curve_adaptation": {
         "name": "Adattamento della curva di riscaldamento"
       },
+      "optimized_defrosting": {
+        "name": "Sbrinamento ottimizzato"
+      },
       "room_therm": {
         "name": "Termostato ambiente"
       },
@@ -776,14 +801,50 @@
     }
   },
   "exceptions": {
+    "bus_unavailable": {
+      "message": "Il bus CAN non è disponibile."
+    },
     "cannot_connect": {
       "message": "Impossibile connettersi al bridge {name}: {error}"
+    },
+    "entry_not_found": {
+      "message": "Nessuna voce Daikin Heat Pump Control con l'ID {entry_id}."
+    },
+    "entry_not_loaded": {
+      "message": "Daikin Heat Pump Control non è caricato."
     },
     "invalid_auth": {
       "message": "Il bridge {name} ha rifiutato la chiave di crittografia API."
     },
+    "invalid_raw_frame": {
+      "message": "Frame CAN non valido {data}: sono attesi da 1 a 7 byte esadecimali, ad es. 31 00 FA C0 FC."
+    },
+    "invalid_value": {
+      "message": "{value} non è un valore valido per {key}."
+    },
+    "no_can_bus": {
+      "message": "Nessun bus CAN configurato."
+    },
+    "raw_not_sent": {
+      "message": "Il frame CAN non è stato inviato."
+    },
+    "value_not_polled": {
+      "message": "{key} non viene letto dalla pompa di calore."
+    },
+    "value_unknown": {
+      "message": "Il valore attuale di {key} non è ancora noto."
+    },
+    "write_not_confirmed": {
+      "message": "La pompa di calore non ha confermato il nuovo valore di {key}."
+    },
+    "write_not_sent": {
+      "message": "Scrittura di {key} non riuscita: il frame non è stato inviato."
+    },
     "write_not_supported": {
-      "message": "{entity} non può ancora essere modificato; la scrittura verso la pompa di calore non è supportata in questa versione."
+      "message": "{entity} non può essere modificato: la scrittura di questa impostazione non è ancora supportata."
+    },
+    "write_rejected": {
+      "message": "La pompa di calore non ha accettato {value} per {key}; riporta {actual}."
     }
   },
   "issues": {
@@ -800,8 +861,13 @@
           "interval_measurement": "Intervallo misure",
           "interval_setting": "Intervallo impostazioni",
           "interval_state": "Intervallo stati",
+          "max_spread_tvbh_tr": "Differenza max. TVBH − TR",
+          "max_spread_tvbh_tv": "Differenza max. TVBH − TV",
           "outdoor_unit": "Unità esterna",
           "scan_interval": "Intervallo di interrogazione",
+          "tr_offset": "Offset TR",
+          "tv_offset": "Offset TV",
+          "tvbh_offset": "Offset TVBH",
           "uart_protocol": "Protocollo"
         },
         "data_description": {
@@ -809,8 +875,13 @@
           "interval_measurement": "Temperature, pressione, portata, pompa e valvole. Vuoto: predefinito.",
           "interval_setting": "Numeri, selezioni e interruttori. Le modifiche sul pannello arrivano senza interrogazione. Vuoto: predefinito.",
           "interval_state": "Valori binari, stato operativo, codice di errore e stato Smart Grid. Vuoto: predefinito.",
+          "max_spread_tvbh_tr": "Con la valvola di bypass al 100 % e oltre 600 L/h, una differenza maggiore per 10 minuti segnala la valvola di bypass come guasta.",
+          "max_spread_tvbh_tv": "Con il miscelatore ACS a 0 % e oltre 600 L/h, una differenza maggiore per 10 minuti segnala la valvola a 3 vie come guasta.",
           "outdoor_unit": "Modello dell'unità esterna; determina il refrigerante e la disposizione dei registri.",
           "scan_interval": "Intervallo in secondi per tutti i valori CAN senza intervallo di gruppo.",
+          "tr_offset": "Correzione di TR per i controlli delle valvole del codice errore.",
+          "tv_offset": "Correzione di TV per i controlli delle valvole del codice errore.",
+          "tvbh_offset": "Correzione di TVBH per i controlli delle valvole del codice errore.",
           "uart_protocol": "Protocollo dell'unità interna; il rilevamento automatico funziona per la maggior parte dei dispositivi."
         },
         "title": "Opzioni"
@@ -829,6 +900,22 @@
         "auto": "Automatico",
         "i": "Protocollo I",
         "s": "Protocollo S"
+      }
+    }
+  },
+  "services": {
+    "send_raw_can": {
+      "name": "Invia frame CAN grezzo",
+      "description": "Invia un frame CAN con l'ID 0x680 alla pompa di calore. Per una richiesta di lettura viene restituita la risposta della pompa di calore.",
+      "fields": {
+        "data": {
+          "name": "Dati",
+          "description": "Da 1 a 7 byte di dati esadecimali, ad es. 31 00 FA C0 FC."
+        },
+        "config_entry_id": {
+          "name": "Voce dell'integrazione",
+          "description": "Voce dell'integrazione; può essere omessa."
+        }
       }
     }
   }
