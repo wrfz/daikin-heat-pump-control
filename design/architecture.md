@@ -388,7 +388,9 @@ Während der Tests wechselt der Nutzer zwischen Bridge-Firmware und bisheriger F
   - Wert-IDs nach Bedeutung, ohne Bus (`tv`, `tr`, `error_code`, `cop`, …); sie stehen in den
     SVG-Attributen `data-run-map`/`data-temp-vars` und in der WebSocket-Antwort, die Element-IDs der
     SVGs bleiben. Liefern CAN und UART denselben Wert, gilt CAN; UART nur, wenn es den Wert per CAN
-    nicht gibt oder kein CAN eingerichtet ist (fest, keine Einstellung).
+    nicht gibt oder kein CAN eingerichtet ist (fest, keine Einstellung). Ausnahme wie im bisherigen
+    Dashboard: TV, TVBH und TR zeigen in einer zweiten Zeile den UART-Wert (`tv_uart`, `tvbh_uart`,
+    `tr_uart`), solange die erste Zeile von CAN kommt; sonst bleibt sie leer (kein Wert doppelt).
   - Externe Werte ohne Bus (COP, elektrische Leistung, Raum-Ist, Raum-Soll, Heißgas am Kondensator,
     Heizstab-Leistung): Options-Flow, Schritt „Dashboard“, je Wert ein Entity-Selector (Domain und
     Geräteklasse eingeschränkt).
@@ -411,6 +413,7 @@ Umsetzung (Teil 5):
   | `temperature_outside` | `temperature_outside` (RoCon-Fühler) | `outdoor_temp` (Luftfühler Außengerät) |
   | `ta2` | `ta2` | – |
   | `tv` / `tr` / `tvbh` | `tv` / `tr` / `tvbh` | `tv` / `tr` / `tv_bh` |
+  | `tv_uart` / `tr_uart` / `tvbh_uart` | – | `tv` / `tr` / `tv_bh`, nur wenn die erste Zeile von CAN kommt |
   | `target_supply_temperature` | `target_supply_temperature` | `supply_setpoint` |
   | `temperature_spread` | `temperature_spread` (geglättet; die rohe ist standardmäßig aus) | `temperature_spread` |
   | `thermal_power` | `thermal_power` (wie bisher geglättet) | `thermal_power` |
@@ -443,9 +446,9 @@ Umsetzung (Teil 5):
     Card-Darstellung.
 - SVG-Layouts als `frontend/daikin_glass_{light,dark,petrol}.svg`: die Wert-Rechtecke tragen
   `data-value="<Wert-ID>"`, die Symbole mit More-Info `data-more-info="<Wert-ID>"`, `data-run-map` und
-  `data-temp-vars` nennen Wert-IDs, das 4-Wege-Ventil vergleicht mit `heating`/`cooling`. Rechtecke
-  ohne `data-value` (zweite Zeile für den UART-Wert) bleiben leer und werden wie fehlende Werte
-  ausgeblendet. Ein Test prüft: jede Wert-ID kommt in jedem SVG vor und umgekehrt.
+  `data-temp-vars` nennen Wert-IDs, das 4-Wege-Ventil vergleicht mit `heating`/`cooling`. Die zweite
+  Zeile von Vorlauf, Vorlauf-BH und Rücklauf trägt `tv_uart`/`tvbh_uart`/`tr_uart`; fehlende Werte
+  werden ausgeblendet. Ein Test prüft: jede Wert-ID kommt in jedem SVG vor und umgekehrt.
 - Darstellung (Card und Panel gleich): Layout `auto` (Standard; hell/dunkel nach `hass.themes.darkMode`),
   `light`, `dark`, `petrol`; `background {show, color [r,g,b], opacity 0–100}`, `box {fill, fill_opacity,
   border, border_opacity}`, `text {value_color, label_color}`. Gespeichert werden nur Abweichungen vom
@@ -587,6 +590,7 @@ Tests und Frontend-Build.
 | UART ohne Antwort | nach 3 Fehlschlägen nur noch alle 10 min, Werte `unavailable`, einmal Warnung |
 | Dashboard-Konfiguration | zentral im Options-Flow (externe Werte, Info-Box); Card-Editor nur Darstellung |
 | Wert-IDs Dashboard | nach Bedeutung ohne Bus (`tv`, `cop`); CAN vor UART, fest; deaktivierte Entity zählt als fehlend |
+| TV/TVBH/TR im Dashboard | wie bisher beide Werte: CAN oben, UART in der zweiten Zeile (nur wenn oben CAN steht) |
 | Panel | `daikin-heat-pump`, Titel in der Systemsprache, Darstellung im Store für alle Nutzer, Zahnrad nur Admins |
 | Options-Flow | Menü „Bus und Abfrage“ / „Dashboard“, jeder Punkt speichert für sich |
 | Reihenfolge Info-Box | Reihenfolge der Auswahl (SelectSelector `multiple`, Dropdown); `reorder`, sobald core es erlaubt (offen) |

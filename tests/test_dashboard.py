@@ -145,6 +145,10 @@ async def test_entities_can_first(
     result = await _entities(hass, hass_ws_client)
     entities = result["entities"]
     assert entities["tv"] == _entity_id(hass, "can", "tv")
+    # The UART readings of TV, TVBH and TR are shown as second line.
+    assert entities["tv_uart"] == _entity_id(hass, "uart", "tv")
+    assert entities["tvbh_uart"] == _entity_id(hass, "uart", "tv_bh")
+    assert entities["tr_uart"] == _entity_id(hass, "uart", "tr")
     assert entities["thermal_power"] == _entity_id(hass, "can", "thermal_power")
     assert entities["fan_speed"] == _entity_id(hass, "uart", "fan_speed")
     assert "cop" not in entities
@@ -168,7 +172,10 @@ async def test_entities_disabled_can_uses_uart(
     )
     entities = (await _entities(hass, hass_ws_client))["entities"]
     assert entities["tv"] == _entity_id(hass, "uart", "tv")
+    # Not shown twice: without the CAN reading there is no second line.
+    assert "tv_uart" not in entities
     assert entities["tr"] == _entity_id(hass, "can", "tr")
+    assert entities["tr_uart"] == _entity_id(hass, "uart", "tr")
 
 
 async def test_entities_both_disabled(
@@ -186,6 +193,7 @@ async def test_entities_both_disabled(
         )
     entities = (await _entities(hass, hass_ws_client))["entities"]
     assert "tv" not in entities
+    assert "tv_uart" not in entities
 
 
 async def test_entities_unavailable_can_stays(
@@ -210,6 +218,7 @@ async def test_entities_uart_only(
     await _setup(hass, uart=uart_esp)
     entities = (await _entities(hass, hass_ws_client))["entities"]
     assert entities["tv"] == _entity_id(hass, "uart", "tv")
+    assert "tv_uart" not in entities
     assert "error_code" not in entities
 
 

@@ -63,6 +63,7 @@ describe("info and prefix texts", () => {
 const STATES: HassEntity[] = [
   entity("sensor.tv", "31.25", { unit_of_measurement: "°C" }),
   entity("sensor.tr", "27", { unit_of_measurement: "°C" }),
+  entity("sensor.tr_uart", "27.4", { unit_of_measurement: "°C" }),
   entity("sensor.error", "no_error"),
   entity("select.mode", "heating"),
   entity("sensor.power", "4.2", { unit_of_measurement: "kW" }),
@@ -78,6 +79,7 @@ const STATES: HassEntity[] = [
 const ENTITIES = {
   tv: "sensor.tv",
   tr: "sensor.tr",
+  tr_uart: "sensor.tr_uart",
   error_code: "sensor.error",
   operating_mode: "select.mode",
   thermal_power: "sensor.power",
@@ -115,6 +117,17 @@ describe("schema", () => {
       (t) => t.textContent,
     );
     expect(labels).toContain("Vorlauf");
+  });
+
+  it("shows the UART reading below the CAN reading", () => {
+    const schema = render();
+    expect(byId(schema, "return_flow_can_value_text").textContent).toBe(
+      "27,0 °C",
+    );
+    const uart = byId(schema, "return_flow_uart_value_text");
+    expect(uart.textContent).toBe("27,4 °C");
+    expect(uart.getAttribute("data-entity")).toBe("sensor.tr_uart");
+    expect(hidden(byId(schema, "return_flow_uart_value"))).toBe(false);
   });
 
   it("hides rows and boxes without a value", () => {

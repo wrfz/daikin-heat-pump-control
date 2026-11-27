@@ -20,6 +20,9 @@ class BusValue:
     id: str
     can: str | None = None
     uart: str | None = None
+    # A second line of the value `second_to`: the UART reading, shown only
+    # while `second_to` comes from CAN, so that a value is never shown twice.
+    second_to: str | None = None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -39,6 +42,9 @@ BUS_VALUES: Final[tuple[BusValue, ...]] = (
     BusValue(id="tv", can="tv", uart="tv"),
     BusValue(id="tr", can="tr", uart="tr"),
     BusValue(id="tvbh", can="tvbh", uart="tv_bh"),
+    BusValue(id="tv_uart", uart="tv", second_to="tv"),
+    BusValue(id="tr_uart", uart="tr", second_to="tr"),
+    BusValue(id="tvbh_uart", uart="tv_bh", second_to="tvbh"),
     BusValue(
         id="target_supply_temperature",
         can="target_supply_temperature",
@@ -139,9 +145,14 @@ def dashboard_entities(hass: HomeAssistant, entry: ConfigEntry) -> dict[str, str
     can = _bus_entities(hass, entry, Bus.CAN)
     uart = _bus_entities(hass, entry, Bus.UART)
     entities: dict[str, str] = {}
+    from_can: set[str] = set()
     for value in BUS_VALUES:
-        if value.can is not None and value.can in can:
+        if value.second_to is not None:
+            if value.second_to in from_can and value.uart in uart:
+                entities[value.id] = uart[value.uart]
+        elif value.can is not None and value.can in can:
             entities[value.id] = can[value.can]
+            from_can.add(value.id)
         elif value.uart is not None and value.uart in uart:
             entities[value.id] = uart[value.uart]
     for external in EXTERNAL_VALUES:
