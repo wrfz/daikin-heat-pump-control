@@ -155,6 +155,17 @@ class CanScheduler:
 
     def reset(self) -> None:
         """Forget all times and fail all writes, e.g. after the connection was lost."""
+        self.release("the bus is unavailable")
+        for slot in self._slots.values():
+            slot.last_answer = None
+            slot.last_request = None
+
+    def release(self, reason: str) -> None:
+        """Drop the open request and fail all writes; keep the times.
+
+        Used when another instance became the master: it polls from now on,
+        and the answers keep coming.
+        """
         outcomes = [(job, Outcome(sent=False)) for job in self._jobs]
         self._jobs.clear()
         if (request := self._open) is not None and request.job is not None:
@@ -163,13 +174,11 @@ class CanScheduler:
             )
             outcomes.insert(0, (request.job, Outcome(sent=sent)))
         self._open = None
-        for slot in self._slots.values():
-            slot.last_answer = None
-            slot.last_request = None
         if dropped := [item for item in outcomes if not item[0].cancelled]:
             _LOGGER.warning(
-                "Dropped %d CAN write(s) because the bus is unavailable: %s",
+                "Dropped %d CAN write(s) because %s: %s",
                 len(dropped),
+                reason,
                 ", ".join(job.key for job, _ in dropped),
             )
             for job, outcome in dropped:

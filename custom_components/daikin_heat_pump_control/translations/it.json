@@ -30,7 +30,7 @@
           "can_node": "Nodo collegato al bus CAN del regolatore RoCon.",
           "uart_node": "Nodo collegato al connettore X10A dell'unità interna."
         },
-        "description": "Assegna un nodo a ciascun bus. I nodi contrassegnati con * usano ancora il firmware precedente; i loro bus si avviano non appena viene installato il firmware bridge.",
+        "description": "Assegnare un nodo a ogni bus. I nodi contrassegnati con * usano ancora il firmware precedente o un firmware bridge più vecchio; i loro bus si avviano non appena viene installato il firmware bridge attuale.",
         "title": "Assegna nodi"
       },
       "discovery_assign": {
@@ -994,6 +994,9 @@
     "no_can_bus": {
       "message": "Nessun bus CAN configurato."
     },
+    "not_master": {
+      "message": "Un'altra istanza di Home Assistant controlla la pompa di calore; questa mostra solo i valori. Renderla master nella dashboard della pompa di calore."
+    },
     "raw_not_sent": {
       "message": "Il frame CAN non è stato inviato."
     },
@@ -1017,6 +1020,10 @@
     }
   },
   "issues": {
+    "bridge_firmware_outdated": {
+      "title": "Aggiornare il firmware bridge su {name}",
+      "description": "Il nodo {name} ({host}) usa il firmware bridge {version}; questa versione dell'integrazione richiede {required} o successivo. I suoi bus restano non disponibili finché non viene installato il firmware bridge attuale."
+    },
     "no_bridge_firmware": {
       "description": "Il nodo {name} ({host}) non usa il firmware bridge Daikin; i suoi bus restano non disponibili. Installa uno degli esempi di firmware bridge. L'integrazione ricontrolla a ogni riconnessione.",
       "title": "{name} non usa il firmware bridge"
@@ -1033,6 +1040,7 @@
           "max_spread_tvbh_tr": "Differenza max. TVBH − TR",
           "max_spread_tvbh_tv": "Differenza max. TVBH − TV",
           "outdoor_unit": "Unità esterna",
+          "preferred_master": "Master preferito",
           "scan_interval": "Intervallo di interrogazione",
           "tr_offset": "Offset TR",
           "tv_offset": "Offset TV",
@@ -1047,6 +1055,7 @@
           "max_spread_tvbh_tr": "Con la valvola di bypass al 100 % e oltre 600 L/h, una differenza maggiore per 10 minuti segnala la valvola di bypass come guasta.",
           "max_spread_tvbh_tv": "Con il miscelatore ACS a 0 % e oltre 600 L/h, una differenza maggiore per 10 minuti segnala la valvola a 3 vie come guasta.",
           "outdoor_unit": "Modello dell'unità esterna; determina il refrigerante e la disposizione dei registri.",
+          "preferred_master": "Diventare il master dei bridge dopo ogni connessione. Per l'istanza principale di Home Assistant quando più istanze usano gli stessi bridge; lasciarlo disattivato nelle altre.",
           "scan_interval": "Intervallo in secondi per tutti i valori CAN senza intervallo di gruppo.",
           "tr_offset": "Correzione di TR per i controlli delle valvole del codice errore.",
           "tv_offset": "Correzione di TV per i controlli delle valvole del codice errore.",

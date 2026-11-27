@@ -108,13 +108,34 @@ def test_can_bridge_buffers() -> None:
     """Full buffers count overflows and dropped frames."""
     clock = Clock()
     bridge = CanBridge(_heat_pump(), clock, rx_capacity=2, tx_capacity=1)
+    bridge.register("sim")
     for i in range(3):
         bridge.inject(SimCanFrame(0x10A, bytes((0x31, 0, 0x28, 0, 0, 0, i))))
     result = bridge.exchange(["680#3100FAC0FC0000", "680#31002800000000"])
     assert result["dropped"] == 1
     assert result["overflows"] >= 1
     assert len(result["rx"]) == 2
-    assert bridge.status()["overflows"] == result["overflows"]
+    assert bridge.overflows == result["overflows"]
+
+
+def test_can_bridge_clients() -> None:
+    """Every client reads all frames; only the master sends."""
+    clock = Clock()
+    bridge = CanBridge(_heat_pump(), clock)
+    bridge.register("a")
+    bridge.register("b")
+    result = bridge.exchange(["680#3100FAC0FC0000"], "b", master=False)
+    assert result["rejected"] == 1
+    assert result["tx"] == []
+    result = bridge.exchange(["680#3100FAC0FC0000"], "a")
+    assert result["tx"] == [[0, 0x680, "3100FAC0FC0000"]]
+    clock.now = 100
+    assert bridge.exchange([], "a")["rx"] == [[15, 0x180, "D200FAC0FC012C"]]
+    other = bridge.exchange([], "b", master=False)
+    assert other["rx"] == [[15, 0x180, "D200FAC0FC012C"]]
+    assert other["pending"] == 0
+    bridge.forget("b")
+    assert "b" not in bridge.readers.cursors
 
 
 def test_uart_protocol_i_and_s() -> None:
@@ -123,17 +144,19 @@ def test_uart_protocol_i_and_s() -> None:
     hp = HeatPump()
     hp.uart_registers[0x61] = bytes(range(12))
     bridge = UartBridge(hp, clock)
+    bridge.register("sim")
     result = bridge.exchange("0340615B")
     assert result["tx_t"] == 0
-    assert result["rx"] == ""
+    assert result["rx"] == []
     clock.now = 45
     first = bridge.exchange("")
-    assert first["rx_t"] == 40
-    assert first["rx"] == "40610E00010203"
+    assert first["rx"] == [[40, "40610E00010203", True]]
     clock.now = 100
     rest = bridge.exchange("")
-    assert first["rx"] + rest["rx"] == "40610E000102030405060708090A0B0E"
-    assert "rx_t" in rest
+    assert rest["rx"] == [[40, "0405060708090A0B0E", False]]
+    clock.now = 200
+    assert bridge.exchange("", "other", master=False)["rejected"] == 0
+    assert bridge.exchange("00", "other", master=False)["rejected"] == 1
 
     hp.uart_protocol = "S"
     hp.uart_registers[0x54] = bytes(16)
@@ -158,8 +181,9 @@ def test_uart_faults() -> None:
     hp.uart_protocol = "S"
     assert hp.handle_uart(bytes((0x03, 0x40, 0x10, 0xAC))) == UART_NAK
     bridge = UartBridge(hp, Clock(), capacity=4)
+    bridge.register("sim")
     bridge.exchange("0340109C" * 3)
     bridge.clock_ms = lambda: 1000
     result = bridge.exchange("")
-    assert result["rx"] == UART_NAK.hex().upper() * 2
+    assert "".join(piece[1] for piece in result["rx"]) == UART_NAK.hex().upper() * 2
     assert result["overflows"] == 2

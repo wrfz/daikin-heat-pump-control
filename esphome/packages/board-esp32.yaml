@@ -6,7 +6,7 @@ esphome:
   friendly_name: ${friendly_name}
   project:
     name: ${project_name}
-    version: "1.0.0"
+    version: "2.0.0"
 
 esp32:
   board: ${board}

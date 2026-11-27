@@ -74,5 +74,10 @@
   "card": {
     "name": "Pompa di calore Daikin",
     "description": "Schema della pompa di calore con tutti i valori dell'integrazione Daikin Heat Pump Control."
+  },
+  "master": {
+    "listening": "Un'altra istanza di Home Assistant controlla la pompa di calore; questa mostra solo i valori.",
+    "claim": "Diventa master",
+    "claim_error": "Questa istanza non è potuta diventare master."
   }
 }

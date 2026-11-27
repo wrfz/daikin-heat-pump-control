@@ -1,4 +1,4 @@
-# Bridge component and the action every bridge offers. Board independent.
+# Bridge component and the actions every bridge offers. Board independent.
 daikin_bridge:
   id: daikin_bridge_id
 
@@ -9,3 +9,10 @@ api:
       then:
         - api.respond:
             data: !lambda "id(daikin_bridge_id).info(root);"
+    - action: daikin_bridge_claim
+      supports_response: only
+      variables:
+        client: string
+      then:
+        - api.respond:
+            data: !lambda "id(daikin_bridge_id).claim(client, root);"

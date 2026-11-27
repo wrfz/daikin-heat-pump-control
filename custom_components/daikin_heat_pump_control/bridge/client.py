@@ -20,8 +20,10 @@ from aioesphomeapi import (
 )
 
 from ..const import (
+    ACTION_BRIDGE_CLAIM,
     ACTION_BRIDGE_INFO,
     ACTION_TIMEOUT,
+    ARG_CLIENT,
     BUS_EXCHANGE_ACTION,
     CLIENT_INFO,
     CONNECT_TIMEOUT,
@@ -57,6 +59,8 @@ class Firmware(StrEnum):
     """Firmware recognised on a node."""
 
     BRIDGE = "bridge"
+    # Bridge firmware without clients (one Home Assistant only); needs an update.
+    OUTDATED = "outdated"
     LEGACY = "legacy"
     OTHER = "other"
 
@@ -143,9 +147,17 @@ def _identify(
     noise_psk: str | None,
 ) -> NodeIdentity:
     if info is not None:
-        firmware = Firmware.BRIDGE
         buses = frozenset(
             bus for bus in info.buses if BUS_EXCHANGE_ACTION[bus] in services
+        )
+        firmware = (
+            Firmware.BRIDGE
+            if ACTION_BRIDGE_CLAIM in services
+            and all(
+                any(arg.name == ARG_CLIENT for arg in services[action].args)
+                for action in (BUS_EXCHANGE_ACTION[bus] for bus in buses)
+            )
+            else Firmware.OUTDATED
         )
     elif legacy := {
         bus for action, bus in LEGACY_MANIFEST_ACTIONS.items() if action in services

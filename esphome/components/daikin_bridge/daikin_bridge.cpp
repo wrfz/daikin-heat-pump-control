@@ -26,6 +26,13 @@ static constexpr uint32_t STATUS_POLL_INTERVAL = 100;
 // most about 40 bytes. More frames are reported with "more" and fetched by the
 // next call.
 static constexpr size_t MAX_FRAMES_PER_RESPONSE = 100;
+// UART bytes and pieces per response, within the same limit.
+static constexpr size_t MAX_UART_BYTES_PER_RESPONSE = 1024;
+static constexpr size_t MAX_UART_PIECES_PER_RESPONSE = 32;
+static constexpr size_t MAX_UART_PIECES = 64;
+// A client that does not call for this long is gone.
+static constexpr uint32_t CLIENT_TIMEOUT = 3000;
+static constexpr size_t CLIENT_ID_MAX = 32;
 
 static int hex_value(char ch) {
   if (ch >= '0' && ch <= '9')
@@ -99,6 +106,7 @@ void DaikinBridge::setup() {
 }
 
 void DaikinBridge::loop() {
+  this->expire_clients_();
 #ifdef USE_DAIKIN_BRIDGE_CAN
   this->can_send_if_quiet_();
   this->can_poll_status_();
@@ -132,6 +140,7 @@ void DaikinBridge::info(JsonObject root) {
   buses.add("uart");
 #endif
   root["uptime"] = static_cast<uint32_t>(millis_64() / 1000);
+  root["clients"] = this->client_count_();
 #ifdef USE_ESP32
   root["heap_free"] = static_cast<uint32_t>(heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
   root["heap_max_block"] = static_cast<uint32_t>(heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
@@ -155,7 +164,6 @@ void DaikinBridge::info(JsonObject root) {
 #ifdef USE_DAIKIN_BRIDGE_CAN
   JsonObject can = root["can"].to<JsonObject>();
   can["buffer"] = this->can_rx_.capacity();
-  can["overflows"] = this->can_rx_.overflows();
   can["state"] = this->can_state_();
   can["tx_errors"] = this->can_status_.tx_error_counter;
   can["rx_errors"] = this->can_status_.rx_error_counter;
@@ -167,8 +175,109 @@ void DaikinBridge::info(JsonObject root) {
 #ifdef USE_DAIKIN_BRIDGE_UART
   JsonObject uart_info = root["uart"].to<JsonObject>();
   uart_info["buffer"] = this->uart_rx_.capacity();
-  uart_info["overflows"] = this->uart_rx_.overflows();
 #endif
+}
+
+
+Client *DaikinBridge::client_(const std::string &id, JsonObject root) {
+  if (id.empty() || id.size() > CLIENT_ID_MAX) {
+    root["error"] = "invalid_client";
+    return nullptr;
+  }
+  this->expire_clients_();
+  uint32_t now = millis();
+  for (auto &client : this->clients_) {
+    if (client.active && client.id == id) {
+      client.last_seen = now;
+      return &client;
+    }
+  }
+  for (size_t i = 0; i < this->clients_.size(); i++) {
+    Client &client = this->clients_[i];
+    if (client.active)
+      continue;
+    client = Client{};
+    client.active = true;
+    client.id = id;
+    client.last_seen = now;
+    client.order = this->next_order_++;
+#ifdef USE_DAIKIN_BRIDGE_CAN
+    client.can_cursor = this->can_rx_.end();
+#endif
+#ifdef USE_DAIKIN_BRIDGE_UART
+    client.uart_cursor = this->uart_rx_.end();
+#endif
+    ESP_LOGD(TAG, "Client %s registered", id.c_str());
+    if (this->master_ < 0)
+      this->set_master_(static_cast<int>(i));
+    return &client;
+  }
+  ESP_LOGW(TAG, "Client %s rejected: %u clients already", id.c_str(), static_cast<unsigned>(MAX_CLIENTS));
+  root["error"] = "too_many_clients";
+  return nullptr;
+}
+
+bool DaikinBridge::is_master_(const Client *client) const {
+  return this->master_ >= 0 && &this->clients_[this->master_] == client;
+}
+
+void DaikinBridge::set_master_(int index) {
+  if (index == this->master_)
+    return;
+  this->master_ = index;
+#ifdef USE_DAIKIN_BRIDGE_CAN
+  // Frames of the previous master are not sent anymore.
+  this->can_queue_.clear();
+  this->can_sent_.clear();
+#endif
+#ifdef USE_DAIKIN_BRIDGE_UART
+  this->uart_sent_ = true;
+#endif
+  if (index >= 0)
+    ESP_LOGI(TAG, "Client %s is the master", this->clients_[index].id.c_str());
+}
+
+void DaikinBridge::expire_clients_() {
+  uint32_t now = millis();
+  bool master_gone = false;
+  for (size_t i = 0; i < this->clients_.size(); i++) {
+    Client &client = this->clients_[i];
+    if (!client.active || now - client.last_seen <= CLIENT_TIMEOUT)
+      continue;
+    ESP_LOGD(TAG, "Client %s is gone", client.id.c_str());
+    client.active = false;
+    if (static_cast<int>(i) == this->master_)
+      master_gone = true;
+  }
+  if (!master_gone)
+    return;
+  this->set_master_(-1);
+  int next = -1;
+  for (size_t i = 0; i < this->clients_.size(); i++) {
+    const Client &client = this->clients_[i];
+    if (client.active && (next < 0 || client.order < this->clients_[next].order))
+      next = static_cast<int>(i);
+  }
+  this->set_master_(next);
+}
+
+size_t DaikinBridge::client_count_() const {
+  return std::count_if(this->clients_.begin(), this->clients_.end(),
+                       [](const Client &client) { return client.active; });
+}
+
+void DaikinBridge::report_client_(const Client *client, bool master, JsonObject root) const {
+  root["master"] = master;
+  root["clients"] = this->client_count_();
+  root["rejected"] = client->rejected;
+}
+
+void DaikinBridge::claim(const std::string &client, JsonObject root) {
+  Client *caller = this->client_(client, root);
+  if (caller == nullptr)
+    return;
+  this->set_master_(static_cast<int>(caller - this->clients_.data()));
+  this->report_client_(caller, true, root);
 }
 
 #ifdef USE_DAIKIN_BRIDGE_CAN
@@ -226,8 +335,9 @@ void DaikinBridge::can_send_if_quiet_() {
   this->last_bus_activity_ = now;
 }
 
-void DaikinBridge::can_report_(JsonObject root) {
+void DaikinBridge::can_report_(Client *client, bool master, JsonObject root) {
   root["now"] = millis();
+  this->report_client_(client, master, root);
   auto add = [](JsonArray list, const TimedFrame &frame) {
     JsonArray item = list.add<JsonArray>();
     item.add(frame.time);
@@ -236,15 +346,20 @@ void DaikinBridge::can_report_(JsonObject root) {
     append_hex(data, frame.data, frame.length);
     item.add(data);
   };
+  client->can_overflows += this->can_rx_.catch_up(client->can_cursor);
   JsonArray rx = root["rx"].to<JsonArray>();
-  this->can_rx_.drain([&](const TimedFrame &frame) { add(rx, frame); }, MAX_FRAMES_PER_RESPONSE);
+  uint64_t end = this->can_rx_.end();
+  for (size_t count = 0; client->can_cursor < end && count < MAX_FRAMES_PER_RESPONSE; count++)
+    add(rx, this->can_rx_.at(client->can_cursor++));
   JsonArray tx = root["tx"].to<JsonArray>();
-  for (const auto &frame : this->can_sent_)
-    add(tx, frame);
-  this->can_sent_.clear();
-  root["more"] = this->can_rx_.size() > 0;
-  root["pending"] = this->can_queue_.size();
-  root["overflows"] = this->can_rx_.overflows();
+  if (master) {
+    for (const auto &frame : this->can_sent_)
+      add(tx, frame);
+    this->can_sent_.clear();
+  }
+  root["more"] = client->can_cursor < end;
+  root["pending"] = master ? this->can_queue_.size() : 0;
+  root["overflows"] = client->can_overflows;
   root["dropped"] = this->can_dropped_;
 }
 
@@ -273,22 +388,33 @@ const char *DaikinBridge::can_state_() const {
 void DaikinBridge::uart_read_() {
   uint8_t byte;
   while (this->uart_->available() > 0 && this->uart_->read_byte(&byte)) {
-    if (!this->uart_rx_time_set_) {
-      this->uart_rx_time_ = millis();
-      this->uart_rx_time_set_ = true;
+    if (this->uart_pieces_.empty() || this->uart_sent_) {
+      this->uart_pieces_.push_back(UartPiece{this->uart_rx_.end(), millis(), this->uart_sent_});
+      this->uart_sent_ = false;
     }
     this->uart_rx_.push(byte);
   }
+  // Keep the piece the oldest buffered byte belongs to, and a bounded number.
+  while (this->uart_pieces_.size() > 1 &&
+         (this->uart_pieces_[1].start <= this->uart_rx_.begin() || this->uart_pieces_.size() > MAX_UART_PIECES))
+    this->uart_pieces_.pop_front();
 }
 
-void DaikinBridge::uart_exchange(const std::string &data, JsonObject root) {
+void DaikinBridge::uart_exchange(const std::string &client, const std::string &data, JsonObject root) {
   this->uart_read_();
-  uint8_t buffer[64];
-  size_t count = 0;
+  Client *caller = this->client_(client, root);
+  if (caller == nullptr)
+    return;
+  bool master = this->is_master_(caller);
   bool sent = false;
-  if (!data.empty()) {
+  if (!data.empty() && !master) {
+    caller->rejected++;
+  } else if (!data.empty()) {
+    uint8_t buffer[64];
+    size_t count = 0;
     if (parse_hex(data.c_str(), data.size(), buffer, sizeof(buffer), &count)) {
       this->uart_->write_array(buffer, count);
+      this->uart_sent_ = true;
       sent = true;
     } else {
       ESP_LOGW(TAG, "Invalid UART data '%s'", data.c_str());
@@ -296,15 +422,43 @@ void DaikinBridge::uart_exchange(const std::string &data, JsonObject root) {
   }
   uint32_t now = millis();
   root["now"] = now;
-  std::string rx;
-  this->uart_rx_.drain([&](const uint8_t &value) { append_hex(rx, &value, 1); });
-  root["rx"] = rx;
-  if (this->uart_rx_time_set_ && !rx.empty())
-    root["rx_t"] = this->uart_rx_time_;
-  this->uart_rx_time_set_ = false;
   if (sent)
     root["tx_t"] = now;
-  root["overflows"] = this->uart_rx_.overflows();
+  this->uart_report_(caller, master, root);
+}
+
+void DaikinBridge::uart_report_(Client *client, bool master, JsonObject root) {
+  this->report_client_(client, master, root);
+  client->uart_overflows += this->uart_rx_.catch_up(client->uart_cursor);
+  JsonArray rx = root["rx"].to<JsonArray>();
+  uint64_t end = this->uart_rx_.end();
+  size_t bytes = 0;
+  size_t pieces = 0;
+  for (size_t i = 0; i < this->uart_pieces_.size() && client->uart_cursor < end; i++) {
+    const UartPiece &piece = this->uart_pieces_[i];
+    uint64_t piece_end = i + 1 < this->uart_pieces_.size() ? this->uart_pieces_[i + 1].start : end;
+    if (piece_end <= client->uart_cursor)
+      continue;
+    if (bytes >= MAX_UART_BYTES_PER_RESPONSE || pieces >= MAX_UART_PIECES_PER_RESPONSE)
+      break;
+    // Bytes before the first kept piece belong to it.
+    uint64_t from = std::max(client->uart_cursor, i == 0 ? client->uart_cursor : piece.start);
+    uint64_t to = std::min<uint64_t>(piece_end, from + (MAX_UART_BYTES_PER_RESPONSE - bytes));
+    std::string hex;
+    for (uint64_t seq = from; seq < to; seq++) {
+      uint8_t value = this->uart_rx_.at(seq);
+      append_hex(hex, &value, 1);
+    }
+    JsonArray item = rx.add<JsonArray>();
+    item.add(piece.time);
+    item.add(hex);
+    item.add(piece.fresh && from == piece.start);
+    bytes += to - from;
+    pieces++;
+    client->uart_cursor = to;
+  }
+  root["more"] = client->uart_cursor < end;
+  root["overflows"] = client->uart_overflows;
 }
 #endif
 

@@ -2,8 +2,9 @@
 
 The server implements the server side of the native API (plaintext and
 Noise_NNpsk0_25519_ChaChaPoly_SHA256) so that the integration connects with
-the real aioesphomeapi client. It offers the bridge actions, the manifest
-action of the previous firmware, or nothing at all.
+the real aioesphomeapi client. It offers the bridge actions (with the clients
+and the master of the real firmware), those of the first bridge version
+without clients, the manifest action of the previous firmware, or nothing.
 """
 
 import asyncio
@@ -21,7 +22,7 @@ from aioesphomeapi.core import MESSAGE_TYPE_TO_PROTO
 from google.protobuf import message
 from noise.connection import NoiseConnection
 
-from .bridge import CanBridge, UartBridge
+from .bridge import DEFAULT_CLIENT, CanBridge, UartBridge
 from .heat_pump import HeatPump
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,6 +37,7 @@ ARG_STRING_ARRAY = 7
 SUPPORTS_RESPONSE_OPTIONAL = 1
 
 FIRMWARE_BRIDGE = "bridge"
+FIRMWARE_BRIDGE_V1 = "bridge_v1"
 FIRMWARE_LEGACY_CAN = "legacy_can"
 FIRMWARE_LEGACY_UART = "legacy_uart"
 FIRMWARE_OTHER = "other"
@@ -76,6 +78,81 @@ class _Action:
     name: str
     args: list[tuple[str, int]]
     handler: Callable[[dict[str, Any]], dict[str, Any]]
+
+
+CLIENT_TIMEOUT_MS = 3000
+MAX_CLIENTS = 4
+CLIENT_ID_MAX = 32
+
+
+@dataclass(slots=True)
+class _Client:
+    last_seen: int
+    rejected: int = 0
+
+
+class Clients:
+    """Clients of the bridge and the master, as the firmware keeps them."""
+
+    def __init__(
+        self, clock_ms: Callable[[], int], buses: list[CanBridge | UartBridge]
+    ) -> None:
+        """Initialize the table."""
+        self.clock_ms = clock_ms
+        self.buses = buses
+        # Insertion order is the order of registration.
+        self.clients: dict[str, _Client] = {}
+        self.master: str | None = None
+        self.claims: list[str] = []
+
+    def expire(self) -> None:
+        """Remove clients that did not call for too long."""
+        now = self.clock_ms()
+        gone = [
+            client_id
+            for client_id, client in self.clients.items()
+            if now - client.last_seen > CLIENT_TIMEOUT_MS
+        ]
+        for client_id in gone:
+            del self.clients[client_id]
+            for bus in self.buses:
+                bus.forget(client_id)
+        if self.master in gone:
+            self.set_master(next(iter(self.clients), None))
+
+    def set_master(self, client_id: str | None) -> None:
+        """Make a client the master."""
+        if client_id == self.master:
+            return
+        self.master = client_id
+        for bus in self.buses:
+            bus.master_changed()
+
+    def touch(self, client_id: str) -> _Client | str:
+        """Find or register a client; return an error text on failure."""
+        if not client_id or len(client_id) > CLIENT_ID_MAX:
+            return "invalid_client"
+        self.expire()
+        now = self.clock_ms()
+        if (client := self.clients.get(client_id)) is not None:
+            client.last_seen = now
+            return client
+        if len(self.clients) >= MAX_CLIENTS:
+            return "too_many_clients"
+        client = self.clients[client_id] = _Client(last_seen=now)
+        for bus in self.buses:
+            bus.register(client_id)
+        if self.master is None:
+            self.set_master(client_id)
+        return client
+
+    def report(self, client_id: str, client: _Client) -> dict[str, Any]:
+        """Return the client fields of an answer."""
+        return {
+            "master": client_id == self.master,
+            "clients": len(self.clients),
+            "rejected": client.rejected,
+        }
 
 
 @dataclass(slots=True)
@@ -299,7 +376,7 @@ class SimulatedEsp:
         clock: Callable[[], float] = time.monotonic,
         friendly_name: str = "",
         esphome_version: str = "2026.11.0",
-        bridge_version: str = "1.0.0",
+        bridge_version: str = "2.0.0",
     ) -> None:
         """Initialize the node."""
         self.name = name
@@ -314,6 +391,9 @@ class SimulatedEsp:
         self._boot = clock()
         self.can = CanBridge(self.heat_pump, self.clock_ms) if can else None
         self.uart = UartBridge(self.heat_pump, self.clock_ms) if uart else None
+        self.clients = Clients(
+            self.clock_ms, [bus for bus in (self.can, self.uart) if bus is not None]
+        )
         self.stats = Stats()
         self.action_hook: Callable[[str, dict[str, Any]], bool] | None = None
         self.info_overrides: dict[str, Any] = {}
@@ -328,7 +408,7 @@ class SimulatedEsp:
     @property
     def project_name(self) -> str:
         """Return the ESPHome project name of the firmware."""
-        if self.firmware != FIRMWARE_BRIDGE:
+        if self.firmware not in (FIRMWARE_BRIDGE, FIRMWARE_BRIDGE_V1):
             return "" if self.firmware == FIRMWARE_OTHER else "wrfz.daikin_rotex"
         buses = "_".join(
             bus for bus, on in (("can", self.can), ("uart", self.uart)) if on
@@ -338,6 +418,8 @@ class SimulatedEsp:
     @property
     def project_version(self) -> str:
         """Return the ESPHome project version of the firmware."""
+        if self.firmware == FIRMWARE_BRIDGE_V1:
+            return "1.0.0"
         return self.bridge_version if self.firmware == FIRMWARE_BRIDGE else ""
 
     def clock_ms(self) -> int:
@@ -354,24 +436,57 @@ class SimulatedEsp:
             actions.append(
                 _Action(0, "daikin_bridge_info", [], lambda _: self.bridge_info())
             )
+            actions.append(
+                _Action(
+                    0,
+                    "daikin_bridge_claim",
+                    [("client", ARG_STRING)],
+                    lambda args: self.claim(args["client"]),
+                )
+            )
             if self.can is not None:
-                can = self.can
+                actions.append(
+                    _Action(
+                        0,
+                        "daikin_can_exchange",
+                        [("client", ARG_STRING), ("frames", ARG_STRING_ARRAY)],
+                        lambda args: self.can_exchange(args["client"], args["frames"]),
+                    )
+                )
+            if self.uart is not None:
+                actions.append(
+                    _Action(
+                        0,
+                        "daikin_uart_exchange",
+                        [("client", ARG_STRING), ("data", ARG_STRING)],
+                        lambda args: self.uart_exchange(args["client"], args["data"]),
+                    )
+                )
+        elif self.firmware == FIRMWARE_BRIDGE_V1:
+            actions.append(
+                _Action(
+                    0,
+                    "daikin_bridge_info",
+                    [],
+                    lambda _: {**self.bridge_info(), "bridge": "1.0.0"},
+                )
+            )
+            if self.can is not None:
                 actions.append(
                     _Action(
                         0,
                         "daikin_can_exchange",
                         [("frames", ARG_STRING_ARRAY)],
-                        lambda args: can.exchange(args["frames"]),
+                        lambda args: self.can_exchange(DEFAULT_CLIENT, args["frames"]),
                     )
                 )
             if self.uart is not None:
-                uart = self.uart
                 actions.append(
                     _Action(
                         0,
                         "daikin_uart_exchange",
                         [("data", ARG_STRING)],
-                        lambda args: uart.exchange(args["data"]),
+                        lambda args: self.uart_exchange(DEFAULT_CLIENT, args["data"]),
                     )
                 )
         elif self.firmware == FIRMWARE_LEGACY_CAN:
@@ -395,9 +510,54 @@ class SimulatedEsp:
         self.firmware = firmware
         self.actions = self._build_actions()
 
+    def _advance(self) -> None:
+        for bus in (self.can, self.uart):
+            if bus is not None:
+                bus.advance()
+
+    def _client(self, client_id: str) -> tuple[str, Any]:
+        """Run the bus up to now, then find or register the client."""
+        self._advance()
+        return client_id, self.clients.touch(client_id)
+
+    def claim(self, client_id: str) -> dict[str, Any]:
+        """Run `daikin_bridge_claim`."""
+        client_id, client = self._client(client_id)
+        if isinstance(client, str):
+            return {"error": client}
+        self.clients.claims.append(client_id)
+        self.clients.set_master(client_id)
+        return self.clients.report(client_id, client)
+
+    def can_exchange(self, client_id: str, frames: list[str]) -> dict[str, Any]:
+        """Run `daikin_can_exchange`."""
+        assert self.can is not None
+        client_id, client = self._client(client_id)
+        if isinstance(client, str):
+            return {"error": client}
+        result = self.can.exchange(
+            frames, client_id, master=client_id == self.clients.master
+        )
+        client.rejected += result.pop("rejected")
+        return {**result, **self.clients.report(client_id, client)}
+
+    def uart_exchange(self, client_id: str, data: str) -> dict[str, Any]:
+        """Run `daikin_uart_exchange`."""
+        assert self.uart is not None
+        client_id, client = self._client(client_id)
+        if isinstance(client, str):
+            return {"error": client}
+        result = self.uart.exchange(
+            data, client_id, master=client_id == self.clients.master
+        )
+        client.rejected += result.pop("rejected")
+        return {**result, **self.clients.report(client_id, client)}
+
     def bridge_info(self) -> dict[str, Any]:
         """Return the answer of `daikin_bridge_info`."""
         buses = [bus for bus, on in (("can", self.can), ("uart", self.uart)) if on]
+        self._advance()
+        self.clients.expire()
         info: dict[str, Any] = {
             "bridge": self.bridge_version,
             "esphome": self.esphome_version,
@@ -407,9 +567,9 @@ class SimulatedEsp:
             "heap_max_block": 110000,
             "reset_reason": "Power on",
             "wifi": {"rssi": -61, "ssid": "home", "ip": "192.168.0.50"},
+            "clients": len(self.clients.clients),
         }
         if self.can is not None:
-            self.can.advance()
             info["can"] = self.can.status()
         if self.uart is not None:
             info["uart"] = self.uart.status()
@@ -459,6 +619,7 @@ class SimulatedEsp:
 
 __all__ = [
     "FIRMWARE_BRIDGE",
+    "FIRMWARE_BRIDGE_V1",
     "FIRMWARE_LEGACY_CAN",
     "FIRMWARE_LEGACY_UART",
     "FIRMWARE_OTHER",

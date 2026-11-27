@@ -8,7 +8,8 @@ api:
     - action: daikin_can_exchange
       supports_response: only
       variables:
+        client: string
         frames: string[]
       then:
         - api.respond:
-            data: !lambda "id(daikin_bridge_id).can_exchange(frames, root);"
+            data: !lambda "id(daikin_bridge_id).can_exchange(client, frames, root);"

@@ -30,7 +30,7 @@
           "can_node": "Knoten am CAN-Bus des RoCon-Reglers.",
           "uart_node": "Knoten am X10A-Stecker des Innengeräts."
         },
-        "description": "Jedem Bus einen Knoten zuweisen. Mit * markierte Knoten laufen noch mit der bisherigen Firmware; ihre Busse starten, sobald die Bridge-Firmware geflasht ist.",
+        "description": "Jedem Bus einen Knoten zuweisen. Mit * markierte Knoten laufen noch mit der bisherigen Firmware oder einer älteren Bridge-Firmware; ihre Busse starten, sobald die aktuelle Bridge-Firmware geflasht ist.",
         "title": "Knoten zuweisen"
       },
       "discovery_assign": {
@@ -994,6 +994,9 @@
     "no_can_bus": {
       "message": "Es ist kein CAN-Bus eingerichtet."
     },
+    "not_master": {
+      "message": "Eine andere Home-Assistant-Instanz steuert die Wärmepumpe; diese zeigt nur die Werte an. Im Wärmepumpen-Dashboard zum Master machen."
+    },
     "raw_not_sent": {
       "message": "Der CAN-Frame wurde nicht gesendet."
     },
@@ -1017,6 +1020,10 @@
     }
   },
   "issues": {
+    "bridge_firmware_outdated": {
+      "title": "Bridge-Firmware auf {name} aktualisieren",
+      "description": "Auf dem Knoten {name} ({host}) läuft die Bridge-Firmware {version}; diese Version der Integration braucht {required} oder neuer. Seine Busse bleiben nicht verfügbar, bis die aktuelle Bridge-Firmware geflasht ist."
+    },
     "no_bridge_firmware": {
       "description": "Auf dem Knoten {name} ({host}) läuft nicht die Daikin-Bridge-Firmware; seine Busse bleiben nicht verfügbar. Eines der Bridge-Firmware-Beispiele flashen. Die Integration prüft bei jeder Wiederverbindung erneut.",
       "title": "Auf {name} läuft nicht die Bridge-Firmware"
@@ -1033,6 +1040,7 @@
           "max_spread_tvbh_tr": "Max. Differenz TVBH − TR",
           "max_spread_tvbh_tv": "Max. Differenz TVBH − TV",
           "outdoor_unit": "Außengerät",
+          "preferred_master": "Bevorzugter Master",
           "scan_interval": "Abfrageintervall",
           "tr_offset": "Offset TR",
           "tv_offset": "Offset TV",
@@ -1047,6 +1055,7 @@
           "max_spread_tvbh_tr": "Bei Bypassventil 100 % und mehr als 600 L/h meldet eine größere Differenz über 10 Minuten das Bypassventil als defekt.",
           "max_spread_tvbh_tv": "Bei Mischer Warmwasser 0 % und mehr als 600 L/h meldet eine größere Differenz über 10 Minuten das 3-Wege-Ventil als defekt.",
           "outdoor_unit": "Modell des Außengeräts; bestimmt Kältemittel und Registeraufbau.",
+          "preferred_master": "Nach jedem Verbinden Master der Bridges werden. Für die Haupt-Instanz von Home Assistant, wenn mehrere Instanzen dieselben Bridges nutzen; in den anderen aus lassen.",
           "scan_interval": "Intervall in Sekunden für alle CAN-Werte ohne Gruppenintervall.",
           "tr_offset": "Korrektur von TR für die Ventilprüfungen des Fehlercodes.",
           "tv_offset": "Korrektur von TV für die Ventilprüfungen des Fehlercodes.",

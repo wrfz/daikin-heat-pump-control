@@ -24,6 +24,8 @@ def _node_diagnostics(node: BridgeNode) -> dict[str, Any]:
         else None,
         "connect_count": node.connect_count,
         "last_error": node.last_error,
+        "master": node.master,
+        "clients": node.clients,
         "identity": None
         if identity is None
         else {

@@ -5,6 +5,7 @@ from collections.abc import Callable
 from datetime import datetime, timedelta
 from enum import StrEnum
 import logging
+import secrets
 from typing import TYPE_CHECKING, Any, override
 
 from aioesphomeapi import APIClient, UserService
@@ -15,12 +16,17 @@ from homeassistant.helpers.event import async_call_later, async_track_time_inter
 from homeassistant.util import dt as dt_util
 
 from ..const import (
+    ACTION_BRIDGE_CLAIM,
     ACTION_BRIDGE_INFO,
+    ARG_CLIENT,
     BUS_EXCHANGE_ACTION,
+    CONF_PREFERRED_MASTER,
     DOMAIN,
     EXCHANGE_INTERVAL,
     INFO_INTERVAL,
+    ISSUE_BRIDGE_FIRMWARE_OUTDATED,
     ISSUE_NO_BRIDGE_FIRMWARE,
+    MIN_BRIDGE_VERSION,
     RECONNECT_MAX_DELAY,
     RECONNECT_MIN_DELAY,
     Bus,
@@ -29,6 +35,7 @@ from .client import (
     BridgeActionError,
     BridgeAuthError,
     BridgeConnectionError,
+    BridgeError,
     BridgeWrongDeviceError,
     Firmware,
     NodeIdentity,
@@ -37,13 +44,16 @@ from .client import (
     async_read_info,
 )
 from .protocol import (
+    BridgeClientError,
     BridgeInfo,
     BridgeProtocolError,
     CanExchangeResult,
     CanFrame,
+    ClientStatus,
     EspClock,
     UartExchangeResult,
     parse_can_exchange,
+    parse_claim,
     parse_uart_exchange,
 )
 from .resolve import Target, async_targets
@@ -54,8 +64,20 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 RAW_HISTORY = 50
+CLIENT_ID_KEY = f"{DOMAIN}_client_id"
 BOOT_TIME_TOLERANCE = timedelta(seconds=30)
 CAN_TX_QUEUE = 16
+
+
+def client_id(hass: HomeAssistant) -> str:
+    """Return the id with which this Home Assistant run calls the bridges.
+
+    It stays the same across reconnections and reloads, so the bridge keeps
+    the master and the read position; a restart of Home Assistant gets a new
+    one.
+    """
+    value: str = hass.data.setdefault(CLIENT_ID_KEY, secrets.token_hex(8))
+    return value
 
 
 class NodeState(StrEnum):
@@ -138,10 +160,14 @@ class BusChannel:
         try:
             while True:
                 self._again = False
-                request = self.build_request()
+                request = {ARG_CLIENT: self.node.client_id, **self.build_request()}
                 try:
                     data = await async_execute(client, service, request)
                     result = self.handle_response(data)
+                except BridgeClientError as err:
+                    self.errors += 1
+                    self.node.async_client_refused(err)
+                    return
                 except (BridgeActionError, BridgeProtocolError) as err:
                     self.errors += 1
                     _LOGGER.debug(
@@ -149,6 +175,7 @@ class BusChannel:
                     )
                     return
                 self.exchanges += 1
+                self.node.async_set_client_status(result.client)
                 for listener in list(self._listeners):
                     listener(result)
                 if (
@@ -255,9 +282,14 @@ class UartChannel(BusChannel):
         result = parse_uart_exchange(data)
         self.clock.extend(result.now)
         self.overflows = result.overflows
-        if result.received:
+        self._more = result.more
+        for piece in result.pieces:
             self.history.append(
-                {"t": result.received_at, "rx": result.received.hex().upper()}
+                {
+                    "t": piece.timestamp,
+                    "rx": piece.data.hex().upper(),
+                    "fresh": piece.fresh,
+                }
             )
         return result
 
@@ -308,6 +340,11 @@ class BridgeNode:
         self.connected_target: Target | None = None
         self.last_error: str | None = None
         self.connect_count = 0
+        # The bridge serves several clients and tells them apart by this id.
+        self.client_id = client_id(hass)
+        self.master = False
+        self.clients = 0
+        self._client_refused_logged = False
         self._client: APIClient | None = None
         self._services: dict[str, UserService] = {}
         self._listeners: list[CALLBACK_TYPE] = []
@@ -351,6 +388,56 @@ class BridgeNode:
     def issue_id(self) -> str:
         """Return the repair issue id of this node."""
         return f"{ISSUE_NO_BRIDGE_FIRMWARE}_{self.mac.replace(':', '')}"
+
+    @property
+    def outdated_issue_id(self) -> str:
+        """Return the repair issue id for an outdated bridge firmware."""
+        return f"{ISSUE_BRIDGE_FIRMWARE_OUTDATED}_{self.mac.replace(':', '')}"
+
+    @callback
+    def async_set_client_status(self, status: ClientStatus) -> None:
+        """Take what the bridge reported about this client."""
+        self._client_refused_logged = False
+        if (status.master, status.clients) == (self.master, self.clients):
+            return
+        if status.master != self.master:
+            if status.master:
+                _LOGGER.info("%s: this instance is the master", self.title)
+            else:
+                _LOGGER.info(
+                    "%s: another instance is the master; only listening", self.title
+                )
+        self.master = status.master
+        self.clients = status.clients
+        self._notify()
+
+    @callback
+    def async_client_refused(self, err: BridgeClientError) -> None:
+        """Log once that the bridge does not serve this client."""
+        if self._client_refused_logged:
+            _LOGGER.debug("%s: %s", self.title, err)
+            return
+        self._client_refused_logged = True
+        _LOGGER.warning("%s: %s", self.title, err)
+        if self.master:
+            self.master = False
+            self._notify()
+
+    async def async_claim(self) -> None:
+        """Become the master of the bridge."""
+        client = self._client
+        service = self._services.get(ACTION_BRIDGE_CLAIM)
+        if client is None or service is None or not self.bridge_ready:
+            raise BridgeActionError(f"{self.title} is not connected")
+        data = await async_execute(client, service, {ARG_CLIENT: self.client_id})
+        try:
+            status = parse_claim(data)
+        except BridgeProtocolError as err:
+            raise BridgeActionError(str(err)) from err
+        self.async_set_client_status(status)
+        # Take over the polling right away.
+        for channel in self.channels.values():
+            channel.async_request_exchange()
 
     @callback
     def async_add_listener(self, listener: CALLBACK_TYPE) -> CALLBACK_TYPE:
@@ -444,6 +531,9 @@ class BridgeNode:
     ) -> None:
         self._client = client
         self._services = services
+        self.master = False
+        self.clients = 0
+        self._client_refused_logged = False
         self.identity = identity
         self._async_set_info(identity.info)
         self.connected_target = target
@@ -476,7 +566,17 @@ class BridgeNode:
                     cancel_on_shutdown=True,
                 )
             )
+            if self.entry.options.get(CONF_PREFERRED_MASTER):
+                self.entry.async_create_task(
+                    self.hass, self._async_claim_preferred(), f"{DOMAIN} claim"
+                )
         self._notify()
+
+    async def _async_claim_preferred(self) -> None:
+        try:
+            await self.async_claim()
+        except BridgeError as err:
+            _LOGGER.warning("%s: could not become the master: %s", self.title, err)
 
     @callback
     def _async_store_target(self, target: Target) -> None:
@@ -508,6 +608,8 @@ class BridgeNode:
     def _async_check_firmware(self) -> None:
         identity = self.identity
         assert identity is not None
+        if identity.firmware is not Firmware.OUTDATED:
+            ir.async_delete_issue(self.hass, DOMAIN, self.outdated_issue_id)
         if identity.firmware is Firmware.BRIDGE:
             ir.async_delete_issue(self.hass, DOMAIN, self.issue_id)
             missing = self.assigned_buses - identity.buses
@@ -518,6 +620,32 @@ class BridgeNode:
                     ", ".join(sorted(missing)),
                 )
             self._missing_buses_logged = missing
+            return
+        if identity.firmware is Firmware.OUTDATED:
+            ir.async_delete_issue(self.hass, DOMAIN, self.issue_id)
+            version = identity.info.bridge_version if identity.info else ""
+            _LOGGER.warning(
+                "Node %s runs bridge firmware %s; %s or later is needed, its buses "
+                "stay unavailable",
+                self.title,
+                version,
+                MIN_BRIDGE_VERSION,
+            )
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                self.outdated_issue_id,
+                is_fixable=False,
+                is_persistent=False,
+                severity=ir.IssueSeverity.ERROR,
+                translation_key=ISSUE_BRIDGE_FIRMWARE_OUTDATED,
+                translation_placeholders={
+                    "name": identity.title,
+                    "host": identity.host,
+                    "version": version or "?",
+                    "required": MIN_BRIDGE_VERSION,
+                },
+            )
             return
         _LOGGER.warning(
             "Node %s does not run the bridge firmware; its buses stay unavailable",
@@ -542,6 +670,8 @@ class BridgeNode:
         self._async_cancel_timers()
         self._client = None
         self._services = {}
+        self.master = False
+        self.clients = 0
         for channel in self.channels.values():
             channel.reset()
         if self.state is NodeState.STOPPED:

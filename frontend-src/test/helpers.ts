@@ -24,6 +24,8 @@ export function entity(
 export interface MockHass extends HomeAssistant {
   calls: Record<string, unknown>[];
   events: ((event: unknown) => void)[];
+  /** Callbacks of `subscribeMessage`, by message type. */
+  subscriptions: Record<string, ((message: unknown) => void)[]>;
 }
 
 /** A Home Assistant object with states and canned WebSocket answers. */
@@ -34,9 +36,11 @@ export function mockHass(
 ): MockHass {
   const calls: Record<string, unknown>[] = [];
   const events: ((event: unknown) => void)[] = [];
+  const subscriptions: Record<string, ((message: unknown) => void)[]> = {};
   return {
     calls,
     events,
+    subscriptions,
     states: Object.fromEntries(states.map((s) => [s.entity_id, s])),
     locale: { language: options.language ?? "en" },
     themes: { darkMode: options.dark ?? false },
@@ -44,6 +48,16 @@ export function mockHass(
     connection: {
       subscribeEvents: (callback) => {
         events.push(callback);
+        return Promise.resolve(() => undefined);
+      },
+      subscribeMessage: <T>(
+        callback: (message: T) => void,
+        message: Record<string, unknown>,
+      ) => {
+        const type = message.type as string;
+        (subscriptions[type] ??= []).push(
+          callback as (message: unknown) => void,
+        );
         return Promise.resolve(() => undefined);
       },
     },

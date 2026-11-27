@@ -74,5 +74,10 @@
   "card": {
     "name": "Pompe à chaleur Daikin",
     "description": "Schéma de la pompe à chaleur avec toutes les valeurs de l'intégration Daikin Heat Pump Control."
+  },
+  "master": {
+    "listening": "Une autre instance de Home Assistant pilote la pompe à chaleur ; celle-ci affiche seulement les valeurs.",
+    "claim": "Devenir maître",
+    "claim_error": "Cette instance n'a pas pu devenir maître."
   }
 }

@@ -30,7 +30,7 @@
           "can_node": "Node connected to the CAN bus of the RoCon controller.",
           "uart_node": "Node connected to the X10A connector of the indoor unit."
         },
-        "description": "Assign a node to each bus. Nodes marked with * still run the previous firmware; their buses start as soon as the bridge firmware is flashed.",
+        "description": "Assign a node to each bus. Nodes marked with * still run the previous firmware or an older bridge firmware; their buses start as soon as the current bridge firmware is flashed.",
         "title": "Assign nodes"
       },
       "discovery_assign": {
@@ -994,6 +994,9 @@
     "no_can_bus": {
       "message": "No CAN bus is configured."
     },
+    "not_master": {
+      "message": "Another Home Assistant instance controls the heat pump; this one only shows the values. Make it the master in the heat pump dashboard."
+    },
     "raw_not_sent": {
       "message": "The CAN frame was not sent."
     },
@@ -1017,6 +1020,10 @@
     }
   },
   "issues": {
+    "bridge_firmware_outdated": {
+      "title": "Update the bridge firmware on {name}",
+      "description": "The node {name} ({host}) runs bridge firmware {version}; this version of the integration needs {required} or later. Its buses stay unavailable until the current bridge firmware is flashed."
+    },
     "no_bridge_firmware": {
       "description": "The node {name} ({host}) does not run the Daikin bridge firmware; its buses stay unavailable. Flash one of the bridge firmware examples. The integration checks again on every reconnection.",
       "title": "{name} does not run the bridge firmware"
@@ -1033,6 +1040,7 @@
           "max_spread_tvbh_tr": "Max. difference TVBH − TR",
           "max_spread_tvbh_tv": "Max. difference TVBH − TV",
           "outdoor_unit": "Outdoor unit",
+          "preferred_master": "Preferred master",
           "scan_interval": "Polling interval",
           "tr_offset": "Offset TR",
           "tv_offset": "Offset TV",
@@ -1047,6 +1055,7 @@
           "max_spread_tvbh_tr": "With the bypass valve at 100 % and more than 600 L/h, a larger difference for 10 minutes reports the bypass valve as defective.",
           "max_spread_tvbh_tv": "With the hot water mixer at 0 % and more than 600 L/h, a larger difference for 10 minutes reports the 3-way valve as defective.",
           "outdoor_unit": "Model of the outdoor unit; selects the refrigerant and the register layout.",
+          "preferred_master": "Become the master of the bridges after every connection. For the main Home Assistant instance when several instances use the same bridges; leave it off in the others.",
           "scan_interval": "Interval in seconds for all CAN values without a group interval.",
           "tr_offset": "Correction of TR for the valve checks of the error code.",
           "tv_offset": "Correction of TV for the valve checks of the error code.",

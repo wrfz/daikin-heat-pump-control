@@ -48,7 +48,7 @@ async def test_setup_and_unload(
     )
     assert bridge is not None
     assert bridge.name == "Daikin Bridge daikin-can"
-    assert bridge.sw_version == "1.0.0"
+    assert bridge.sw_version == "2.0.0"
     can_device = registry.async_get_device_by_identifier(
         (DOMAIN, f"{entry.entry_id}_can"), entry.entry_id
     )

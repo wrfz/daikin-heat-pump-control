@@ -214,11 +214,17 @@ class CanCoordinator:
         self._updated: dict[str, int] = {}
         self._listeners: dict[str, list[CALLBACK_TYPE]] = defaultdict(list)
         self._available = channel.available
+        self._master = channel.node.master
 
     @property
     def available(self) -> bool:
         """Return True while the bus can be used."""
         return self.channel.available
+
+    @property
+    def master(self) -> bool:
+        """Return True while this instance may send to the heat pump."""
+        return self.channel.node.master
 
     @property
     def optimized_defrosting(self) -> bool:
@@ -274,6 +280,10 @@ class CanCoordinator:
     @callback
     def _handle_node(self) -> None:
         available = self.channel.available
+        if self.master != self._master:
+            self._master = self.master
+            if not self._master and available:
+                self.scheduler.release("another instance became the master")
         if available == self._available:
             return
         self._available = available
@@ -318,7 +328,11 @@ class CanCoordinator:
             if smoother.update(now / 1000):
                 self._set(key, smoother.value, changed)
         self._notify(changed)
-        if self.channel.available and (frames := self.scheduler.next_request(now)):
+        if (
+            self.channel.available
+            and self.master
+            and (frames := self.scheduler.next_request(now))
+        ):
             self.channel.async_send(frames)
 
     def _apply(
@@ -357,7 +371,7 @@ class CanCoordinator:
                 self._smoothers[derived.smoothed].set_raw(value)
         if self._errors is not None:
             self._errors.changed(key)
-        if self._defrost is not None:
+        if self._defrost is not None and self.master:
             self._defrost_on_change(key, previous, state)
 
     # --------------------------------------------------------- error code
@@ -418,6 +432,8 @@ class CanCoordinator:
         Turning it on sets the antifreeze temperature to off, which the
         optimization needs.
         """
+        if on:
+            self._check_master()
         self._set_optimized_defrosting(on)
         if on:
             await self.async_write(ANTIFREEZE, ANTIFREEZE_OFF)
@@ -443,11 +459,18 @@ class CanCoordinator:
             self.hass, _write(), f"{DOMAIN} write {key}", eager_start=False
         )
 
-    def _check_writable(self, key: str) -> None:
+    def _check_master(self) -> None:
         if not self.available:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="bus_unavailable"
             )
+        if not self.master:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="not_master"
+            )
+
+    def _check_writable(self, key: str) -> None:
+        self._check_master()
         if key not in self.scheduler.keys:  # pragma: no cover
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -552,10 +575,7 @@ class CanCoordinator:
 
     async def async_send_raw(self, data: bytes) -> CanFrame | None:
         """Send a raw frame; return the answer to a read request, if any."""
-        if not self.available:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="bus_unavailable"
-            )
+        self._check_master()
         future: asyncio.Future[Outcome] = self.hass.loop.create_future()
 
         def _done(outcome: Outcome) -> None:
@@ -588,6 +608,7 @@ class CanCoordinator:
 
         return {
             "available": self.available,
+            "master": self.master,
             "values": {
                 key: {
                     "state": _plain(state),

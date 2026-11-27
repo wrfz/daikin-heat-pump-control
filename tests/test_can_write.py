@@ -511,10 +511,12 @@ async def test_hot_water_run(
 
 
 async def test_hot_water_run_unknown_setpoint(
-    hass: HomeAssistant, can_esp: SimulatedEsp
+    hass: HomeAssistant, can_esp: SimulatedEsp, freezer: FrozenDateTimeFactory
 ) -> None:
     """Without a known setpoint the button refuses."""
     await setup_can(hass, can_esp)
+    # One exchange: the bridge reports this instance as the master.
+    await run_bus(hass, freezer, 0.2)
     with pytest.raises(HomeAssistantError) as err:
         await _call(
             hass,

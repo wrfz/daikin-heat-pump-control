@@ -74,5 +74,10 @@
   "card": {
     "name": "Daikin Wärmepumpe",
     "description": "Schema der Wärmepumpe mit allen Werten der Integration Daikin Heat Pump Control."
+  },
+  "master": {
+    "listening": "Eine andere Home-Assistant-Instanz steuert die Wärmepumpe; diese zeigt nur die Werte an.",
+    "claim": "Master werden",
+    "claim_error": "Diese Instanz konnte nicht Master werden."
   }
 }

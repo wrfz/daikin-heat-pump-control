@@ -8,7 +8,8 @@ api:
     - action: daikin_uart_exchange
       supports_response: only
       variables:
+        client: string
         data: string
       then:
         - api.respond:
-            data: !lambda "id(daikin_bridge_id).uart_exchange(data, root);"
+            data: !lambda "id(daikin_bridge_id).uart_exchange(client, data, root);"

@@ -58,6 +58,7 @@ from .const import (
     CONF_NODES,
     CONF_NOISE_PSK,
     CONF_OUTDOOR_UNIT,
+    CONF_PREFERRED_MASTER,
     CONF_SCAN_INTERVAL,
     CONF_SHOW_PANEL,
     CONF_TR_OFFSET,
@@ -122,7 +123,9 @@ class Candidate:
     @property
     def label(self) -> str:
         """Return the label shown in the selection."""
-        mark = LEGACY_MARK if self.firmware is Firmware.LEGACY else ""
+        mark = (
+            LEGACY_MARK if self.firmware in (Firmware.LEGACY, Firmware.OUTDATED) else ""
+        )
         return f"{self.title} ({self.host}){mark}"
 
     def stored(self) -> dict[str, Any]:
@@ -512,7 +515,10 @@ class DaikinConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_discovery_key(error="invalid_auth")
         except BridgeConnectionError:
             return self.async_abort(reason="cannot_connect")
-        if identity.firmware is not Firmware.BRIDGE or not identity.buses:
+        if (
+            identity.firmware not in (Firmware.BRIDGE, Firmware.OUTDATED)
+            or not identity.buses
+        ):
             return self.async_abort(reason="not_daikin_bridge")
         self._discovered = Candidate.from_identity(identity)
         self._add_candidate(self._discovered)
@@ -826,6 +832,12 @@ class DaikinOptionsFlow(OptionsFlowWithReload):
             fields.update(_error_check_schema(options))
         if data.get(CONF_UART_NODE) is not None:
             fields.update(_uart_schema(options).schema)
+        fields[
+            probatio.Required(
+                CONF_PREFERRED_MASTER,
+                default=options.get(CONF_PREFERRED_MASTER, False),
+            )
+        ] = BooleanSelector()
         return self.async_show_form(step_id="bus", data_schema=probatio.Schema(fields))
 
     async def async_step_dashboard(

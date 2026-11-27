@@ -30,7 +30,7 @@
           "can_node": "Nœud connecté au bus CAN du régulateur RoCon.",
           "uart_node": "Nœud connecté au connecteur X10A de l'unité intérieure."
         },
-        "description": "Attribuez un nœud à chaque bus. Les nœuds marqués d'un * utilisent encore l'ancien firmware ; leurs bus démarrent dès que le firmware bridge est flashé.",
+        "description": "Attribuer un nœud à chaque bus. Les nœuds marqués d'un * utilisent encore l'ancien firmware ou un firmware bridge plus ancien ; leurs bus démarrent dès que le firmware bridge actuel est flashé.",
         "title": "Attribuer les nœuds"
       },
       "discovery_assign": {
@@ -994,6 +994,9 @@
     "no_can_bus": {
       "message": "Aucun bus CAN n'est configuré."
     },
+    "not_master": {
+      "message": "Une autre instance de Home Assistant pilote la pompe à chaleur ; celle-ci affiche seulement les valeurs. La rendre maître dans le tableau de bord de la pompe à chaleur."
+    },
     "raw_not_sent": {
       "message": "La trame CAN n'a pas été envoyée."
     },
@@ -1017,6 +1020,10 @@
     }
   },
   "issues": {
+    "bridge_firmware_outdated": {
+      "title": "Mettre à jour le firmware bridge de {name}",
+      "description": "Le nœud {name} ({host}) utilise le firmware bridge {version} ; cette version de l'intégration nécessite {required} ou plus récent. Ses bus restent indisponibles jusqu'à ce que le firmware bridge actuel soit flashé."
+    },
     "no_bridge_firmware": {
       "description": "Le nœud {name} ({host}) n'utilise pas le firmware bridge Daikin ; ses bus restent indisponibles. Flashez l'un des exemples de firmware bridge. L'intégration vérifie à nouveau à chaque reconnexion.",
       "title": "{name} n'utilise pas le firmware bridge"
@@ -1033,6 +1040,7 @@
           "max_spread_tvbh_tr": "Différence max. TVBH − TR",
           "max_spread_tvbh_tv": "Différence max. TVBH − TV",
           "outdoor_unit": "Unité extérieure",
+          "preferred_master": "Maître préféré",
           "scan_interval": "Intervalle d'interrogation",
           "tr_offset": "Décalage TR",
           "tv_offset": "Décalage TV",
@@ -1047,6 +1055,7 @@
           "max_spread_tvbh_tr": "Avec la vanne de dérivation à 100 % et plus de 600 L/h, une différence plus grande pendant 10 minutes signale la vanne de dérivation comme défectueuse.",
           "max_spread_tvbh_tv": "Avec le mélangeur ECS à 0 % et plus de 600 L/h, une différence plus grande pendant 10 minutes signale la vanne 3 voies comme défectueuse.",
           "outdoor_unit": "Modèle de l'unité extérieure ; détermine le réfrigérant et la disposition des registres.",
+          "preferred_master": "Devenir le maître des bridges après chaque connexion. Pour l'instance principale de Home Assistant lorsque plusieurs instances utilisent les mêmes bridges ; à laisser désactivé dans les autres.",
           "scan_interval": "Intervalle en secondes pour toutes les valeurs CAN sans intervalle de groupe.",
           "tr_offset": "Correction de TR pour les contrôles des vannes du code d'erreur.",
           "tv_offset": "Correction de TV pour les contrôles des vannes du code d'erreur.",

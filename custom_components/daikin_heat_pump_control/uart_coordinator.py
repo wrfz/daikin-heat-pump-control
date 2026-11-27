@@ -183,6 +183,7 @@ class UartCoordinator:
         self._short_payload_logged: set[str] = set()
         self._listeners: dict[str, list[CALLBACK_TYPE]] = defaultdict(list)
         self._available = channel.available
+        self._master = channel.node.master
         self._unsub_answer_poll: CALLBACK_TYPE | None = None
 
     def _new_scheduler(self) -> UartScheduler:
@@ -238,8 +239,20 @@ class UartCoordinator:
             for listener in list(self._listeners.get(key, ())):
                 listener()
 
+    @property
+    def master(self) -> bool:
+        """Return True while this instance may send to the indoor unit."""
+        return self.channel.node.master
+
     @callback
     def _handle_node(self) -> None:
+        if self.master != self._master:
+            self._master = self.master
+            if not self._master:
+                # The new master polls; its answers keep coming.
+                self._cancel_answer_poll()
+                self.scheduler.open = None
+                self._detecting = False
         available = self.channel.available
         if available == self._available:
             return
@@ -272,28 +285,35 @@ class UartCoordinator:
             return
         clock = self.channel.clock
         now = clock.extend(result.now)
+        master = self.master
         changed: set[str] = set()
-        if result.sent_at is not None:
+        if result.sent_at is not None and master:
             sent_at = clock.extend(result.sent_at)
             if self._detecting:
                 self._detector.sent(sent_at)
             else:
                 self.scheduler.handle_sent(sent_at)
-        received_at = (
-            clock.extend(result.received_at) if result.received_at is not None else now
-        )
         if self._detecting:
-            self._run_detection(now, result.received)
+            self._run_detection(now, b"".join(piece.data for piece in result.pieces))
         else:
-            self._handle_bytes(received_at, result.received, changed)
-            changed.update(self._register_keys(self.scheduler.check_timeout(now)))
+            for piece in result.pieces:
+                if piece.fresh:
+                    self.parser.clear()
+                if self.protocol is not None or master:
+                    self._handle_bytes(
+                        clock.extend(piece.timestamp), piece.data, changed
+                    )
+                if self.is_halted():
+                    return
+            if master:
+                changed.update(self._register_keys(self.scheduler.check_timeout(now)))
         if self.is_halted():
             return
         for key, smoother in self._smoothers.items():
             if smoother.update(now / 1000):
                 self._set(key, smoother.value, changed)
         self._notify(changed)
-        if not self.channel.available:
+        if not self.channel.available or not master:
             return
         if not self._detecting and self._should_detect(now):
             self._start_detection(now)
@@ -465,6 +485,7 @@ class UartCoordinator:
             "available": self.available,
             "outdoor_unit": self.unit.model,
             "protocol": self.protocol,
+            "master": self.master,
             "may_detect": self.may_detect,
             "detecting": self._detecting,
             "detections": list(self.detections),

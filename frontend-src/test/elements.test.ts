@@ -320,3 +320,71 @@ describe("panel", () => {
     ).toBeNull();
   });
 });
+
+describe("master", () => {
+  const MASTER = "daikin_heat_pump_control/master/subscribe";
+  const CLAIM = "daikin_heat_pump_control/master/claim";
+
+  async function listening(
+    hass: ReturnType<typeof mockHass>,
+    status: { master: boolean; clients: number },
+  ): Promise<DaikinHeatPumpView> {
+    const element = await view(hass);
+    for (const callback of hass.subscriptions[MASTER] ?? []) callback(status);
+    await element.updateComplete;
+    return element;
+  }
+
+  it("shows nothing as the only or the controlling instance", async () => {
+    const hass = mockHass(STATES, {
+      "daikin_heat_pump_control/entities": ENTITIES,
+    });
+    for (const status of [
+      { master: false, clients: 0 },
+      { master: true, clients: 2 },
+    ]) {
+      const element = await listening(hass, status);
+      expect(element.shadowRoot!.querySelector(".master")).toBeNull();
+      element.remove();
+    }
+  });
+
+  it("offers to become the master while another instance controls", async () => {
+    const hass = mockHass(STATES, {
+      "daikin_heat_pump_control/entities": ENTITIES,
+      [CLAIM]: { master: true, clients: 2 },
+    });
+    const element = await listening(hass, { master: false, clients: 2 });
+    const banner = element.shadowRoot!.querySelector(".master");
+    expect(banner?.textContent).toContain("only shows the values");
+    banner!.querySelector("button")!.click();
+    await settle();
+    expect(hass.calls.some((call) => call.type === CLAIM)).toBe(true);
+    expect(element.shadowRoot!.querySelector(".master .error")).toBeNull();
+  });
+
+  it("reports a failed claim", async () => {
+    const hass = mockHass(STATES, {
+      "daikin_heat_pump_control/entities": ENTITIES,
+      [CLAIM]: { code: "claim_failed" },
+    });
+    const element = await listening(hass, { master: false, clients: 2 });
+    element
+      .shadowRoot!.querySelector<HTMLButtonElement>(".master button")!
+      .click();
+    await settle();
+    await element.updateComplete;
+    expect(element.shadowRoot!.querySelector(".master .error")).not.toBeNull();
+  });
+
+  it("shows no button to other users", async () => {
+    const hass = mockHass(
+      STATES,
+      { "daikin_heat_pump_control/entities": ENTITIES },
+      { admin: false },
+    );
+    const element = await listening(hass, { master: false, clients: 2 });
+    expect(element.shadowRoot!.querySelector(".master")).not.toBeNull();
+    expect(element.shadowRoot!.querySelector(".master button")).toBeNull();
+  });
+});

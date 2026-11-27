@@ -8,6 +8,7 @@ import type {
   Appearance,
   DashboardData,
   HomeAssistant,
+  MasterStatus,
   UnsubscribeFunc,
 } from "./types";
 
@@ -49,10 +50,13 @@ export class DaikinHeatPumpView extends LitElement {
   @state() private data?: DashboardData;
   @state() private error?: string;
   @state() private source?: { file: string; text: string };
+  @state() private master?: MasterStatus;
+  @state() private claimError = false;
 
   private schema?: Schema;
   private schemaKey?: string;
   private unsubscribe?: Promise<UnsubscribeFunc | undefined>;
+  private unsubscribeMaster?: Promise<UnsubscribeFunc | undefined>;
   private refreshTimer?: ReturnType<typeof setTimeout>;
   private loading?: string;
 
@@ -66,6 +70,8 @@ export class DaikinHeatPumpView extends LitElement {
     clearTimeout(this.refreshTimer);
     void this.unsubscribe?.then((unsubscribe) => unsubscribe?.());
     this.unsubscribe = undefined;
+    void this.unsubscribeMaster?.then((unsubscribe) => unsubscribe?.());
+    this.unsubscribeMaster = undefined;
   }
 
   private get language(): string {
@@ -91,6 +97,33 @@ export class DaikinHeatPumpView extends LitElement {
         );
       }, "entity_registry_updated")
       .catch(() => undefined);
+    this.unsubscribeMaster = this.hass.connection
+      .subscribeMessage<MasterStatus>(
+        (status) => {
+          this.master = status;
+        },
+        { type: `${DOMAIN}/master/subscribe` },
+      )
+      .catch(() => undefined);
+  }
+
+  /** Another instance controls the bridges; this one only shows the values. */
+  private get listening(): boolean {
+    return (
+      this.master !== undefined &&
+      !this.master.master &&
+      this.master.clients > 1
+    );
+  }
+
+  private async claim(): Promise<void> {
+    if (!this.hass) return;
+    try {
+      await this.hass.callWS({ type: `${DOMAIN}/master/claim` });
+      this.claimError = false;
+    } catch {
+      this.claimError = true;
+    }
   }
 
   /** Ask the integration for the entities of the values. */
@@ -130,7 +163,27 @@ export class DaikinHeatPumpView extends LitElement {
         ${localize(this.language, this.error)}
       </div>`;
     }
-    return html`<div class="schema" @click=${this.onClick}></div>`;
+    const t = (key: string): string => localize(this.language, key);
+    return html`${
+        this.listening
+          ? html`<div class="master">
+              <span>${t("master.listening")}</span>
+              ${
+                this.hass?.user?.is_admin
+                  ? html`<button type="button" @click=${this.claim}>
+                      ${t("master.claim")}
+                    </button>`
+                  : ""
+              }
+              ${
+                this.claimError
+                  ? html`<span class="error">${t("master.claim_error")}</span>`
+                  : ""
+              }
+            </div>`
+          : ""
+      }
+      <div class="schema" @click=${this.onClick}></div>`;
   }
 
   protected override updated(): void {
@@ -182,6 +235,32 @@ export class DaikinHeatPumpView extends LitElement {
     .message {
       padding: 16px;
       color: var(--secondary-text-color);
+    }
+    .master {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px 16px;
+      padding: 8px 16px;
+      margin-bottom: 8px;
+      border-radius: var(--ha-card-border-radius, 12px);
+      background: var(--warning-color, #ffa600);
+      color: var(--text-primary-color, #fff);
+    }
+    .master span {
+      flex: 1;
+    }
+    .master .error {
+      flex-basis: 100%;
+    }
+    .master button {
+      font: inherit;
+      padding: 6px 14px;
+      border-radius: 18px;
+      border: 1px solid currentColor;
+      background: none;
+      color: inherit;
+      cursor: pointer;
     }
   `;
 }

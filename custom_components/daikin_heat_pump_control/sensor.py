@@ -59,10 +59,16 @@ def _can_state(node: BridgeNode) -> str | None:
     return state if state in CAN_STATES else "unknown"
 
 
-def _uart_overflows(node: BridgeNode) -> int | None:
-    if node.info is None or node.info.uart is None:
-        return None
-    return node.info.uart.overflows
+def _overflows(bus: Bus) -> Callable[[BridgeNode], int | None]:
+    """Return the frames or bytes this instance missed on a bus."""
+
+    def _value(node: BridgeNode) -> int | None:
+        channel = node.channels.get(bus)
+        if channel is None or not channel.available:
+            return None
+        return channel.overflows
+
+    return _value
 
 
 BRIDGE_SENSORS: tuple[BridgeSensorEntityDescription, ...] = (
@@ -140,7 +146,7 @@ BRIDGE_SENSORS: tuple[BridgeSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
         bus=Bus.CAN,
-        value_fn=lambda node: _can(node, "overflows"),
+        value_fn=_overflows(Bus.CAN),
     ),
     BridgeSensorEntityDescription(
         key="can_bus_state",
@@ -190,7 +196,7 @@ BRIDGE_SENSORS: tuple[BridgeSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
         bus=Bus.UART,
-        value_fn=_uart_overflows,
+        value_fn=_overflows(Bus.UART),
     ),
 )
 

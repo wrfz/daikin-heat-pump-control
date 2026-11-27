@@ -72,6 +72,7 @@ Aktionen der Bridge (Namen vorläufig):
 | `daikin_bridge_info` | – | angebotene Busse (`can`, `uart` oder beide), Firmware-Version, Puffergrößen, Diagnosewerte (Abschnitt 6.4) |
 | `daikin_can_exchange` | 0…n zu sendende Frames (ID + Daten, hex) | alle seit dem letzten Aufruf empfangenen Frames mit ESP-Zeitstempel (ms), Überlauf-Zähler |
 | `daikin_uart_exchange` | 0…n zu sendende Bytes (hex) | alle seither empfangenen Bytes mit Zeitstempel des ersten Bytes, Überlauf-Zähler |
+| `daikin_bridge_claim` | – | macht den Aufrufer zum Master (Abschnitt 3.1) |
 
 - Takt: die Integration ruft `exchange` alle 200 ms auf (fest; darüber wäre der CAN langsamer als heute), sofort, sobald etwas
   zu senden ist, und beim UART nach einer Anfrage im 100-ms-Takt, bis die Antwort vollständig ist.
@@ -95,7 +96,9 @@ Ringpuffer, Zeitregel, die Aktionen und die Diagnose. Sie nutzt die Standard-Sch
 Socket-Anbindung an den Simulator ersetzt (Abschnitt 11). Packages (dünn) `bridge-base` (Board,
 WLAN, API, Komponente), `bridge-can`, `bridge-uart` und daraus die Beispiele
 `daikin-can-bridge.yaml`, `daikin-uart-bridge.yaml` und `daikin-can-uart-bridge.yaml` (beide Busse
-auf einem ESP). Bei beiden Bussen laufen die Aktionen unabhängig voneinander (eigene Puffer, eigene
+auf einem ESP). Der Nutzer kopiert nur das Beispiel; Komponente und Packages lädt ESPHome aus dem
+GitHub-Repo, beide mit demselben Stand (Substitution `bridge_ref`, Branch oder Release-Tag), damit sie
+immer zusammenpassen. Die Projektversion der Firmware ist die Version der Komponente. Bei beiden Bussen laufen die Aktionen unabhängig voneinander (eigene Puffer, eigene
 Zeitregeln). Die Firmware enthält keine Sensoren für HA; Diagnosewerte liefert sie über
 `daikin_bridge_info`.
 
@@ -117,6 +120,25 @@ Relais für Smart Grid) bleiben in seiner YAML und damit in der ESPHome-Integrat
 `esphome.project` zur Erkennung: `wrfz.daikin_can_bridge`, `wrfz.daikin_uart_bridge`,
 `wrfz.daikin_can_uart_bridge` (in HA nur auf der ESPHome-Geräteseite als Hersteller/Modell sichtbar,
 nicht in Entity-Namen).
+
+### 3.1 Mehrere Clients (Master)
+
+Mehrere HA-Instanzen (z. B. Produktiv und Entwicklung) können an derselben Bridge hängen.
+- Nur eine Integration kommuniziert mit der Wärmepumpe (Master): nur ihre Anfragen und
+  Schreibvorgänge werden gesendet. Die empfangenen Frames bekommen alle angemeldeten Integrationen,
+  damit sie dieselben Werte anzeigen. Die `exchange`-Aktionen tragen dazu eine Kennung des Aufrufers
+  und melden, ob er Master ist.
+- Verabschiedet sich der Master, erkennt das die Bridge und macht eine der übrigen zum Master.
+- Jede Integration, die nicht Master ist, zeigt im Dashboard (Panel und Card) einen Knopf „Master
+  werden“; ein Druck macht sie zum Master, die bisherige verliert den Status. Keine Entity.
+- Option „Bevorzugter Master“ (Options-Flow, Standard aus): die Integration wird nach jedem Verbinden
+  Master. Für die Produktiv-Instanz gedacht, damit sie nach einem Neustart wieder steuert.
+- Wer nicht Master ist, schreibt nicht (Fehler `not_master`); Abtauoptimierung, Schreibzähler und
+  UART-Erkennung laufen nur beim Master.
+- Kein anderer Sender auf demselben ESP: `daikin_bridge` lehnt beim Validieren der Konfiguration die
+  bisherigen Komponenten und weitere Sender auf dem Bus ab; reines Mitlesen (`on_frame`) bleibt
+  erlaubt.
+- Ältere Bridge-Firmware ohne diese Funktion: Repair-Issue „Bridge-Firmware aktualisieren“.
 
 ## 4. Einrichtung und Erkennung
 
@@ -597,6 +619,7 @@ Tests und Frontend-Build.
 | Reihenfolge Info-Box | Reihenfolge der Auswahl (SelectSelector `multiple`, Dropdown); `reorder`, sobald core es erlaubt (offen) |
 | Frontend-Build | Vite, ein ES-Modul ohne Hash, `?v=<Version>`, Build eingecheckt und in CI geprüft |
 | UART-Protokoll automatisch | Ergebnis gespeichert, einmal neu laden, nur passende Entities; neu erkennen bei Optionsänderung oder dauerhaftem Ausfall |
+| Mehrere Clients | ein Master sendet, alle empfangen; Wechsel automatisch oder per Knopf im Dashboard; Option „Bevorzugter Master“ |
 
 ## 14. Umsetzung in Teilen (je Teil eine Session)
 

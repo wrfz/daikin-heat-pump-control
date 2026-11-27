@@ -4,18 +4,22 @@ The component has no protocol knowledge. It buffers received data, sends
 data handed over by the integration (CAN frames only after the bus was quiet
 for a while) and reports diagnostic values. The API actions that call it are
 declared in the YAML packages.
+
+Several clients may use the bridge; only the master sends. No other component
+may send on the buses of the bridge, which the final validation checks.
 """
 
 import esphome.codegen as cg
 from esphome.components import canbus, uart
 import esphome.config_validation as cv
+import esphome.final_validate as fv
 from esphome.const import CONF_ID
 
 CODEOWNERS = ["@wrfz"]
 DEPENDENCIES = ["api"]
 AUTO_LOAD = ["json"]
 
-BRIDGE_VERSION = "1.0.0"
+BRIDGE_VERSION = "2.0.0"
 
 CONF_CAN = "can"
 CONF_UART = "uart"
@@ -24,6 +28,12 @@ CONF_UART_ID = "uart_id"
 CONF_BUFFER_SIZE = "buffer_size"
 CONF_SEND_QUEUE_SIZE = "send_queue_size"
 CONF_QUIET_TIME = "quiet_time"
+
+DOMAIN = "daikin_bridge"
+# Components that talk to the heat pump themselves.
+CONFLICTING_COMPONENTS = ("daikin_rotex_can", "daikin_rotex_uart")
+# Actions that send on a bus, with the key that names the bus.
+SEND_ACTIONS = {"canbus.send": CONF_CANBUS_ID, "uart.write": CONF_ID}
 
 daikin_bridge_ns = cg.esphome_ns.namespace("daikin_bridge")
 DaikinBridge = daikin_bridge_ns.class_("DaikinBridge", cg.Component)
@@ -54,6 +64,50 @@ CONFIG_SCHEMA = cv.All(
     ).extend(cv.COMPONENT_SCHEMA),
     cv.has_at_least_one_key(CONF_CAN, CONF_UART),
 )
+
+
+def _bus_users(node, bus_id, path):
+    """Yield the paths in a config subtree that use the bus `bus_id`."""
+    if isinstance(node, dict):
+        for key, value in node.items():
+            if key in SEND_ACTIONS and isinstance(value, dict):
+                if str(value.get(SEND_ACTIONS[key])) == bus_id:
+                    yield [*path, key]
+                continue
+            if key in (CONF_CANBUS_ID, CONF_UART_ID) and str(value) == bus_id:
+                yield [*path, key]
+                continue
+            yield from _bus_users(value, bus_id, [*path, key])
+    elif isinstance(node, list):
+        for index, item in enumerate(node):
+            yield from _bus_users(item, bus_id, [*path, index])
+
+
+def _final_validate(config):
+    """Reject other components that send to the heat pump on this ESP."""
+    full_config = fv.full_config.get()
+    for component in CONFLICTING_COMPONENTS:
+        if component in full_config:
+            raise cv.Invalid(
+                f"'{component}' cannot run next to the Daikin bridge: only one "
+                "of them may talk to the heat pump. Remove it from this node."
+            )
+    for bus, key in ((CONF_CAN, CONF_CANBUS_ID), (CONF_UART, CONF_UART_ID)):
+        if (bus_config := config.get(bus)) is None:
+            continue
+        bus_id = str(bus_config[key])
+        for domain, domain_config in full_config.items():
+            if domain == DOMAIN:
+                continue
+            for path in _bus_users(domain_config, bus_id, [domain]):
+                raise cv.Invalid(
+                    f"'{bus_id}' is used by the Daikin bridge; nothing else may "
+                    f"send on it ({'->'.join(map(str, path))}).",
+                )
+    return config
+
+
+FINAL_VALIDATE_SCHEMA = _final_validate
 
 
 async def to_code(config):

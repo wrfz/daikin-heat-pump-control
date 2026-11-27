@@ -13,7 +13,7 @@ esphome:
   name: daikin-host
   project:
     name: wrfz.daikin_can_uart_bridge
-    version: "1.0.0"
+    version: "2.0.0"
 
 host:
   mac_address: "02:00:00:da:1c:01"

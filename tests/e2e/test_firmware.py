@@ -36,6 +36,8 @@ API_PORT = 16053
 CAN_PORT = 16054
 API_KEY = "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8="
 MAC = "02:00:00:da:1c:01"
+CLIENT = "e2e-a"
+OTHER = "e2e-b"
 
 
 @pytest.fixture(scope="session")
@@ -197,8 +199,8 @@ async def _client() -> tuple[APIClient, dict[str, UserService]]:
     return client, {s.name: s for s in services}
 
 
-async def _call(client: APIClient, service: UserService, **data: Any) -> dict[str, Any]:
-    response = await client.execute_service(service, data, return_response=True)
+async def _call(api: APIClient, service: UserService, **data: Any) -> dict[str, Any]:
+    response = await api.execute_service(service, data, return_response=True)
     assert response is not None
     assert response.success, response.error_message
     return json.loads(response.response_data)
@@ -215,6 +217,7 @@ async def test_probe_and_info(node: tuple[CanEndpoint, UartEndpoint]) -> None:
     assert identity.info.can.buffer == 256
     assert identity.info.uart is not None
     assert identity.info.uart.buffer == 1024
+    assert identity.info.bridge_version == "2.0.0"
 
 
 async def test_can_exchange_and_quiet_time(
@@ -226,9 +229,13 @@ async def test_can_exchange_and_quiet_time(
     try:
         exchange = services["daikin_can_exchange"]
         first = await _call(
-            client, exchange, frames=["680#3100FAC0FC0000", "680#31002800000000", "bad"]
+            client,
+            exchange,
+            client=CLIENT,
+            frames=["680#3100FAC0FC0000", "680#31002800000000", "bad"],
         )
         assert first["dropped"] == 1
+        assert first["master"]
         async with asyncio.timeout(5):
             while len(can.received) < 2:
                 can.event.clear()
@@ -237,7 +244,7 @@ async def test_can_exchange_and_quiet_time(
         tx: list[list[Any]] = list(first["tx"])
         async with asyncio.timeout(5):
             while len(rx) < 2:
-                result = await _call(client, exchange, frames=[])
+                result = await _call(client, exchange, client=CLIENT, frames=[])
                 rx += result["rx"]
                 tx += result["tx"]
         assert [f[2] for f in rx] == ["D200FAC0FC012C", "D2002801220000"]
@@ -255,35 +262,87 @@ async def test_can_buffer_overflow(node: tuple[CanEndpoint, UartEndpoint]) -> No
     client, services = await _client()
     try:
         exchange = services["daikin_can_exchange"]
-        await _call(client, exchange, frames=["680#3100FAC0FC0000"])
+        await _call(client, exchange, client=CLIENT, frames=["680#3100FAC0FC0000"])
+        await _call(client, exchange, client=OTHER, frames=[])
         async with asyncio.timeout(5):
             while not can.received:
                 can.event.clear()
                 await can.event.wait()
-        await _call(client, exchange, frames=[])
+        await _call(client, exchange, client=CLIENT, frames=[])
         for i in range(300):
             can.send(SimCanFrame(0x10A, bytes((0x30, 0, 0x28, 0, i & 0xFF, 0, 0))))
-        # Bridge info does not drain the buffer; wait until it reports overflows.
-        info = services["daikin_bridge_info"]
-        last: dict[str, Any] = {}
-        try:
-            async with asyncio.timeout(10):
-                while (last := await _call(client, info))["can"][
-                    "overflows"
-                ] < 300 - 256:
-                    pass
-        except TimeoutError:
-            pytest.fail(f"no overflow reported: {last}")
+        # The other client reads along until the last frame arrived.
+        last = "30002800" + f"{299 & 0xFF:02X}" + "0000"
+        seen: list[str] = []
+        async with asyncio.timeout(10):
+            while not seen or seen[-1] != last:
+                result = await _call(client, exchange, client=OTHER, frames=[])
+                seen += [frame[2] for frame in result["rx"]]
         rx: list[list[Any]] = []
         more = True
         while more:
-            result = await _call(client, exchange, frames=[])
+            result = await _call(client, exchange, client=CLIENT, frames=[])
             assert len(result["rx"]) <= 100
             rx += result["rx"]
             more = result["more"]
         assert result["overflows"] >= 300 - 256
         assert len(rx) == 256
-        assert rx[-1][2] == "30002800" + f"{299 & 0xFF:02X}" + "0000"
+        assert rx[-1][2] == last
+    finally:
+        await client.disconnect()
+
+
+async def test_clients_and_master(node: tuple[CanEndpoint, UartEndpoint]) -> None:
+    """The first client is the master; the other reads along and can take over."""
+    can, _ = node
+    client, services = await _client()
+    try:
+        exchange = services["daikin_can_exchange"]
+        claim = services["daikin_bridge_claim"]
+        first = await _call(client, exchange, client=CLIENT, frames=[])
+        assert first["master"]
+        other = await _call(
+            client, exchange, client=OTHER, frames=["680#31002800000000"]
+        )
+        assert not other["master"]
+        assert other["rejected"] == 1
+        assert other["clients"] == 2
+        await _call(client, exchange, client=CLIENT, frames=["680#3100FAC0FC0000"])
+        rx: dict[str, list[str]] = {CLIENT: [], OTHER: []}
+        async with asyncio.timeout(5):
+            while len(rx[CLIENT]) < 1 or len(rx[OTHER]) < 1:
+                for name in rx:
+                    result = await _call(client, exchange, client=name, frames=[])
+                    rx[name] += [frame[2] for frame in result["rx"]]
+        assert rx[CLIENT] == rx[OTHER] == ["D200FAC0FC012C"]
+        assert [frame.data.hex().upper() for frame in can.received] == [
+            "3100FAC0FC0000"
+        ]
+
+        claimed = await _call(client, claim, client=OTHER)
+        assert claimed == {"master": True, "clients": 2, "rejected": 1}
+        result = await _call(
+            client, exchange, client=CLIENT, frames=["680#3100FAC0FC0000"]
+        )
+        assert not result["master"]
+        assert result["rejected"] == 1
+
+        # Without calls of the master the remaining client becomes the master.
+        async with asyncio.timeout(10):
+            while not (await _call(client, exchange, client=CLIENT, frames=[]))[
+                "master"
+            ]:
+                pass
+        info = await _call(client, services["daikin_bridge_info"])
+        assert info["clients"] == 1
+        assert (await _call(client, exchange, client="", frames=[])) == {
+            "error": "invalid_client"
+        }
+        for index in range(3):
+            await _call(client, exchange, client=f"extra-{index}", frames=[])
+        assert (await _call(client, exchange, client="extra-3", frames=[])) == {
+            "error": "too_many_clients"
+        }
     finally:
         await client.disconnect()
 
@@ -294,17 +353,69 @@ async def test_uart_exchange(node: tuple[CanEndpoint, UartEndpoint]) -> None:
     client, services = await _client()
     try:
         exchange = services["daikin_uart_exchange"]
-        sent = await _call(client, exchange, data="0340615B")
+        await _call(client, exchange, client=CLIENT, data="")
+        await _call(client, exchange, client=OTHER, data="")
+        sent = await _call(client, exchange, client=CLIENT, data="0340615B")
         assert "tx_t" in sent
-        received = ""
+        pieces: dict[str, list[list[Any]]] = {CLIENT: [], OTHER: []}
         async with asyncio.timeout(5):
-            while len(received) < 32:
-                result = await _call(client, exchange, data="")
-                received += result["rx"]
-        assert received == "40610E000102030405060708090A0B0E"
+            while any(
+                len("".join(piece[1] for piece in got)) < 32 for got in pieces.values()
+            ):
+                for name, got in pieces.items():
+                    result = await _call(client, exchange, client=name, data="")
+                    got += result["rx"]
+        for got in pieces.values():
+            assert "".join(piece[1] for piece in got) == (
+                "40610E000102030405060708090A0B0E"
+            )
+            assert got[0][2] is True
+            assert all(piece[2] is False for piece in got[1:])
+            assert got[0][0] >= sent["tx_t"]
+        refused = await _call(client, exchange, client=OTHER, data="0340615B")
+        assert refused["rejected"] == 1
         assert uart.requests == [bytes.fromhex("0340615B")]
     finally:
         await client.disconnect()
+
+
+SEND_EVERY_10S = "interval:\n  - interval: 10s\n    then:\n      - {}\n"
+ON_FRAME = (
+    "    can_id: 0x680\n    on_frame:\n      - can_id: 0x180\n"
+    "        then:\n          - logger.log: frame\n"
+)
+
+
+@pytest.mark.parametrize(
+    ("replace", "extra", "valid"),
+    [
+        (None, SEND_EVERY_10S.format("canbus.send: [0x31]"), False),
+        (None, SEND_EVERY_10S.format("uart.write: [0x03]"), False),
+        (("    can_id: 0x680\n", ON_FRAME), "", True),
+    ],
+)
+def test_no_other_sender(
+    firmware: Path, replace: tuple[str, str] | None, extra: str, valid: bool
+) -> None:
+    """The configuration check rejects other senders on the bridge buses."""
+    workdir = BUILD_DIR / "tests" / "e2e"
+    text = (workdir / "daikin-host-bridge.yaml").read_text()
+    if replace is not None:
+        assert replace[0] in text
+        text = text.replace(*replace)
+    config = workdir / "daikin-host-check.yaml"
+    config.write_text(text + extra)
+    result = subprocess.run(
+        [str(ESPHOME), "config", config.name],
+        cwd=workdir,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    output = result.stdout + result.stderr
+    assert (result.returncode == 0) is valid, output
+    if not valid:
+        assert "nothing else may send on it" in output
 
 
 @pytest.fixture(autouse=True)

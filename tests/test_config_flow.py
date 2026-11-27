@@ -513,7 +513,11 @@ async def test_options(hass: HomeAssistant, uart_esp: SimulatedEsp) -> None:
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
-    assert entry.options == {"outdoor_unit": "ERGA04EAV3", "uart_protocol": "s"}
+    assert entry.options == {
+        "outdoor_unit": "ERGA04EAV3",
+        "uart_protocol": "s",
+        "preferred_master": False,
+    }
     assert entry.state is ConfigEntryState.LOADED
 
 
@@ -537,6 +541,7 @@ async def test_options_polling_intervals(
         "tr_offset",
         "max_spread_tvbh_tv",
         "max_spread_tvbh_tr",
+        "preferred_master",
     }
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -551,6 +556,7 @@ async def test_options_polling_intervals(
         "tr_offset": 0.0,
         "max_spread_tvbh_tv": 0.3,
         "max_spread_tvbh_tr": 0.3,
+        "preferred_master": False,
     }
 
 

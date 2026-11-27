@@ -1,6 +1,7 @@
-# Daikin bridge firmware (uart). Copy this file and the packages folder next to
-# your ESPHome configuration, adjust the substitutions and add your own
-# components below if needed.
+# Daikin bridge firmware (uart). Copy this file next to your ESPHome
+# configuration, adjust the substitutions and add your own components below if
+# needed. The component and the packages come from the same version of the
+# repository (`bridge_ref`: a branch or a release tag), so they always match.
 substitutions:
   name: daikin-uart
   friendly_name: Daikin UART Bridge
@@ -10,23 +11,24 @@ substitutions:
   ota_password: !secret daikin_ota_password
   uart_tx_pin: GPIO1
   uart_rx_pin: GPIO2
+  bridge_ref: main
 
 external_components:
   - source:
       type: git
       url: https://github.com/wrfz/daikin-heat-pump-control
-      ref: main
+      ref: ${bridge_ref}
       path: esphome/components
     components: [daikin_bridge]
     refresh: 1d
-  # For a local checkout use instead:
-  # - source:
-  #     type: local
-  #     path: components
-  #   components: [daikin_bridge]
 
 packages:
-  board: !include packages/board-esp32.yaml
-  core: !include packages/bridge-core.yaml
-  uart_hw: !include packages/uart-esp32.yaml
-  bridge_uart: !include packages/bridge-uart.yaml
+  daikin_bridge:
+    url: https://github.com/wrfz/daikin-heat-pump-control
+    ref: ${bridge_ref}
+    refresh: 1d
+    files:
+      - esphome/packages/board-esp32.yaml
+      - esphome/packages/bridge-core.yaml
+      - esphome/packages/uart-esp32.yaml
+      - esphome/packages/bridge-uart.yaml

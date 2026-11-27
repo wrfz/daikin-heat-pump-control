@@ -64,6 +64,9 @@ OUTDOOR_UNITS: Final = (
 ACTION_BRIDGE_INFO: Final = "daikin_bridge_info"
 ACTION_CAN_EXCHANGE: Final = "daikin_can_exchange"
 ACTION_UART_EXCHANGE: Final = "daikin_uart_exchange"
+ACTION_BRIDGE_CLAIM: Final = "daikin_bridge_claim"
+# Argument with which the bridge tells its clients apart.
+ARG_CLIENT: Final = "client"
 BUS_EXCHANGE_ACTION: Final[dict[Bus, str]] = {
     Bus.CAN: ACTION_CAN_EXCHANGE,
     Bus.UART: ACTION_UART_EXCHANGE,
@@ -84,6 +87,12 @@ RECONNECT_MIN_DELAY: Final = 1.0
 RECONNECT_MAX_DELAY: Final = 60.0
 
 ISSUE_NO_BRIDGE_FIRMWARE: Final = "no_bridge_firmware"
+ISSUE_BRIDGE_FIRMWARE_OUTDATED: Final = "bridge_firmware_outdated"
+# Bridge firmware that serves several clients.
+MIN_BRIDGE_VERSION: Final = "2.0.0"
+
+# Become the master of the bridges after every connection.
+CONF_PREFERRED_MASTER: Final = "preferred_master"
 
 # Polling of the CAN values (seconds).
 CONF_SCAN_INTERVAL: Final = "scan_interval"

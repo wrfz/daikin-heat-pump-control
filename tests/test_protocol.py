@@ -6,11 +6,15 @@ import pytest
 
 from custom_components.daikin_heat_pump_control.bridge.client import normalize_mac
 from custom_components.daikin_heat_pump_control.bridge.protocol import (
+    BridgeClientError,
     BridgeProtocolError,
     CanFrame,
+    ClientStatus,
     EspClock,
+    UartPiece,
     parse_bridge_info,
     parse_can_exchange,
+    parse_claim,
     parse_uart_exchange,
 )
 from custom_components.daikin_heat_pump_control.const import Bus
@@ -51,10 +55,14 @@ def test_parse_can_exchange() -> None:
                 "overflows": 2,
                 "dropped": 3,
                 "more": True,
+                "master": True,
+                "clients": 2,
+                "rejected": 4,
             }
         )
     )
     assert result.now == 1000
+    assert result.client == ClientStatus(master=True, clients=2, rejected=4)
     assert result.received[0].timestamp == 990
     assert result.received[0].frame == CanFrame(
         can_id=0x180, data=bytes.fromhex("D200FAC0FC012C")
@@ -65,6 +73,24 @@ def test_parse_can_exchange() -> None:
     minimal = parse_can_exchange(_json({"now": 5}))
     assert minimal.received == ()
     assert (minimal.pending, minimal.overflows, minimal.dropped) == (0, 0, 0)
+    assert minimal.client == ClientStatus(master=False, clients=0, rejected=0)
+
+
+@pytest.mark.parametrize("code", ["too_many_clients", "invalid_client"])
+def test_client_refused(code: str) -> None:
+    """An answer with an error code raises BridgeClientError."""
+    with pytest.raises(BridgeClientError) as err:
+        parse_can_exchange(_json({"error": code}))
+    assert err.value.code == code
+    with pytest.raises(BridgeClientError):
+        parse_claim(_json({"error": code}))
+
+
+def test_parse_claim() -> None:
+    """The claim answer reports the master and the clients."""
+    assert parse_claim(_json({"master": True, "clients": 2})) == ClientStatus(
+        master=True, clients=2
+    )
 
 
 @pytest.mark.parametrize(
@@ -88,21 +114,39 @@ def test_parse_can_exchange_invalid(data: bytes) -> None:
 
 
 def test_parse_uart_exchange() -> None:
-    """The UART exchange answer is parsed."""
+    """The UART exchange answer is parsed into pieces."""
     result = parse_uart_exchange(
-        _json({"now": 50, "rx_t": 40, "rx": "4061", "tx_t": 10, "overflows": 1})
+        _json(
+            {
+                "now": 50,
+                "rx": [[30, "0E", False], [40, "4061", True]],
+                "tx_t": 10,
+                "overflows": 1,
+                "more": True,
+                "master": False,
+                "clients": 2,
+            }
+        )
     )
-    assert result.received == bytes((0x40, 0x61))
-    assert result.received_at == 40
+    assert result.pieces == (
+        UartPiece(timestamp=30, data=b"\x0e", fresh=False),
+        UartPiece(timestamp=40, data=bytes((0x40, 0x61)), fresh=True),
+    )
     assert result.sent_at == 10
     assert result.overflows == 1
-    empty = parse_uart_exchange(_json({"now": 50, "rx": "", "rx_t": 1}))
-    assert empty.received == b""
-    assert empty.received_at is None
-    with pytest.raises(BridgeProtocolError):
-        parse_uart_exchange(_json({"now": 50, "rx": "4"}))
-    with pytest.raises(BridgeProtocolError):
-        parse_uart_exchange(_json({"now": 50, "rx": 4}))
+    assert result.more
+    assert not result.client.master
+    empty = parse_uart_exchange(_json({"now": 50}))
+    assert empty.pieces == ()
+    for bad in (
+        {"now": 50, "rx": "40"},
+        {"now": 50, "rx": [[1, "4", True]]},
+        {"now": 50, "rx": [[1, "40"]]},
+        {"now": 50, "rx": [[True, "40", True]]},
+        {"now": 50, "rx": [[1, "40", 1]]},
+    ):
+        with pytest.raises(BridgeProtocolError):
+            parse_uart_exchange(_json(bad))
 
 
 def test_parse_bridge_info() -> None:
@@ -110,7 +154,8 @@ def test_parse_bridge_info() -> None:
     info = parse_bridge_info(
         _json(
             {
-                "bridge": "1.0.0",
+                "bridge": "2.0.0",
+                "clients": 2,
                 "esphome": "2026.11.0",
                 "buses": ["can", "uart", "spi"],
                 "uptime": 12,
@@ -118,8 +163,8 @@ def test_parse_bridge_info() -> None:
                 "heap_max_block": 2,
                 "reset_reason": "Software",
                 "wifi": {"rssi": -50, "ssid": "x", "ip": "1.2.3.4"},
-                "can": {"buffer": 256, "overflows": 0, "state": "bus_off"},
-                "uart": {"buffer": 1024, "overflows": 4},
+                "can": {"buffer": 256, "state": "bus_off"},
+                "uart": {"buffer": 1024},
             }
         )
     )
@@ -128,7 +173,8 @@ def test_parse_bridge_info() -> None:
     assert info.can.state == "bus_off"
     assert info.can.tx_errors is None
     assert info.uart is not None
-    assert info.uart.overflows == 4
+    assert info.uart.buffer == 1024
+    assert info.clients == 2
     assert info.wifi_rssi == -50
     minimal = parse_bridge_info(_json({}))
     assert minimal.buses == frozenset()

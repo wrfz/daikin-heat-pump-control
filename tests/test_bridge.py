@@ -130,7 +130,9 @@ async def test_uart_channel(
     entry = await _setup(hass, uart=uart_esp)
     channel = entry.runtime_data.channels["uart"]
     received = bytearray()
-    channel.async_add_listener(lambda result: received.extend(result.received))
+    channel.async_add_listener(
+        lambda result: received.extend(b"".join(p.data for p in result.pieces))
+    )
     channel.async_send(bytes.fromhex("0340615B"))
     await hass.async_block_till_done()
     await _tick(hass, freezer, 0.2)
@@ -227,7 +229,7 @@ async def test_start_after_stop(hass: HomeAssistant, can_esp: SimulatedEsp) -> N
 
 def test_sensor_values_without_info() -> None:
     """Sensors return None before the first bridge info."""
-    node = MagicMock(info=None, boot_time=None)
+    node = MagicMock(info=None, boot_time=None, channels={})
     assert {d.key: d.value_fn(node) for d in BRIDGE_SENSORS} == dict.fromkeys(
         (d.key for d in BRIDGE_SENSORS), None
     )
@@ -288,6 +290,8 @@ async def test_more_frames_fetched_at_once(
     received = []
     channel.async_add_listener(lambda result: received.extend(result.received))
     assert can_esp.can is not None
+    # The bridge keeps frames for a client from its first exchange on.
+    await _tick(hass, freezer, 0.2)
     for i in range(150):
         can_esp.can.inject(SimCanFrame(0x10A, bytes((0x30, 0, 0x28, 0, i, 0, 0))))
     await _tick(hass, freezer, 0.2)

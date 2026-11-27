@@ -74,5 +74,10 @@
   "card": {
     "name": "Daikin heat pump",
     "description": "Schematic of the heat pump with all values of the Daikin Heat Pump Control integration."
+  },
+  "master": {
+    "listening": "Another Home Assistant instance controls the heat pump; this one only shows the values.",
+    "claim": "Become master",
+    "claim_error": "This instance could not become the master."
   }
 }

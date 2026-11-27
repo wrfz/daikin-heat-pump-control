@@ -20,6 +20,15 @@ class BridgeProtocolError(ValueError):
     """Raised when a bridge response does not have the expected format."""
 
 
+class BridgeClientError(BridgeProtocolError):
+    """Raised when the bridge does not serve this client."""
+
+    def __init__(self, code: str) -> None:
+        """Initialize with the error code of the bridge."""
+        super().__init__(f"Bridge refused the client: {code}")
+        self.code = code
+
+
 @dataclass(frozen=True, slots=True, kw_only=True)
 class CanFrame:
     """A classic CAN frame with an 11-bit identifier."""
@@ -59,6 +68,15 @@ class TimedCanFrame:
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
+class ClientStatus:
+    """What the bridge reports about the calling client."""
+
+    master: bool = True
+    clients: int = 1
+    rejected: int = 0
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
 class CanExchangeResult:
     """Answer of `daikin_can_exchange`."""
 
@@ -69,6 +87,16 @@ class CanExchangeResult:
     overflows: int
     dropped: int
     more: bool = False
+    client: ClientStatus = field(default_factory=ClientStatus)
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class UartPiece:
+    """Received UART bytes; `fresh` bytes start the answer to a new request."""
+
+    timestamp: int
+    data: bytes
+    fresh: bool
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -76,10 +104,11 @@ class UartExchangeResult:
     """Answer of `daikin_uart_exchange`."""
 
     now: int
-    received_at: int | None
-    received: bytes
+    pieces: tuple[UartPiece, ...]
     sent_at: int | None
     overflows: int
+    more: bool = False
+    client: ClientStatus = field(default_factory=ClientStatus)
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -87,7 +116,6 @@ class CanStatus:
     """CAN controller status reported by the bridge."""
 
     buffer: int
-    overflows: int
     state: str
     tx_errors: int | None
     rx_errors: int | None
@@ -100,7 +128,6 @@ class UartStatus:
     """UART buffer status reported by the bridge."""
 
     buffer: int
-    overflows: int
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -117,6 +144,7 @@ class BridgeInfo:
     wifi_rssi: int | None
     wifi_ssid: str | None
     wifi_ip: str | None
+    clients: int | None = None
     can: CanStatus | None = None
     uart: UartStatus | None = None
     raw: dict[str, Any] = field(default_factory=dict, compare=False)
@@ -129,7 +157,17 @@ def _load(data: bytes) -> dict[str, Any]:
         raise BridgeProtocolError("Response is not valid JSON") from err
     if not isinstance(value, dict):
         raise BridgeProtocolError("Response is not a JSON object")
+    if isinstance(error := value.get("error"), str):
+        raise BridgeClientError(error)
     return value
+
+
+def _client(obj: dict[str, Any]) -> ClientStatus:
+    return ClientStatus(
+        master=obj.get("master") is True,
+        clients=_opt_int(obj, "clients") or 0,
+        rejected=_opt_int(obj, "rejected") or 0,
+    )
 
 
 def _int(obj: dict[str, Any], key: str) -> int:
@@ -201,24 +239,49 @@ def parse_can_exchange(data: bytes) -> CanExchangeResult:
         overflows=_opt_int(obj, "overflows") or 0,
         dropped=_opt_int(obj, "dropped") or 0,
         more=obj.get("more") is True,
+        client=_client(obj),
     )
+
+
+def _uart_pieces(obj: dict[str, Any]) -> tuple[UartPiece, ...]:
+    items = obj.get("rx", [])
+    if not isinstance(items, list):
+        raise BridgeProtocolError("Field 'rx' is not a list")
+    pieces: list[UartPiece] = []
+    for item in items:
+        if (
+            not isinstance(item, list)
+            or len(item) != 3
+            or isinstance(item[0], bool)
+            or not isinstance(item[0], int)
+            or not isinstance(item[1], str)
+            or not isinstance(item[2], bool)
+        ):
+            raise BridgeProtocolError(f"Invalid UART entry {item!r}")
+        try:
+            data = bytes.fromhex(item[1])
+        except ValueError as err:
+            raise BridgeProtocolError(f"Invalid UART data {item[1]!r}") from err
+        pieces.append(UartPiece(timestamp=item[0], data=data, fresh=item[2]))
+    return tuple(pieces)
 
 
 def parse_uart_exchange(data: bytes) -> UartExchangeResult:
     """Parse the response of `daikin_uart_exchange`."""
     obj = _load(data)
-    raw = _opt_str(obj, "rx") or ""
-    try:
-        received = bytes.fromhex(raw)
-    except ValueError as err:
-        raise BridgeProtocolError(f"Invalid UART data {raw!r}") from err
     return UartExchangeResult(
         now=_int(obj, "now"),
-        received_at=_opt_int(obj, "rx_t") if received else None,
-        received=received,
+        pieces=_uart_pieces(obj),
         sent_at=_opt_int(obj, "tx_t"),
         overflows=_opt_int(obj, "overflows") or 0,
+        more=obj.get("more") is True,
+        client=_client(obj),
     )
+
+
+def parse_claim(data: bytes) -> ClientStatus:
+    """Parse the response of `daikin_bridge_claim`."""
+    return _client(_load(data))
 
 
 def parse_bridge_info(data: bytes) -> BridgeInfo:
@@ -235,7 +298,6 @@ def parse_bridge_info(data: bytes) -> BridgeInfo:
     if can_obj is not None:
         can = CanStatus(
             buffer=_opt_int(can_obj, "buffer") or 0,
-            overflows=_opt_int(can_obj, "overflows") or 0,
             state=_opt_str(can_obj, "state") or "unknown",
             tx_errors=_opt_int(can_obj, "tx_errors"),
             rx_errors=_opt_int(can_obj, "rx_errors"),
@@ -244,10 +306,7 @@ def parse_bridge_info(data: bytes) -> BridgeInfo:
         )
     uart = None
     if uart_obj is not None:
-        uart = UartStatus(
-            buffer=_opt_int(uart_obj, "buffer") or 0,
-            overflows=_opt_int(uart_obj, "overflows") or 0,
-        )
+        uart = UartStatus(buffer=_opt_int(uart_obj, "buffer") or 0)
     return BridgeInfo(
         bridge_version=_opt_str(obj, "bridge") or "",
         esphome_version=_opt_str(obj, "esphome") or "",
@@ -259,6 +318,7 @@ def parse_bridge_info(data: bytes) -> BridgeInfo:
         wifi_rssi=_opt_int(wifi, "rssi"),
         wifi_ssid=_opt_str(wifi, "ssid"),
         wifi_ip=_opt_str(wifi, "ip"),
+        clients=_opt_int(obj, "clients"),
         can=can,
         uart=uart,
         raw=obj,

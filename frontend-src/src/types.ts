@@ -13,6 +13,10 @@ export interface Connection {
     callback: (event: unknown) => void,
     eventType: string,
   ): Promise<UnsubscribeFunc>;
+  subscribeMessage<T>(
+    callback: (message: T) => void,
+    subscribeMessage: Record<string, unknown>,
+  ): Promise<UnsubscribeFunc>;
 }
 
 export interface HomeAssistant {
@@ -30,6 +34,12 @@ export interface HomeAssistant {
 export interface DashboardData {
   entities: Record<string, string>;
   info: string[];
+}
+
+/** Whether this instance controls the bridges (WebSocket `master/subscribe`). */
+export interface MasterStatus {
+  master: boolean;
+  clients: number;
 }
 
 export type Rgb = [number, number, number];
