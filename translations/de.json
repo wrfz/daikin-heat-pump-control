@@ -107,13 +107,410 @@
   },
   "entity": {
     "binary_sensor": {
+      "bivalence_function": {
+        "name": "Bivalenzfunktion"
+      },
       "connected": {
         "name": "Verbindung"
+      },
+      "energy_saving_mode": {
+        "name": "Energiesparmodus"
+      },
+      "external_temp_sensor": {
+        "name": "SKonfig T-Außen"
+      },
+      "status_kesselpumpe": {
+        "name": "Kesselpumpe"
+      },
+      "status_kompressor": {
+        "name": "Verdichter"
+      }
+    },
+    "number": {
+      "antileg_temp": {
+        "name": "Antilegionellen-Temperatur"
+      },
+      "circulation_interval_off": {
+        "name": "Zirkulationsintervall aus"
+      },
+      "circulation_interval_on": {
+        "name": "Zirkulationsintervall an"
+      },
+      "circulation_pump_max": {
+        "name": "Umwälzpumpe max."
+      },
+      "circulation_pump_min": {
+        "name": "Umwälzpumpe min."
+      },
+      "cooling_setpoint_adj": {
+        "name": "Kühlsollwert-Korrektur"
+      },
+      "delay_time_for_backup_heating": {
+        "name": "Wartezeit BOH"
+      },
+      "delta_temp_ch": {
+        "name": "Spreizung HZ"
+      },
+      "delta_temp_dhw": {
+        "name": "Spreizung WW"
+      },
+      "dhw_off_time": {
+        "name": "WW-Sperrzeit"
+      },
+      "flow_rate_hyst": {
+        "name": "Durchfluss Hysterese"
+      },
+      "flow_rate_min": {
+        "name": "Durchfluss min."
+      },
+      "flow_rate_setpoint": {
+        "name": "Durchfluss Soll"
+      },
+      "flow_temperature_day": {
+        "name": "T-Vorlauf Tag"
+      },
+      "flow_temperature_night": {
+        "name": "T-Vorlauf Nacht"
+      },
+      "heating_curve": {
+        "name": "Heizkurve"
+      },
+      "hp_hyst_tdhw": {
+        "name": "WP-Hysterese TDHW"
+      },
+      "max_dhw_loading": {
+        "name": "Max. WW-Ladezeit"
+      },
+      "max_heating_temperature": {
+        "name": "Max. Temp. Heizung"
+      },
+      "max_pressure": {
+        "name": "Max. Druck"
+      },
+      "max_pressure_drop": {
+        "name": "Max. Druckverlust"
+      },
+      "max_t_out_cooling": {
+        "name": "Max. Kühlen A-Temp"
+      },
+      "max_target_flow_temp": {
+        "name": "Max. T-Vorlauf"
+      },
+      "min_pressure": {
+        "name": "Min. Druck"
+      },
+      "min_t_flow_cooling": {
+        "name": "Min. VL-Soll Kühlen"
+      },
+      "min_target_flow_temp": {
+        "name": "Min. T-Vorlauf"
+      },
+      "power_biv": {
+        "name": "Leistung BIV"
+      },
+      "power_dhw": {
+        "name": "Leistung WW"
+      },
+      "power_ehs_1": {
+        "name": "Leistung EHS Stufe 1"
+      },
+      "power_ehs_2": {
+        "name": "Leistung EHS Stufe 2"
+      },
+      "set_pressure": {
+        "name": "Soll-Druck"
+      },
+      "start_t_out_cooling": {
+        "name": "Start Kühlen A-Temp"
+      },
+      "supply_temperature_adjustment_cooling": {
+        "name": "Anpassung T-VL Kühlen"
+      },
+      "supply_temperature_adjustment_heating": {
+        "name": "Anpassung T-VL Heizen"
+      },
+      "t_dhw_1_min": {
+        "name": "Schaltschwelle TDHW"
+      },
+      "t_flow_cooling": {
+        "name": "T-VL Kühlen"
+      },
+      "t_flow_cooling_max": {
+        "name": "VL-Soll Max Kühlen"
+      },
+      "t_flow_cooling_start": {
+        "name": "VL-Soll Start Kühlen"
+      },
+      "target_hot_water_temperature_1": {
+        "name": "T-WW-Soll 1"
+      },
+      "target_hot_water_temperature_2": {
+        "name": "T-WW-Soll 2"
+      },
+      "target_hot_water_temperature_3": {
+        "name": "T-WW-Soll 3"
+      },
+      "target_room1_temperature": {
+        "name": "Raumsoll 1"
+      },
+      "target_room2_temperature": {
+        "name": "Raumsoll 2"
+      },
+      "target_room3_temperature": {
+        "name": "Raumsoll 3"
+      },
+      "tdiff_dhw_ch": {
+        "name": "TDiff-WW HZU"
+      }
+    },
+    "select": {
+      "antileg_day": {
+        "name": "Antilegionellen-Tag",
+        "state": {
+          "daily": "Täglich",
+          "friday": "Freitag",
+          "monday": "Montag",
+          "off": "Aus",
+          "saturday": "Samstag",
+          "sunday": "Sonntag",
+          "thursday": "Donnerstag",
+          "tuesday": "Dienstag",
+          "wednesday": "Mittwoch"
+        }
+      },
+      "building_insulation": {
+        "name": "Gebäudedämmung",
+        "state": {
+          "good": "Gut",
+          "low": "Gering",
+          "normal": "Normal",
+          "off": "Aus",
+          "very_good": "Sehr gut"
+        }
+      },
+      "electric_heater": {
+        "name": "Heizstäbe",
+        "state": {
+          "3": "3 kW",
+          "6": "6 kW",
+          "9": "9 kW",
+          "off": "Aus"
+        }
+      },
+      "function_ehs": {
+        "name": "Funktion EHS",
+        "state": {
+          "no_additional_heat_generator": "Kein zusätzlicher Wärmeerzeuger",
+          "optional_backup_heater": "Optionaler Backup-Heater",
+          "wez1_for_hot_water_wez2_for_heating": "WEZ1 für WW, WEZ2 für HZ",
+          "wez_for_hot_water_and_heating": "WEZ für WW und HZ"
+        }
+      },
+      "heating_limit_day": {
+        "name": "Heizgrenze Tag",
+        "state": {
+          "10": "10 °C",
+          "11": "11 °C",
+          "12": "12 °C",
+          "13": "13 °C",
+          "14": "14 °C",
+          "15": "15 °C",
+          "16": "16 °C",
+          "17": "17 °C",
+          "18": "18 °C",
+          "19": "19 °C",
+          "20": "20 °C",
+          "21": "21 °C",
+          "22": "22 °C",
+          "23": "23 °C",
+          "24": "24 °C",
+          "25": "25 °C",
+          "26": "26 °C",
+          "27": "27 °C",
+          "28": "28 °C",
+          "29": "29 °C",
+          "30": "30 °C",
+          "31": "31 °C",
+          "32": "32 °C",
+          "33": "33 °C",
+          "34": "34 °C",
+          "35": "35 °C",
+          "36": "36 °C",
+          "37": "37 °C",
+          "38": "38 °C",
+          "39": "39 °C",
+          "40": "40 °C",
+          "off": "Aus"
+        }
+      },
+      "heating_limit_night": {
+        "name": "Heizgrenze Nacht",
+        "state": {
+          "10": "10 °C",
+          "11": "11 °C",
+          "12": "12 °C",
+          "13": "13 °C",
+          "14": "14 °C",
+          "15": "15 °C",
+          "16": "16 °C",
+          "17": "17 °C",
+          "18": "18 °C",
+          "19": "19 °C",
+          "20": "20 °C",
+          "21": "21 °C",
+          "22": "22 °C",
+          "23": "23 °C",
+          "24": "24 °C",
+          "25": "25 °C",
+          "26": "26 °C",
+          "27": "27 °C",
+          "28": "28 °C",
+          "29": "29 °C",
+          "30": "30 °C",
+          "31": "31 °C",
+          "32": "32 °C",
+          "33": "33 °C",
+          "34": "34 °C",
+          "35": "35 °C",
+          "36": "36 °C",
+          "37": "37 °C",
+          "38": "38 °C",
+          "39": "39 °C",
+          "40": "40 °C",
+          "off": "Aus"
+        }
+      },
+      "hk_function": {
+        "name": "HK-Funktion",
+        "state": {
+          "fixed": "Fest",
+          "weather_dependent": "Witterungsgeführt"
+        }
+      },
+      "indoor_unit": {
+        "name": "Innengerät",
+        "state": {
+          "304": "304",
+          "308": "308",
+          "508": "508",
+          "516": "516",
+          "none": "Nicht gesetzt"
+        }
+      },
+      "operating_mode": {
+        "name": "Betriebsmodus",
+        "state": {
+          "automatic_1": "Automatik 1",
+          "automatic_2": "Automatik 2",
+          "cooling": "Kühlen",
+          "heating": "Heizen",
+          "lowering": "Absenken",
+          "standby": "Bereitschaft",
+          "summer": "Sommer"
+        }
+      },
+      "outdoor_unit": {
+        "name": "Außengerät",
+        "state": {
+          "11": "11",
+          "14": "14",
+          "16": "16",
+          "4": "4",
+          "6": "6",
+          "8": "8",
+          "none": "Nicht gesetzt"
+        }
+      },
+      "quiet": {
+        "name": "Flüsterbetrieb",
+        "state": {
+          "night_only": "Nur nachts",
+          "off": "Aus",
+          "on": "An"
+        }
+      },
+      "sg_mode": {
+        "name": "SG-Modus",
+        "state": {
+          "off": "Aus",
+          "sg_mode_1": "SG-Modus 1",
+          "sg_mode_2": "SG-Modus 2"
+        }
+      },
+      "t_h_c_switch": {
+        "name": "T-HK-Umschaltung",
+        "state": {
+          "10": "10 °C",
+          "11": "11 °C",
+          "12": "12 °C",
+          "13": "13 °C",
+          "14": "14 °C",
+          "15": "15 °C",
+          "16": "16 °C",
+          "17": "17 °C",
+          "18": "18 °C",
+          "19": "19 °C",
+          "20": "20 °C",
+          "21": "21 °C",
+          "22": "22 °C",
+          "23": "23 °C",
+          "24": "24 °C",
+          "25": "25 °C",
+          "26": "26 °C",
+          "27": "27 °C",
+          "28": "28 °C",
+          "29": "29 °C",
+          "30": "30 °C",
+          "31": "31 °C",
+          "32": "32 °C",
+          "33": "33 °C",
+          "34": "34 °C",
+          "35": "35 °C",
+          "36": "36 °C",
+          "37": "37 °C",
+          "38": "38 °C",
+          "39": "39 °C",
+          "40": "40 °C",
+          "off": "Aus"
+        }
+      },
+      "temperature_antifreeze": {
+        "name": "T-Frostschutz",
+        "state": {
+          "0": "0 °C",
+          "1": "1 °C",
+          "2": "2 °C",
+          "3": "3 °C",
+          "4": "4 °C",
+          "5": "5 °C",
+          "minus_1": "-1 °C",
+          "minus_10": "-10 °C",
+          "minus_11": "-11 °C",
+          "minus_12": "-12 °C",
+          "minus_13": "-13 °C",
+          "minus_14": "-14 °C",
+          "minus_15": "-15 °C",
+          "minus_2": "-2 °C",
+          "minus_3": "-3 °C",
+          "minus_4": "-4 °C",
+          "minus_5": "-5 °C",
+          "minus_6": "-6 °C",
+          "minus_7": "-7 °C",
+          "minus_8": "-8 °C",
+          "minus_9": "-9 °C",
+          "off": "Aus"
+        }
       }
     },
     "sensor": {
+      "bivalence_temperature": {
+        "name": "Bivalenztemperatur"
+      },
       "bridge_version": {
         "name": "Bridge-Version"
+      },
+      "bypass_valve": {
+        "name": "Bypassventil"
       },
       "can_arbitration_lost": {
         "name": "CAN-Arbitrierung verloren"
@@ -140,8 +537,100 @@
       "can_tx_errors": {
         "name": "CAN-Sendefehler"
       },
+      "circulation_pump": {
+        "name": "Umwälzpumpe"
+      },
+      "dhw_mixer_position": {
+        "name": "WW-Mischerposition"
+      },
+      "ehs_for_ch": {
+        "name": "Energie EHS Heizung"
+      },
+      "energy_cooling": {
+        "name": "Energie Kühlung"
+      },
+      "error_code": {
+        "name": "Fehlercode",
+        "state": {
+          "e128": "E128 Fehler Rücklauftemperaturfühler",
+          "e129": "E129 Fehler Drucksensor",
+          "e198": "E198 Durchflussmessung nicht plausibel",
+          "e200": "E200 Kommunikationsfehler",
+          "e75": "E75 Fehler Außentemperaturfühler",
+          "e76": "E76 Fehler Speichertemperaturfühler",
+          "e8005": "E8005 Wasserdruck in Heizungsanlage zu gering",
+          "e81": "E81 Kommunikationsfehler Rocon",
+          "e8100": "E8100 Kommunikation",
+          "e88": "E88 Kommunikationsfehler Rocon Handbuch",
+          "e9000": "E9000 Interne vorübergehende Meldung",
+          "e9001": "E9001 Rücklauffühler",
+          "e9002": "E9002 Vorlauffühler",
+          "e9003": "E9003 Frostschutzfunktion",
+          "e9004": "E9004 Durchfluss",
+          "e9005": "E9005 Vorlauftemperaturfühler",
+          "e9006": "E9006 Vorlauftemperaturfühler",
+          "e9007": "E9007 Platine IG defekt",
+          "e9008": "E9008 Kältemitteltemperatur außerhalb des Bereiches",
+          "e9009": "E9009 STB Fehler",
+          "e9010": "E9010 STB Fehler",
+          "e9011": "E9011 Fehler Flowsensor",
+          "e9012": "E9012 Fehler Vorlauffühler",
+          "e9013": "E9013 Platine AG defekt",
+          "e9014": "E9014 P-Kältemittel hoch",
+          "e9015": "E9015 P-Kältemittel niedrig",
+          "e9016": "E9016 Lastschutz Verdichter",
+          "e9017": "E9017 Ventilator blockiert",
+          "e9018": "E9018 Expansionsventil",
+          "e9019": "E9019 Warmwassertemperatur > 85°C",
+          "e9020": "E9020 T-Verdampfer hoch",
+          "e9021": "E9021 HPS-System",
+          "e9022": "E9022 Fehler AT-Fühler",
+          "e9023": "E9023 Fehler WW-Fühler",
+          "e9024": "E9024 Drucksensor",
+          "e9025": "E9025 Fehler Rücklauffühler",
+          "e9026": "E9026 Drucksensor",
+          "e9027": "E9027 Aircoil-Fühler Defrost",
+          "e9028": "E9028 Aircoil-Fühler temp",
+          "e9029": "E9029 Fehler Kältefühler AG",
+          "e9030": "E9030 Defekt elektrisch",
+          "e9031": "E9031 Defekt elektrisch",
+          "e9032": "E9032 Defekt elektrisch",
+          "e9033": "E9033 Defekt elektrisch",
+          "e9034": "E9034 Defekt elektrisch",
+          "e9035": "E9035 Platine AG defekt",
+          "e9036": "E9036 Defekt elektrisch",
+          "e9037": "E9037 Einstellung Leistung",
+          "e9038": "E9038 Kältemittel Leck",
+          "e9039": "E9039 Unter/Überspannung",
+          "e9041": "E9041 Übertragungsfehler",
+          "e9042": "E9042 Übertragungsfehler",
+          "e9043": "E9043 Übertragungsfehler",
+          "e9044": "E9044 Übertragungsfehler",
+          "e91": "E91 Kommunikationsfehler Rocon Handbuch",
+          "no_error": "Kein Fehler",
+          "unknown": "Unbekannter Fehler",
+          "w8006": "W8006 Warnung Druckverlust",
+          "w8007": "W8007 Wasserdruck in Anlage zu hoch"
+        }
+      },
       "esphome_version": {
         "name": "ESPHome-Version"
+      },
+      "ext": {
+        "name": "Smart-Grid-Zustand",
+        "state": {
+          "none": "Nicht gesetzt",
+          "sg1": "SG1 - WW und HZ aus",
+          "sg2": "SG2 - WW und HZ +5 °C",
+          "sg3": "SG3 - WW 70 °C",
+          "sgn": "SGN - Normaler Modus"
+        }
+      },
+      "flow_rate": {
+        "name": "Durchfluss"
+      },
+      "flow_rate_calc": {
+        "name": "Durchfluss berechnet"
       },
       "heap_free": {
         "name": "Freier Heap"
@@ -155,17 +644,134 @@
       "last_restart": {
         "name": "Letzter Neustart"
       },
+      "mode_of_operating": {
+        "name": "Betriebsart",
+        "state": {
+          "cooling": "Kühlen",
+          "defrosting": "Abtauen",
+          "heating": "Heizen",
+          "hot_water": "Warmwasserbereitung",
+          "standby": "Bereitschaft"
+        }
+      },
+      "qboh": {
+        "name": "Energie EHS Warmwasser"
+      },
+      "qch": {
+        "name": "Energie Heizung"
+      },
+      "qdhw": {
+        "name": "Energie Warmwasser"
+      },
       "reset_reason": {
         "name": "Reset-Grund"
+      },
+      "runtime_compressor": {
+        "name": "Laufzeit Verdichter"
+      },
+      "runtime_pump": {
+        "name": "Laufzeit Pumpe"
       },
       "ssid": {
         "name": "SSID"
       },
+      "system_time": {
+        "name": "Systemzeit"
+      },
+      "t_ext": {
+        "name": "T-Außen"
+      },
+      "t_hs": {
+        "name": "T-WE"
+      },
+      "t_room": {
+        "name": "Raum-Ist"
+      },
+      "ta2": {
+        "name": "TA2"
+      },
+      "target_supply_temperature": {
+        "name": "Vorlauf-Soll"
+      },
+      "tdhw1": {
+        "name": "Warmwassertemperatur"
+      },
+      "tdhw2": {
+        "name": "Warmwassertemperatur 2"
+      },
+      "temperature_outside": {
+        "name": "Außentemperatur"
+      },
+      "temperature_spread": {
+        "name": "Spreizung"
+      },
+      "temperature_spread_raw": {
+        "name": "Spreizung (roh)"
+      },
+      "thermal_power": {
+        "name": "Thermische Leistung"
+      },
+      "thermal_power_raw": {
+        "name": "Thermische Leistung (roh)"
+      },
+      "tliq": {
+        "name": "Tliq"
+      },
+      "total_electrical_energy": {
+        "name": "Elektrische Energie gesamt"
+      },
+      "total_energy_produced": {
+        "name": "Erzeugte Energie gesamt"
+      },
+      "tr": {
+        "name": "TR"
+      },
+      "tv": {
+        "name": "TV"
+      },
+      "tv_max": {
+        "name": "TV max."
+      },
+      "tv_tvbh_delta": {
+        "name": "TV-TVBH-Delta"
+      },
+      "tvbh": {
+        "name": "TVBH"
+      },
+      "tvbh_tr_delta": {
+        "name": "TVBH-TR-Delta"
+      },
       "uart_overflows": {
         "name": "UART-Pufferüberläufe"
       },
+      "vorlauf_soll_tv_delta": {
+        "name": "Vorlauf-Soll-TV-Delta"
+      },
+      "water_pressure": {
+        "name": "Wasserdruck"
+      },
       "wifi_signal": {
         "name": "WLAN-Signal"
+      }
+    },
+    "switch": {
+      "1_dhw": {
+        "name": "1x Warmwasser"
+      },
+      "ch_support": {
+        "name": "HZ-Unterstützung"
+      },
+      "circulation_with_dhw_program": {
+        "name": "Zirkulation mit WW-Programm"
+      },
+      "heating_curve_adaptation": {
+        "name": "Heizkurvenadaption"
+      },
+      "room_therm": {
+        "name": "Raumthermostat"
+      },
+      "smart_grid": {
+        "name": "Smart Grid"
       }
     }
   },
@@ -175,6 +781,9 @@
     },
     "invalid_auth": {
       "message": "Die Bridge {name} hat den API-Verschlüsselungsschlüssel abgelehnt."
+    },
+    "write_not_supported": {
+      "message": "{entity} kann noch nicht geändert werden; Schreiben an die Wärmepumpe wird in dieser Version nicht unterstützt."
     }
   },
   "issues": {
@@ -184,17 +793,24 @@
     }
   },
   "options": {
-    "abort": {
-      "no_options": "Ohne UART-Bus gibt es keine Optionen."
-    },
     "step": {
       "init": {
         "data": {
+          "interval_counter": "Intervall Zähler",
+          "interval_measurement": "Intervall Messwerte",
+          "interval_setting": "Intervall Einstellungen",
+          "interval_state": "Intervall Zustände",
           "outdoor_unit": "Außengerät",
+          "scan_interval": "Abfrageintervall",
           "uart_protocol": "Protokoll"
         },
         "data_description": {
+          "interval_counter": "Energie, Laufzeiten und Systemzeit. Leer: Standard.",
+          "interval_measurement": "Temperaturen, Druck, Durchfluss, Pumpe und Ventile. Leer: Standard.",
+          "interval_setting": "Zahlen, Auswahlen und Schalter. Änderungen am Bedienteil kommen ohne Abfrage an. Leer: Standard.",
+          "interval_state": "Binäre Werte, Betriebsart, Fehlercode und Smart-Grid-Zustand. Leer: Standard.",
           "outdoor_unit": "Modell des Außengeräts; bestimmt Kältemittel und Registeraufbau.",
+          "scan_interval": "Intervall in Sekunden für alle CAN-Werte ohne Gruppenintervall.",
           "uart_protocol": "Protokoll des Innengeräts; die automatische Erkennung passt für die meisten Geräte."
         },
         "title": "Optionen"

@@ -6,6 +6,7 @@ from homeassistant.config_entries import ConfigEntry
 
 from .bridge.node import BridgeNode, BusChannel
 from .const import Bus
+from .coordinator import CanCoordinator
 
 
 @dataclass(slots=True, kw_only=True)
@@ -14,6 +15,7 @@ class DaikinRuntimeData:
 
     nodes: dict[str, BridgeNode]
     channels: dict[Bus, BusChannel]
+    can: CanCoordinator | None = None
 
 
 type DaikinConfigEntry = ConfigEntry[DaikinRuntimeData]

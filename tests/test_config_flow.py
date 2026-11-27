@@ -510,9 +510,33 @@ async def test_options(hass: HomeAssistant, uart_esp: SimulatedEsp) -> None:
     assert entry.state is ConfigEntryState.LOADED
 
 
-async def test_options_without_uart(hass: HomeAssistant, can_esp: SimulatedEsp) -> None:
-    """Without UART there are no options."""
-    entry = daikin_entry(hass, can=can_esp)
+async def test_options_polling_intervals(
+    hass: HomeAssistant, can_esp: SimulatedEsp
+) -> None:
+    """With CAN the polling intervals can be set; a cleared group interval is removed."""
+    entry = daikin_entry(
+        hass, can=can_esp, options={"scan_interval": 30, "interval_counter": 600}
+    )
     result = await hass.config_entries.options.async_init(entry.entry_id)
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_options"
+    assert result["step_id"] == "init"
+    fields = {str(key) for key in result["data_schema"].schema}
+    assert fields == {
+        "scan_interval",
+        "interval_measurement",
+        "interval_state",
+        "interval_setting",
+        "interval_counter",
+    }
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"scan_interval": 60, "interval_setting": 300}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.options == {"scan_interval": 60, "interval_setting": 300}
+
+
+async def test_options_both_buses(hass: HomeAssistant, both_esp: SimulatedEsp) -> None:
+    """With both buses the form holds the intervals and the UART settings."""
+    entry = daikin_entry(hass, can=both_esp, uart=both_esp)
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    fields = {str(key) for key in result["data_schema"].schema}
+    assert {"scan_interval", "outdoor_unit", "uart_protocol"} <= fields

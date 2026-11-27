@@ -20,6 +20,9 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
@@ -39,6 +42,7 @@ from .bridge.client import (
     normalize_mac,
 )
 from .bridge.resolve import esphome_entry_target
+from .can.table import Group
 from .const import (
     BUS_CONF,
     CONF_CAN_NODE,
@@ -46,17 +50,22 @@ from .const import (
     CONF_NODES,
     CONF_NOISE_PSK,
     CONF_OUTDOOR_UNIT,
+    CONF_SCAN_INTERVAL,
     CONF_UART_NODE,
     CONF_UART_PROTOCOL,
     DEFAULT_PORT,
+    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     ESPHOME_CONF_NOISE_PSK,
     ESPHOME_DOMAIN,
+    MAX_SCAN_INTERVAL,
+    MIN_SCAN_INTERVAL,
     OUTDOOR_UNITS,
     PROJECT_NAME_PATTERN,
     Bus,
     UartProtocol,
 )
+from .coordinator import group_option
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -663,6 +672,33 @@ class DaikinConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
+def _interval_selector() -> NumberSelector:
+    return NumberSelector(
+        NumberSelectorConfig(
+            min=MIN_SCAN_INTERVAL,
+            max=MAX_SCAN_INTERVAL,
+            step=1,
+            mode=NumberSelectorMode.BOX,
+            unit_of_measurement="s",
+        )
+    )
+
+
+def _interval_schema(options: Mapping[str, Any]) -> dict[Any, Any]:
+    fields: dict[Any, Any] = {
+        probatio.Required(
+            CONF_SCAN_INTERVAL,
+            default=options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
+        ): _interval_selector()
+    }
+    for group in Group:
+        key = group_option(group)
+        fields[
+            probatio.Optional(key, description={"suggested_value": options.get(key)})
+        ] = _interval_selector()
+    return fields
+
+
 class DaikinOptionsFlow(OptionsFlowWithReload):
     """Options of the integration."""
 
@@ -670,12 +706,15 @@ class DaikinOptionsFlow(OptionsFlowWithReload):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Show the options."""
-        if self.config_entry.data.get(CONF_UART_NODE) is None:
-            return self.async_abort(reason="no_options")
+        options = self.config_entry.options
+        data = self.config_entry.data
         if user_input is not None:
-            return self.async_create_entry(
-                data={**self.config_entry.options, **user_input}
-            )
-        return self.async_show_form(
-            step_id="init", data_schema=_uart_schema(self.config_entry.options)
-        )
+            group_keys = {group_option(group) for group in Group}
+            kept = {k: v for k, v in options.items() if k not in group_keys}
+            return self.async_create_entry(data={**kept, **user_input})
+        fields: dict[Any, Any] = {}
+        if data.get(CONF_CAN_NODE) is not None:
+            fields.update(_interval_schema(options))
+        if data.get(CONF_UART_NODE) is not None:
+            fields.update(_uart_schema(options).schema)
+        return self.async_show_form(step_id="init", data_schema=probatio.Schema(fields))

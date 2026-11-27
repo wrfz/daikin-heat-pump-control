@@ -82,3 +82,11 @@ RECONNECT_MIN_DELAY: Final = 1.0
 RECONNECT_MAX_DELAY: Final = 60.0
 
 ISSUE_NO_BRIDGE_FIRMWARE: Final = "no_bridge_firmware"
+
+# Polling of the CAN values (seconds).
+CONF_SCAN_INTERVAL: Final = "scan_interval"
+CONF_GROUP_INTERVAL_PREFIX: Final = "interval_"
+DEFAULT_SCAN_INTERVAL: Final = 30.0
+MIN_SCAN_INTERVAL: Final = 1.0
+MAX_SCAN_INTERVAL: Final = 3600.0
+TV_MAX_POLL_INTERVAL: Final = 2.0

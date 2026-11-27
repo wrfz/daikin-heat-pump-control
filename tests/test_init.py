@@ -202,6 +202,7 @@ async def test_reconnect_after_connection_loss(
     assert "Bridge daikin-can is available again" in caplog.text
 
 
+@pytest.mark.usefixtures("no_can_polling")
 async def test_exchange_cycle(
     hass: HomeAssistant, can_esp: SimulatedEsp, freezer: FrozenDateTimeFactory
 ) -> None:

@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import override
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -15,17 +15,23 @@ from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
     UnitOfInformation,
+    UnitOfPower,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .bridge.node import BridgeNode
+from .can.table import CAN_VALUES, CanValue, Platform
 from .const import Bus
-from .entity import BridgeEntity
+from .coordinator import COMPUTED_DISABLED_BY_DEFAULT
+from .entity import BridgeEntity, CanEntity, enum_or_none
 from .runtime import DaikinConfigEntry
 
 PARALLEL_UPDATES = 0
+
+ERROR_CODE = "error_code"
 
 CAN_STATES = ["error_active", "error_passive", "bus_off", "stopped", "unknown"]
 
@@ -188,18 +194,122 @@ BRIDGE_SENSORS: tuple[BridgeSensorEntityDescription, ...] = (
 )
 
 
+def _can_description(value: CanValue) -> SensorEntityDescription:
+    enum = value.platform is Platform.ENUM
+    return SensorEntityDescription(
+        key=value.key,
+        translation_key=value.key,
+        device_class=SensorDeviceClass.ENUM
+        if enum
+        else enum_or_none(SensorDeviceClass, value.device_class),
+        options=value.option_keys if enum else None,
+        native_unit_of_measurement=value.unit,
+        state_class=enum_or_none(SensorStateClass, value.state_class),
+        suggested_display_precision=value.precision,
+        entity_category=enum_or_none(EntityCategory, value.category),
+        entity_registry_enabled_default=value.enabled_default,
+    )
+
+
+def _delta(key: str) -> SensorEntityDescription:
+    return SensorEntityDescription(
+        key=key,
+        translation_key=key,
+        device_class=SensorDeviceClass.TEMPERATURE_DELTA,
+        native_unit_of_measurement=UnitOfTemperature.KELVIN,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        entity_registry_enabled_default=key not in COMPUTED_DISABLED_BY_DEFAULT,
+    )
+
+
+def _power(key: str) -> SensorEntityDescription:
+    return SensorEntityDescription(
+        key=key,
+        translation_key=key,
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        entity_registry_enabled_default=key not in COMPUTED_DISABLED_BY_DEFAULT,
+    )
+
+
+COMPUTED_SENSORS: tuple[SensorEntityDescription, ...] = (
+    _power("thermal_power"),
+    _power("thermal_power_raw"),
+    _delta("temperature_spread"),
+    _delta("temperature_spread_raw"),
+    _delta("tv_tvbh_delta"),
+    _delta("tvbh_tr_delta"),
+    _delta("vorlauf_soll_tv_delta"),
+    SensorEntityDescription(
+        key="tv_max",
+        translation_key="tv_max",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+    ),
+    SensorEntityDescription(
+        key="system_time",
+        translation_key="system_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+)
+
+CAN_SENSORS: tuple[SensorEntityDescription, ...] = (
+    *(
+        _can_description(value)
+        for value in CAN_VALUES
+        if value.platform in (Platform.SENSOR, Platform.ENUM)
+    ),
+    *COMPUTED_SENSORS,
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: DaikinConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensors."""
-    async_add_entities(
+    entities: list[SensorEntity] = [
         BridgeSensor(node, description)
         for node in entry.runtime_data.nodes.values()
         for description in BRIDGE_SENSORS
         if description.bus is None or description.bus in node.assigned_buses
-    )
+    ]
+    if (coordinator := entry.runtime_data.can) is not None:
+        entities.extend(
+            CanErrorCodeSensor(coordinator, description)
+            if description.key == ERROR_CODE
+            else CanSensor(coordinator, description)
+            for description in CAN_SENSORS
+        )
+    async_add_entities(entities)
+
+
+class CanSensor(CanEntity, SensorEntity):
+    """Sensor of a value of the RoCon controller."""
+
+    @property
+    @override
+    def native_value(self) -> StateType | datetime:
+        """Return the value."""
+        return self.can_state
+
+
+class CanErrorCodeSensor(CanSensor):
+    """Error code with the numeric code as attribute."""
+
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the numeric code."""
+        return {"code": self.coordinator.raw(ERROR_CODE)}
 
 
 class BridgeSensor(BridgeEntity, SensorEntity):

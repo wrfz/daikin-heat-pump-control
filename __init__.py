@@ -7,10 +7,14 @@ import logging
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 
 from .bridge.client import BridgeAuthError, BridgeConnectionError
-from .bridge.node import BridgeNode
+from .bridge.node import BridgeNode, CanChannel
 from .const import (
     BUS_CONF,
     CONF_NODE_NAME,
@@ -21,17 +25,25 @@ from .const import (
     ISSUE_NO_BRIDGE_FIRMWARE,
     Bus,
 )
+from .coordinator import CanCoordinator, entity_defaults, polling_intervals
 from .entity import (
     async_register_devices,
     async_update_bridge_device,
     bridge_device_identifier,
     bus_device_identifier,
+    can_unique_id,
 )
 from .runtime import DaikinConfigEntry, DaikinRuntimeData
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
+PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
 def _assigned_buses(entry: DaikinConfigEntry) -> dict[str, set[Bus]]:
@@ -98,7 +110,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaikinConfigEntry) -> bo
         for node in nodes.values()
         for bus, channel in node.channels.items()
     }
-    entry.runtime_data = DaikinRuntimeData(nodes=nodes, channels=channels)
+    can = None
+    if isinstance(channel := channels.get(Bus.CAN), CanChannel):
+        can = CanCoordinator(
+            hass,
+            channel,
+            active=_active_can_keys(hass, entry),
+            intervals=polling_intervals(entry.options),
+        )
+        entry.async_on_unload(can.async_start())
+    entry.runtime_data = DaikinRuntimeData(nodes=nodes, channels=channels, can=can)
     _async_update_devices(hass, entry)
     _async_remove_stale_issues(hass, entry)
 
@@ -115,6 +136,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaikinConfigEntry) -> bo
         )
         node.async_start()
     return True
+
+
+def _active_can_keys(hass: HomeAssistant, entry: DaikinConfigEntry) -> set[str]:
+    """Return the keys of the enabled CAN entities.
+
+    Entities not registered yet count as their default; values that no
+    enabled entity needs are not polled. Enabling an entity reloads the entry.
+    """
+    registered: dict[str, bool] = {}
+    prefix = can_unique_id(entry, "")
+    for entity in er.async_entries_for_config_entry(er.async_get(hass), entry.entry_id):
+        if entity.unique_id.startswith(prefix):
+            registered[entity.unique_id.removeprefix(prefix)] = not entity.disabled
+    return {
+        key
+        for key, default in entity_defaults().items()
+        if registered.get(key, default)
+    }
 
 
 def _async_update_devices(hass: HomeAssistant, entry: DaikinConfigEntry) -> None:

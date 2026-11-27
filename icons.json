@@ -1,8 +1,178 @@
 {
   "entity": {
+    "binary_sensor": {
+      "bivalence_function": {
+        "default": "mdi:toggle-switch-off-outline"
+      },
+      "energy_saving_mode": {
+        "default": "mdi:leaf"
+      },
+      "external_temp_sensor": {
+        "default": "mdi:thermometer-probe"
+      },
+      "status_kesselpumpe": {
+        "default": "mdi:pump"
+      },
+      "status_kompressor": {
+        "default": "mdi:heat-pump"
+      }
+    },
+    "number": {
+      "antileg_temp": {
+        "default": "mdi:bacteria-outline"
+      },
+      "circulation_interval_off": {
+        "default": "mdi:timer-pause-outline"
+      },
+      "circulation_interval_on": {
+        "default": "mdi:timer-play-outline"
+      },
+      "circulation_pump_max": {
+        "default": "mdi:waves-arrow-right"
+      },
+      "circulation_pump_min": {
+        "default": "mdi:waves-arrow-left"
+      },
+      "delay_time_for_backup_heating": {
+        "default": "mdi:clock-time-two-outline"
+      },
+      "delta_temp_ch": {
+        "default": "mdi:thermometer-lines"
+      },
+      "delta_temp_dhw": {
+        "default": "mdi:thermometer-lines"
+      },
+      "dhw_off_time": {
+        "default": "mdi:timer-off-outline"
+      },
+      "flow_rate_hyst": {
+        "default": "mdi:waves-arrow-right"
+      },
+      "flow_rate_min": {
+        "default": "mdi:waves-arrow-right"
+      },
+      "flow_rate_setpoint": {
+        "default": "mdi:waves-arrow-right"
+      },
+      "heating_curve": {
+        "default": "mdi:chart-bell-curve-cumulative"
+      },
+      "hp_hyst_tdhw": {
+        "default": "mdi:arrow-left-right"
+      },
+      "max_dhw_loading": {
+        "default": "mdi:timer-sand"
+      },
+      "max_pressure": {
+        "default": "mdi:gauge-full"
+      },
+      "max_pressure_drop": {
+        "default": "mdi:gauge-low"
+      },
+      "max_target_flow_temp": {
+        "default": "mdi:waves-arrow-right"
+      },
+      "min_pressure": {
+        "default": "mdi:gauge-empty"
+      },
+      "min_target_flow_temp": {
+        "default": "mdi:waves-arrow-left"
+      },
+      "power_biv": {
+        "default": "mdi:heating-coil"
+      },
+      "power_dhw": {
+        "default": "mdi:heating-coil"
+      },
+      "power_ehs_1": {
+        "default": "mdi:heating-coil"
+      },
+      "power_ehs_2": {
+        "default": "mdi:heating-coil"
+      },
+      "set_pressure": {
+        "default": "mdi:gauge"
+      },
+      "target_hot_water_temperature_1": {
+        "default": "mdi:water-thermometer"
+      },
+      "target_hot_water_temperature_2": {
+        "default": "mdi:water-thermometer"
+      },
+      "target_hot_water_temperature_3": {
+        "default": "mdi:water-thermometer"
+      },
+      "target_room1_temperature": {
+        "default": "mdi:home-thermometer"
+      },
+      "target_room2_temperature": {
+        "default": "mdi:home-thermometer"
+      },
+      "target_room3_temperature": {
+        "default": "mdi:home-thermometer"
+      }
+    },
+    "select": {
+      "antileg_day": {
+        "default": "mdi:calendar-week"
+      },
+      "building_insulation": {
+        "default": "mdi:home-thermometer-outline"
+      },
+      "electric_heater": {
+        "default": "mdi:induction"
+      },
+      "function_ehs": {
+        "default": "mdi:heating-coil"
+      },
+      "heating_limit_day": {
+        "default": "mdi:thermometer-chevron-down"
+      },
+      "heating_limit_night": {
+        "default": "mdi:thermometer-chevron-down"
+      },
+      "hk_function": {
+        "default": "mdi:weather-partly-cloudy"
+      },
+      "indoor_unit": {
+        "default": "mdi:water-boiler"
+      },
+      "operating_mode": {
+        "default": "mdi:sun-snowflake-variant",
+        "state": {
+          "cooling": "mdi:snowflake",
+          "heating": "mdi:fire",
+          "lowering": "mdi:weather-night",
+          "standby": "mdi:power-standby",
+          "summer": "mdi:white-balance-sunny"
+        }
+      },
+      "outdoor_unit": {
+        "default": "mdi:hvac"
+      },
+      "quiet": {
+        "default": "mdi:volume-low",
+        "state": {
+          "night_only": "mdi:weather-night",
+          "off": "mdi:volume-high"
+        }
+      },
+      "sg_mode": {
+        "default": "mdi:transmission-tower"
+      },
+      "t_h_c_switch": {
+        "default": "mdi:sun-snowflake-variant"
+      },
+      "temperature_antifreeze": {
+        "default": "mdi:snowflake-thermometer"
+      }
+    },
     "sensor": {
       "bridge_version": {
         "default": "mdi:chip"
+      },
+      "bypass_valve": {
+        "default": "mdi:pipe-valve"
       },
       "can_arbitration_lost": {
         "default": "mdi:swap-horizontal"
@@ -26,8 +196,29 @@
       "can_tx_errors": {
         "default": "mdi:alert-circle-outline"
       },
+      "circulation_pump": {
+        "default": "mdi:pump"
+      },
+      "dhw_mixer_position": {
+        "default": "mdi:valve"
+      },
+      "error_code": {
+        "default": "mdi:alert",
+        "state": {
+          "no_error": "mdi:check-circle-outline"
+        }
+      },
       "esphome_version": {
         "default": "mdi:chip"
+      },
+      "ext": {
+        "default": "mdi:transmission-tower-import"
+      },
+      "flow_rate": {
+        "default": "mdi:waves-arrow-right"
+      },
+      "flow_rate_calc": {
+        "default": "mdi:waves-arrow-right"
       },
       "heap_free": {
         "default": "mdi:memory"
@@ -38,14 +229,80 @@
       "ip_address": {
         "default": "mdi:ip-network"
       },
+      "mode_of_operating": {
+        "default": "mdi:sun-snowflake-variant",
+        "state": {
+          "cooling": "mdi:snowflake",
+          "defrosting": "mdi:snowflake-melt",
+          "heating": "mdi:fire",
+          "hot_water": "mdi:water-boiler",
+          "standby": "mdi:power-standby"
+        }
+      },
       "reset_reason": {
         "default": "mdi:restart-alert"
       },
       "ssid": {
         "default": "mdi:wifi"
       },
+      "system_time": {
+        "default": "mdi:clock-outline"
+      },
+      "temperature_spread": {
+        "default": "mdi:thermometer-lines"
+      },
+      "temperature_spread_raw": {
+        "default": "mdi:thermometer-lines"
+      },
+      "thermal_power": {
+        "default": "mdi:fire"
+      },
+      "thermal_power_raw": {
+        "default": "mdi:fire"
+      },
+      "tr": {
+        "default": "mdi:thermometer-lines"
+      },
+      "tv": {
+        "default": "mdi:thermometer-lines"
+      },
+      "tv_max": {
+        "default": "mdi:thermometer-chevron-up"
+      },
+      "tv_tvbh_delta": {
+        "default": "mdi:thermometer-lines"
+      },
+      "tvbh": {
+        "default": "mdi:thermometer-lines"
+      },
+      "tvbh_tr_delta": {
+        "default": "mdi:thermometer-lines"
+      },
       "uart_overflows": {
         "default": "mdi:tray-full"
+      },
+      "vorlauf_soll_tv_delta": {
+        "default": "mdi:thermometer-lines"
+      }
+    },
+    "switch": {
+      "1_dhw": {
+        "default": "mdi:hand-water"
+      },
+      "ch_support": {
+        "default": "mdi:heating-coil"
+      },
+      "circulation_with_dhw_program": {
+        "default": "mdi:water-sync"
+      },
+      "heating_curve_adaptation": {
+        "default": "mdi:chart-bell-curve-cumulative"
+      },
+      "room_therm": {
+        "default": "mdi:thermostat"
+      },
+      "smart_grid": {
+        "default": "mdi:transmission-tower"
       }
     }
   }

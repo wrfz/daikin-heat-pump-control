@@ -21,6 +21,8 @@ from helpers import DOMAIN, MAC_CAN, daikin_entry, esphome_entry, wait_for_state
 from sim.esp import SimulatedEsp, make_noise_psk
 from sim.heat_pump import SimCanFrame
 
+pytestmark = pytest.mark.usefixtures("no_can_polling")
+
 CONNECTION = "binary_sensor.daikin_bridge_daikin_can_connection"
 FRAME = CanFrame(can_id=0x680, data=bytes.fromhex("3100FAC0FC0000"))
 

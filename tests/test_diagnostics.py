@@ -59,9 +59,16 @@ async def test_entities(
     snapshot: SnapshotAssertion,
     platform: Platform,
 ) -> None:
-    """All diagnostic entities of the bridge nodes."""
+    """All diagnostic entities of the bridge nodes (CAN entities: test_can)."""
     entry = daikin_entry(hass, can=can_esp, uart=uart_esp)
-    with patch("custom_components.daikin_heat_pump_control.PLATFORMS", [platform]):
+    with (
+        patch("custom_components.daikin_heat_pump_control.PLATFORMS", [platform]),
+        patch("custom_components.daikin_heat_pump_control.sensor.CAN_SENSORS", ()),
+        patch(
+            "custom_components.daikin_heat_pump_control.binary_sensor.CAN_BINARY_SENSORS",
+            (),
+        ),
+    ):
         assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)

@@ -1,15 +1,18 @@
 """Devices and base entities."""
 
-from typing import TYPE_CHECKING, override
+from enum import StrEnum
+from typing import TYPE_CHECKING, NoReturn, override
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 
 from .bridge.node import BridgeNode
 from .const import DOMAIN, Bus
+from .coordinator import CanCoordinator, CanState
 
 if TYPE_CHECKING:
     from .runtime import DaikinConfigEntry
@@ -96,6 +99,66 @@ class BridgeEntity(Entity):
     @callback
     def _handle_node_update(self) -> None:
         self.async_write_ha_state()
+
+
+def enum_or_none[E: StrEnum](enum: type[E], value: str | None) -> E | None:
+    """Convert a plain string of the value table to a Home Assistant enum."""
+    return None if value is None else enum(value)
+
+
+def can_unique_id(entry: ConfigEntry, key: str) -> str:
+    """Return the unique id of a CAN entity."""
+    return f"{entry.entry_id}_{Bus.CAN}_{key}"
+
+
+class CanEntity(Entity):
+    """Entity of a value of the RoCon controller."""
+
+    _attr_has_entity_name = True
+    _attr_should_poll = False
+
+    def __init__(
+        self, coordinator: CanCoordinator, description: EntityDescription
+    ) -> None:
+        """Initialize the entity."""
+        self.coordinator = coordinator
+        self.entity_description = description
+        entry = coordinator.channel.node.entry
+        self._attr_unique_id = can_unique_id(entry, description.key)
+        self._attr_device_info = DeviceInfo(
+            identifiers={bus_device_identifier(entry, Bus.CAN)}
+        )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return True while the CAN bus can be used."""
+        return self.coordinator.available
+
+    @property
+    def can_state(self) -> CanState:
+        """Return the state of the value."""
+        return self.coordinator.state(self.entity_description.key)
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to changes of the value."""
+        self.async_on_remove(
+            self.coordinator.async_add_listener(
+                self.entity_description.key, self._handle_update
+            )
+        )
+
+    @callback
+    def _handle_update(self) -> None:
+        self.async_write_ha_state()
+
+    def _raise_read_only(self) -> NoReturn:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="write_not_supported",
+            translation_placeholders={"entity": self.entity_id},
+        )
 
 
 @callback

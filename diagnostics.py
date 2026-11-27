@@ -60,4 +60,7 @@ async def async_get_config_entry_diagnostics(
             mac: _node_diagnostics(node)
             for mac, node in entry.runtime_data.nodes.items()
         },
+        "can": entry.runtime_data.can.diagnostics()
+        if entry.runtime_data.can is not None
+        else None,
     }

@@ -154,6 +154,12 @@ Options-Flow: Knoten neu zuordnen, Außengerät/Protokoll, Abfrageintervalle (gl
 Offsets für die Fehlererkennung (`tv`, `tvbh`, `tr`), Grenzwerte der Spreizungsprüfung, Panel in der
 Seitenleiste an/aus.
 
+Abfrageintervalle (CAN): jede Entity der Tabelle gehört zu einer Gruppe – Messwerte (Temperaturen,
+Druck, Durchfluss, Pumpe, Ventile), Zustände (binäre Werte, Betriebsart, Fehlercode, SG-Zustand),
+Einstellungen (number/select/switch) und Zähler (Energie, Laufzeiten, Systemzeit). Intervall einer
+Entity: das Gruppenintervall, wenn gesetzt; sonst ihr eigener Standard (Durchfluss 10 s,
+Betriebsmodus 5 s), sonst das globale Intervall (Standard 30 s).
+
 ## 5. Paketaufbau
 
 Das Repo ist selbst der Integrationsordner (`config/custom_components/daikin_heat_pump_control`);
@@ -199,8 +205,14 @@ testbar.
   roh/geglättet, Spreizung roh/geglättet, Tv−TvBH, TvBH−Tr, Vorlauf-Soll−Tv, `tv_max`), Systemzeit und
   -datum, Taste „Warmwasser bereiten“, Schalter „Abtau-Optimierung“.
 - Abfrage: je Entity ein Intervall (Standard 30 s, einzelne kürzer, z. B. Durchfluss 10 s,
-  Betriebsmodus 5 s), immer nur eine offene Anfrage, 250 ms Busruhe, verloren nach 3 s, das am längsten
-  überfällige zuerst; `tv` mit `tv_max` intern alle 2 s.
+  Betriebsmodus 5 s; Gruppen Abschnitt 4), immer nur eine offene Anfrage, 250 ms Busruhe, verloren
+  nach 3 s, das am längsten überfällige zuerst; `tv` mit `tv_max` intern alle 2 s. Fällig ist ein
+  Register, wenn seit der letzten Antwort und der letzten Anfrage das Intervall vergangen ist: eine
+  verlorene Anfrage zählt als Versuch, das Register wird erst nach seinem Intervall erneut angefragt
+  (ein Register, das die Anlage nicht kennt, blockiert die anderen nicht). Warnung beim ersten
+  Verlust, danach Debug, bis wieder eine Antwort kommt.
+- Systemzeit: ein Zeitstempel-Sensor aus den sechs Registern Tag/Monat/Jahr/Stunde/Minute/Sekunde
+  (RoCon-Uhr als Ortszeit der HA-Zeitzone), standardmäßig deaktiviert; die Teile sind intern.
 - Mithören: Antworten an andere Teilnehmer und Schreib-/Antwort-Frames des RoCon werden dekodiert
   (Änderungen am Bedienteil kommen ohne eigene Abfrage an).
 - Schreiben: Abschnitt 7.
@@ -274,11 +286,16 @@ Integration schreibt wie die Komponente heute und sperrt nichts; ein Budget legt
     als Attribut.
   - Auswahlen mit Text-Optionen (Betriebsmodus, SG-Modus, HK-Funktion, Gebäudedämmung …) → `select` mit
     übersetzten Optionen.
-  - Einstellungen mit festen Zahlenwerten (Raumsoll 1–3, T-WW-Soll 1–3, Heizgrenze Tag/Nacht …) →
-    `number` mit Min/Max/Schritt; nicht erlaubte Werte werden auf den nächsten gültigen gerundet.
-    Ausnahme: Wertelisten mit Text-Eintrag (z. B. T-Frostschutz mit „Aus“) bleiben `select`.
-  - Ein/Aus-Einstellungen (1× Warmwasser, Raumthermostat, Flüsterbetrieb, Abtau-Optimierung …) →
-    `switch`.
+  - Einstellungen mit festen Zahlenwerten (Raumsoll 1–3, T-WW-Soll 1–3 …) → `number` mit
+    Min/Max/Schritt; nicht erlaubte Werte werden auf den nächsten gültigen gerundet.
+    Ausnahme: Wertelisten mit Text-Eintrag (T-Frostschutz, Heizgrenze Tag/Nacht, T_HK-Umschaltung,
+    jeweils mit „Aus“) bleiben `select`; Optionen `off` und die Zahlenwerte, angezeigt mit Einheit.
+  - Ein/Aus-Einstellungen (1× Warmwasser, Raumthermostat, Abtau-Optimierung …) → `switch`;
+    Flüsterbetrieb hat drei Stufen (Aus/An/Nur nachts) und bleibt `select`.
+- Kategorien: Hauptsteuerung ohne Kategorie (Betriebsmodus, Raumsoll 1–3, T-WW-Soll 1–3,
+  1× Warmwasser, Flüsterbetrieb, SG-Modus), alle übrigen Einstellungen „Konfiguration“.
+- Namen de/en/fr/it aus den Beispielen der CAN-Komponente, bereinigt (Umlaute, Sprachmischung,
+  Schreibweise). HA bildet die entity_id aus dem Namen in der Systemsprache.
 - Geräteklassen, Einheiten, Zustandsklassen und Genauigkeit korrekt gesetzt.
 
 ## 9. Wechsel der Firmware auf einem Knoten
@@ -395,7 +412,10 @@ Tests und Frontend-Build.
 | Zustände | übersetzte Schlüssel (HA-Standard) |
 | Einheiten UART | korrigiert (L/h, bar) |
 | Schreibschutz | nur bei Änderung + Zähler, keine Sperre |
-| Zahlen-Selects | `number`; Ein/Aus-Selects → `switch` |
+| Zahlen-Selects | `number`; Ein/Aus-Selects → `switch`; Wertelisten mit „Aus“ bleiben `select` |
+| Verlorene CAN-Anfrage | zählt als Versuch, erneut nach dem Intervall |
+| Systemzeit | ein Zeitstempel-Sensor, standardmäßig aus |
+| Abfrageintervalle | global + Gruppen Messwerte/Zustände/Einstellungen/Zähler |
 | Heizprogramm 1 | vorerst nicht |
 | Abtauoptimierung | Verhalten wie heute |
 | Dampfdrucktabelle | CoolProp, feiner; Qualität mindestens gleich |
@@ -415,8 +435,10 @@ Tests und Frontend-Build.
 
 1. Grundgerüst (Werkzeuge, CI, Quality-Scale-Datei), Simulator und simulierter ESP, Bridge-Verbindung,
    Bridge-YAML, Config-Flow mit Erkennung, Diagnose je Knoten.
-2. CAN: Protokoll, Entity-Tabelle, Planer, Mithören, Entities lesen.
-3. CAN: Schreiben, Abtauoptimierung, Warmwasser-Taste, Fehlererkennung, Dienst `send_raw_can`.
+2. CAN: Protokoll, Entity-Tabelle, Planer, Mithören, Entities lesen (auch number/select/switch, die
+   bis Teil 3 nur lesen), berechnete Werte mit Glättung, Systemzeit, Abfrageintervalle im Options-Flow.
+3. CAN: Schreiben, Abtauoptimierung, Warmwasser-Taste, Zusatzbefunde des Fehlercodes, Dienst
+   `send_raw_can`.
 4. UART: Protokolle I/S, Erkennung, Konverter, Dampfdrucktabellen, Entities, Kältekreiswerte.
 5. Frontend: gemeinsame Darstellung, Panel, Card, Editor, WebSocket-API.
 6. README de/en, HACS, Feinschliff, Hardware-Inbetriebnahme durch den Nutzer.
