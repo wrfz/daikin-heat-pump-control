@@ -11,12 +11,13 @@ jobs:
   hassfest:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           path: repo
-      - uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@v10
         with:
           python-version: "3.14"
+          activate-environment: true
       - name: Fetch hassfest of the minimum Home Assistant version
         run: |
           mkdir core
