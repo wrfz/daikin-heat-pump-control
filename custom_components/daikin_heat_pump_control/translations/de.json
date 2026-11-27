@@ -110,8 +110,26 @@
       "bivalence_function": {
         "name": "Bivalenzfunktion"
       },
+      "buh1": {
+        "name": "Heizstab Stufe 1"
+      },
+      "buh2": {
+        "name": "Heizstab Stufe 2"
+      },
+      "buh_bsh": {
+        "name": "Heizstab Speicher"
+      },
+      "circulation_pump": {
+        "name": "Umwälzpumpe"
+      },
       "connected": {
         "name": "Verbindung"
+      },
+      "defrost_operation": {
+        "name": "Abtauvorgang"
+      },
+      "dhw_priority": {
+        "name": "Vorrang Warmwasser"
       },
       "energy_saving_mode": {
         "name": "Energiesparmodus"
@@ -119,11 +137,26 @@
       "external_temp_sensor": {
         "name": "SKonfig T-Außen"
       },
+      "flow_switch": {
+        "name": "Strömungsschalter"
+      },
+      "press_eq": {
+        "name": "Druckausgleich"
+      },
+      "startup_control": {
+        "name": "Anlaufsteuerung"
+      },
       "status_kesselpumpe": {
         "name": "Kesselpumpe"
       },
       "status_kompressor": {
         "name": "Verdichter"
+      },
+      "thermostat": {
+        "name": "Thermostat"
+      },
+      "water_pump": {
+        "name": "Wasserpumpe"
       }
     },
     "button": {
@@ -508,6 +541,20 @@
       }
     },
     "sensor": {
+      "3_way_valve": {
+        "name": "3-Wege-Ventil",
+        "state": {
+          "heating": "Heizen",
+          "hot_water": "Warmwasser"
+        }
+      },
+      "4_way_valve": {
+        "name": "4-Wege-Ventil",
+        "state": {
+          "cooling": "Kühlen",
+          "heating": "Heizen"
+        }
+      },
       "bivalence_temperature": {
         "name": "Bivalenztemperatur"
       },
@@ -547,6 +594,18 @@
       },
       "dhw_mixer_position": {
         "name": "WW-Mischerposition"
+      },
+      "dhw_setpoint": {
+        "name": "Warmwasser-Soll"
+      },
+      "dhw_temp": {
+        "name": "Warmwassertemperatur"
+      },
+      "discharge_pressure": {
+        "name": "Hochdruck"
+      },
+      "discharge_superheat": {
+        "name": "Überhitzung Heißgas"
       },
       "ehs_for_ch": {
         "name": "Energie EHS Heizung"
@@ -635,6 +694,9 @@
       "esphome_version": {
         "name": "ESPHome-Version"
       },
+      "exch_temp": {
+        "name": "Temperatur Lamellenwärmetauscher"
+      },
       "ext": {
         "name": "Smart-Grid-Zustand",
         "state": {
@@ -644,6 +706,12 @@
           "sg3": "SG3 - WW 70 °C",
           "sgn": "SGN - Normaler Modus"
         }
+      },
+      "exv": {
+        "name": "Expansionsventil"
+      },
+      "fan_speed": {
+        "name": "Ventilatordrehzahl"
       },
       "flow_rate": {
         "name": "Durchfluss"
@@ -656,6 +724,24 @@
       },
       "heap_max_block": {
         "name": "Größter freier Block"
+      },
+      "heat_sink_temp": {
+        "name": "Temperatur Kühlkörper"
+      },
+      "indoor_units_connected": {
+        "name": "Innengeräte angeschlossen"
+      },
+      "indoor_units_max": {
+        "name": "Innengeräte maximal"
+      },
+      "inv_freq": {
+        "name": "Verdichterdrehzahl"
+      },
+      "inv_prim_current": {
+        "name": "Inverter-Primärstrom"
+      },
+      "inv_sec_current": {
+        "name": "Inverter-Sekundärstrom"
       },
       "ip_address": {
         "name": "IP-Adresse"
@@ -673,6 +759,30 @@
           "standby": "Bereitschaft"
         }
       },
+      "outdoor_4_way_valves": {
+        "name": "Außengerät 4-Wege-Ventile"
+      },
+      "outdoor_crankcase_heaters": {
+        "name": "Außengerät Kurbelwannenheizungen"
+      },
+      "outdoor_expansion_valves": {
+        "name": "Außengerät Expansionsventile"
+      },
+      "outdoor_fans": {
+        "name": "Außengerät Lüfter"
+      },
+      "outdoor_inv_compressors": {
+        "name": "Außengerät Inverter-Verdichter"
+      },
+      "outdoor_solenoid_valves": {
+        "name": "Außengerät Magnetventile"
+      },
+      "outdoor_std_compressors": {
+        "name": "Außengerät Festdrehzahl-Verdichter"
+      },
+      "outdoor_temp": {
+        "name": "Außenlufttemperatur"
+      },
       "qboh": {
         "name": "Energie EHS Warmwasser"
       },
@@ -681,6 +791,9 @@
       },
       "qdhw": {
         "name": "Energie Warmwasser"
+      },
+      "refrigerant_pressure": {
+        "name": "Kältemitteldruck"
       },
       "reset_reason": {
         "name": "Reset-Grund"
@@ -691,8 +804,17 @@
       "runtime_pump": {
         "name": "Laufzeit Pumpe"
       },
+      "saturation_temp": {
+        "name": "Sättigungstemperatur"
+      },
       "ssid": {
         "name": "SSID"
+      },
+      "subcooling": {
+        "name": "Unterkühlung"
+      },
+      "supply_setpoint": {
+        "name": "Vorlauf-Soll"
       },
       "system_time": {
         "name": "Systemzeit"
@@ -702,6 +824,9 @@
       },
       "t_hs": {
         "name": "T-WE"
+      },
+      "t_liq": {
+        "name": "Temperatur Flüssigkeitsleitung"
       },
       "t_room": {
         "name": "Raum-Ist"
@@ -718,6 +843,9 @@
       "tdhw2": {
         "name": "Warmwassertemperatur 2"
       },
+      "temp_after_compr": {
+        "name": "Heißgastemperatur"
+      },
       "temperature_outside": {
         "name": "Außentemperatur"
       },
@@ -726,6 +854,12 @@
       },
       "temperature_spread_raw": {
         "name": "Spreizung (roh)"
+      },
+      "tgt_cond_temp": {
+        "name": "Ziel-Kondensationstemperatur"
+      },
+      "tgt_evap_temp": {
+        "name": "Ziel-Verdampfungstemperatur"
       },
       "thermal_power": {
         "name": "Thermische Leistung"
@@ -748,6 +882,9 @@
       "tv": {
         "name": "TV"
       },
+      "tv_bh": {
+        "name": "TVBH"
+      },
       "tv_max": {
         "name": "TV max."
       },
@@ -760,8 +897,40 @@
       "tvbh_tr_delta": {
         "name": "TVBH-TR-Delta"
       },
+      "uart_mode_of_operating": {
+        "name": "Betriebsart",
+        "state": {
+          "auto": "Automatik",
+          "auto_cool": "Auto Kühlen",
+          "auto_heat": "Auto Heizen",
+          "aux": "Zusatz",
+          "cooling": "Kühlen",
+          "cooling_hot_water": "Kühlen + Warmwasser",
+          "cooling_storage": "Kältespeicher",
+          "dry": "Entfeuchten",
+          "fan_only": "Nur Lüfter",
+          "heating": "Heizen",
+          "heating_hot_water": "Heizen + Warmwasser",
+          "heating_storage": "Wärmespeicher",
+          "hot_water": "Warmwasserbereitung",
+          "standby": "Bereitschaft",
+          "stored_thermal_cooling_1": "Speicherbetrieb Kühlen 1",
+          "stored_thermal_cooling_2": "Speicherbetrieb Kühlen 2",
+          "stored_thermal_cooling_3": "Speicherbetrieb Kühlen 3",
+          "stored_thermal_cooling_4": "Speicherbetrieb Kühlen 4",
+          "stored_thermal_heating_1": "Speicherbetrieb Heizen 1",
+          "stored_thermal_heating_2": "Speicherbetrieb Heizen 2",
+          "stored_thermal_heating_3": "Speicherbetrieb Heizen 3",
+          "stored_thermal_heating_4": "Speicherbetrieb Heizen 4",
+          "unknown": "Unbekannt",
+          "ventilation": "Lüftung"
+        }
+      },
       "uart_overflows": {
         "name": "UART-Pufferüberläufe"
+      },
+      "voltage": {
+        "name": "Spannung"
       },
       "vorlauf_soll_tv_delta": {
         "name": "Vorlauf-Soll-TV-Delta"

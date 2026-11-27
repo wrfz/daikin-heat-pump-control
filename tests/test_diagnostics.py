@@ -21,6 +21,7 @@ from sim.esp import SimulatedEsp
 
 
 @pytest.mark.freeze_time("2026-11-26 12:00:00+00:00")
+@pytest.mark.usefixtures("no_uart_polling")
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -67,6 +68,14 @@ async def test_entities(
         patch(
             "custom_components.daikin_heat_pump_control.binary_sensor.CAN_BINARY_SENSORS",
             (),
+        ),
+        patch(
+            "custom_components.daikin_heat_pump_control.sensor.uart_sensors",
+            return_value=[],
+        ),
+        patch(
+            "custom_components.daikin_heat_pump_control.binary_sensor.uart_binary_sensors",
+            return_value=[],
         ),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)

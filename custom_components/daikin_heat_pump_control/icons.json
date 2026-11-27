@@ -4,17 +4,50 @@
       "bivalence_function": {
         "default": "mdi:toggle-switch-off-outline"
       },
+      "buh1": {
+        "default": "mdi:heating-coil"
+      },
+      "buh2": {
+        "default": "mdi:heating-coil"
+      },
+      "buh_bsh": {
+        "default": "mdi:heating-coil"
+      },
+      "circulation_pump": {
+        "default": "mdi:pump"
+      },
+      "defrost_operation": {
+        "default": "mdi:snowflake-melt"
+      },
+      "dhw_priority": {
+        "default": "mdi:water-boiler-alert"
+      },
       "energy_saving_mode": {
         "default": "mdi:leaf"
       },
       "external_temp_sensor": {
         "default": "mdi:thermometer-probe"
       },
+      "flow_switch": {
+        "default": "mdi:waves-arrow-right"
+      },
+      "press_eq": {
+        "default": "mdi:scale-balance"
+      },
+      "startup_control": {
+        "default": "mdi:play-circle-outline"
+      },
       "status_kesselpumpe": {
         "default": "mdi:pump"
       },
       "status_kompressor": {
         "default": "mdi:heat-pump"
+      },
+      "thermostat": {
+        "default": "mdi:thermostat"
+      },
+      "water_pump": {
+        "default": "mdi:pump"
       }
     },
     "button": {
@@ -173,6 +206,20 @@
       }
     },
     "sensor": {
+      "3_way_valve": {
+        "default": "mdi:valve",
+        "state": {
+          "heating": "mdi:radiator",
+          "hot_water": "mdi:water-boiler"
+        }
+      },
+      "4_way_valve": {
+        "default": "mdi:valve",
+        "state": {
+          "cooling": "mdi:snowflake",
+          "heating": "mdi:fire"
+        }
+      },
       "bridge_version": {
         "default": "mdi:chip"
       },
@@ -207,6 +254,18 @@
       "dhw_mixer_position": {
         "default": "mdi:valve"
       },
+      "dhw_setpoint": {
+        "default": "mdi:water-boiler"
+      },
+      "dhw_temp": {
+        "default": "mdi:water-boiler"
+      },
+      "discharge_pressure": {
+        "default": "mdi:gauge-full"
+      },
+      "discharge_superheat": {
+        "default": "mdi:thermometer-plus"
+      },
       "error_code": {
         "default": "mdi:alert",
         "state": {
@@ -216,8 +275,17 @@
       "esphome_version": {
         "default": "mdi:chip"
       },
+      "exch_temp": {
+        "default": "mdi:radiator"
+      },
       "ext": {
         "default": "mdi:transmission-tower-import"
+      },
+      "exv": {
+        "default": "mdi:valve"
+      },
+      "fan_speed": {
+        "default": "mdi:fan"
       },
       "flow_rate": {
         "default": "mdi:waves-arrow-right"
@@ -230,6 +298,18 @@
       },
       "heap_max_block": {
         "default": "mdi:memory"
+      },
+      "heat_sink_temp": {
+        "default": "mdi:chip"
+      },
+      "indoor_units_connected": {
+        "default": "mdi:counter"
+      },
+      "indoor_units_max": {
+        "default": "mdi:counter"
+      },
+      "inv_freq": {
+        "default": "mdi:heat-pump"
       },
       "ip_address": {
         "default": "mdi:ip-network"
@@ -244,20 +324,68 @@
           "standby": "mdi:power-standby"
         }
       },
+      "outdoor_4_way_valves": {
+        "default": "mdi:valve"
+      },
+      "outdoor_crankcase_heaters": {
+        "default": "mdi:heating-coil"
+      },
+      "outdoor_expansion_valves": {
+        "default": "mdi:valve"
+      },
+      "outdoor_fans": {
+        "default": "mdi:fan"
+      },
+      "outdoor_inv_compressors": {
+        "default": "mdi:heat-pump-outline"
+      },
+      "outdoor_solenoid_valves": {
+        "default": "mdi:valve"
+      },
+      "outdoor_std_compressors": {
+        "default": "mdi:heat-pump-outline"
+      },
+      "outdoor_temp": {
+        "default": "mdi:sun-thermometer-outline"
+      },
+      "refrigerant_pressure": {
+        "default": "mdi:gauge"
+      },
       "reset_reason": {
         "default": "mdi:restart-alert"
+      },
+      "saturation_temp": {
+        "default": "mdi:thermometer-water"
       },
       "ssid": {
         "default": "mdi:wifi"
       },
+      "subcooling": {
+        "default": "mdi:snowflake-thermometer"
+      },
+      "supply_setpoint": {
+        "default": "mdi:thermometer-lines"
+      },
       "system_time": {
         "default": "mdi:clock-outline"
+      },
+      "t_liq": {
+        "default": "mdi:thermometer-water"
+      },
+      "temp_after_compr": {
+        "default": "mdi:thermometer-high"
       },
       "temperature_spread": {
         "default": "mdi:thermometer-lines"
       },
       "temperature_spread_raw": {
         "default": "mdi:thermometer-lines"
+      },
+      "tgt_cond_temp": {
+        "default": "mdi:thermometer-chevron-up"
+      },
+      "tgt_evap_temp": {
+        "default": "mdi:thermometer-chevron-down"
       },
       "thermal_power": {
         "default": "mdi:fire"
@@ -271,6 +399,9 @@
       "tv": {
         "default": "mdi:thermometer-lines"
       },
+      "tv_bh": {
+        "default": "mdi:thermometer-lines"
+      },
       "tv_max": {
         "default": "mdi:thermometer-chevron-up"
       },
@@ -282,6 +413,20 @@
       },
       "tvbh_tr_delta": {
         "default": "mdi:thermometer-lines"
+      },
+      "uart_mode_of_operating": {
+        "default": "mdi:sun-snowflake-variant",
+        "state": {
+          "cooling": "mdi:snowflake",
+          "cooling_hot_water": "mdi:snowflake",
+          "dry": "mdi:water-percent",
+          "fan_only": "mdi:fan",
+          "heating": "mdi:fire",
+          "heating_hot_water": "mdi:fire",
+          "hot_water": "mdi:water-boiler",
+          "standby": "mdi:power-standby",
+          "ventilation": "mdi:fan"
+        }
       },
       "uart_overflows": {
         "default": "mdi:tray-full"

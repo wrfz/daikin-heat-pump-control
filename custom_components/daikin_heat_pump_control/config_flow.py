@@ -56,6 +56,7 @@ from .const import (
     CONF_TR_OFFSET,
     CONF_TV_OFFSET,
     CONF_TVBH_OFFSET,
+    CONF_UART_DETECTED_PROTOCOL,
     CONF_UART_NODE,
     CONF_UART_PROTOCOL,
     DEFAULT_MAX_SPREAD,
@@ -169,6 +170,13 @@ def _uart_schema(defaults: Mapping[str, Any]) -> probatio.Schema:
                 )
             ),
         }
+    )
+
+
+def _uart_changed(old: Mapping[str, Any], new: Mapping[str, Any]) -> bool:
+    """Return True if the outdoor unit or the UART protocol option changed."""
+    return any(
+        old.get(key) != new.get(key) for key in (CONF_OUTDOOR_UNIT, CONF_UART_PROTOCOL)
     )
 
 
@@ -414,6 +422,13 @@ class DaikinConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
             return self.async_create_entry(title=TITLE, data=data, options=uart_options)
         options = {**target.options, **uart_options}
+        detected = target.data.get(CONF_UART_DETECTED_PROTOCOL)
+        if (
+            detected is not None
+            and target.data.get(CONF_UART_NODE) == data[CONF_UART_NODE]
+            and not _uart_changed(target.options, options)
+        ):
+            data[CONF_UART_DETECTED_PROTOCOL] = detected
         if self.source == SOURCE_RECONFIGURE:
             return self.async_update_reload_and_abort(
                 target, data=data, options=options
@@ -743,7 +758,20 @@ class DaikinOptionsFlow(OptionsFlowWithReload):
         if user_input is not None:
             group_keys = {group_option(group) for group in Group}
             kept = {k: v for k, v in options.items() if k not in group_keys}
-            return self.async_create_entry(data={**kept, **user_input})
+            new_options = {**kept, **user_input}
+            if CONF_UART_DETECTED_PROTOCOL in data and _uart_changed(
+                options, new_options
+            ):
+                # Detect the protocol again with the new settings.
+                self.hass.config_entries.async_update_entry(
+                    self.config_entry,
+                    data={
+                        k: v
+                        for k, v in data.items()
+                        if k != CONF_UART_DETECTED_PROTOCOL
+                    },
+                )
+            return self.async_create_entry(data=new_options)
         fields: dict[Any, Any] = {}
         if data.get(CONF_CAN_NODE) is not None:
             fields.update(_interval_schema(options))

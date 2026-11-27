@@ -81,7 +81,7 @@ def daikin_entry(
         },
         options=options
         if options is not None
-        else ({"outdoor_unit": "RRLQ008CAV3", "uart_protocol": "auto"} if uart else {}),
+        else ({"outdoor_unit": "RRLQ008CAV3", "uart_protocol": "i"} if uart else {}),
     )
     entry.add_to_hass(hass)
     return entry

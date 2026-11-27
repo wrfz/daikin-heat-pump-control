@@ -63,4 +63,7 @@ async def async_get_config_entry_diagnostics(
         "can": entry.runtime_data.can.diagnostics()
         if entry.runtime_data.can is not None
         else None,
+        "uart": entry.runtime_data.uart.diagnostics()
+        if entry.runtime_data.uart is not None
+        else None,
     }

@@ -14,6 +14,7 @@ from .bridge.node import BridgeNode
 from .can.table import CAN_VALUES_BY_KEY, StateValue
 from .const import DOMAIN, Bus
 from .coordinator import CanCoordinator, CanState
+from .uart_coordinator import UartCoordinator, UartState
 
 if TYPE_CHECKING:
     from .runtime import DaikinConfigEntry
@@ -107,9 +108,59 @@ def enum_or_none[E: StrEnum](enum: type[E], value: str | None) -> E | None:
     return None if value is None else enum(value)
 
 
+def bus_unique_id(entry: ConfigEntry, bus: Bus, key: str) -> str:
+    """Return the unique id of an entity of a bus device."""
+    return f"{entry.entry_id}_{bus}_{key}"
+
+
 def can_unique_id(entry: ConfigEntry, key: str) -> str:
     """Return the unique id of a CAN entity."""
-    return f"{entry.entry_id}_{Bus.CAN}_{key}"
+    return bus_unique_id(entry, Bus.CAN, key)
+
+
+class UartEntity(Entity):
+    """Entity of a value of the indoor unit read over UART."""
+
+    _attr_has_entity_name = True
+    _attr_should_poll = False
+
+    def __init__(
+        self, coordinator: UartCoordinator, description: EntityDescription
+    ) -> None:
+        """Initialize the entity."""
+        self.coordinator = coordinator
+        self.entity_description = description
+        entry = coordinator.channel.node.entry
+        self._attr_unique_id = bus_unique_id(entry, Bus.UART, description.key)
+        self._attr_device_info = DeviceInfo(
+            identifiers={bus_device_identifier(entry, Bus.UART)}
+        )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return True while the bus can be used and the register answers."""
+        return self.coordinator.available and self.coordinator.value_available(
+            self.entity_description.key
+        )
+
+    @property
+    def uart_state(self) -> UartState:
+        """Return the state of the value."""
+        return self.coordinator.state(self.entity_description.key)
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to changes of the value."""
+        self.async_on_remove(
+            self.coordinator.async_add_listener(
+                self.entity_description.key, self._handle_update
+            )
+        )
+
+    @callback
+    def _handle_update(self) -> None:
+        self.async_write_ha_state()
 
 
 class CanEntity(Entity):

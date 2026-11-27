@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 
 from helpers import DOMAIN, MAC_CAN, daikin_entry, esphome_entry, wait_for_state
 from sim.esp import SimulatedEsp, make_noise_psk
-from sim.heat_pump import SimCanFrame
+from sim.heat_pump import HeatPump, SimCanFrame
 
 pytestmark = pytest.mark.usefixtures("no_can_polling")
 
@@ -118,10 +118,15 @@ async def test_many_frames_split(
     assert all(r.dropped == 0 for r in results)
 
 
+@pytest.mark.usefixtures("no_uart_polling")
 async def test_uart_channel(
-    hass: HomeAssistant, uart_esp: SimulatedEsp, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    uart_esp: SimulatedEsp,
+    heat_pump: HeatPump,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Bytes are handed to the UART bridge and the answer is collected."""
+    heat_pump.uart_registers[0x61] = bytes(range(12))
     entry = await _setup(hass, uart=uart_esp)
     channel = entry.runtime_data.channels["uart"]
     received = bytearray()

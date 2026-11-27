@@ -12,6 +12,7 @@ import helpers  # noqa: F401  # sets up the import path first
 from helpers import MAC_BOTH, MAC_CAN, MAC_UART, ha_clock
 from sim.esp import FIRMWARE_BRIDGE, SimulatedEsp, make_noise_psk
 from sim.heat_pump import HeatPump
+from sim.indoor import load_indoor
 from sim.rocon import load_rocon
 
 
@@ -44,8 +45,19 @@ def mdns() -> Generator[dict[str, str]]:
 def no_can_polling() -> Generator[None]:
     """Keep the CAN coordinator from polling, for tests of the raw channel."""
     with patch(
-        "custom_components.daikin_heat_pump_control._active_can_keys",
-        return_value=set(),
+        "custom_components.daikin_heat_pump_control.entity_defaults",
+        return_value={},
+    ):
+        yield
+
+
+@pytest.fixture
+def no_uart_polling() -> Generator[None]:
+    """Keep the UART coordinator away from the bus, for tests of the raw channel."""
+    with patch(
+        "custom_components.daikin_heat_pump_control.uart_coordinator."
+        "UartCoordinator.async_start",
+        return_value=lambda: None,
     ):
         yield
 
@@ -55,7 +67,7 @@ def heat_pump() -> HeatPump:
     """Return the simulated heat pump."""
     hp = HeatPump()
     load_rocon(hp)
-    hp.uart_registers[0x61] = bytes(range(12))
+    load_indoor(hp)
     return hp
 
 

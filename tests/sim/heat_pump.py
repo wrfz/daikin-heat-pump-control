@@ -67,6 +67,13 @@ class HeatPump:
     uart_protocol: str = "I"
     uart_registers: dict[int, bytes] = field(default_factory=dict)
     uart_bad_checksum: set[int] = field(default_factory=set)
+    # Registers that are not answered at all (unknown ones get a NAK).
+    uart_silent: set[int] = field(default_factory=set)
+    # Answer to a request in the other protocol; None: no answer.
+    uart_foreign_reply: bytes | None = UART_NAK
+    # Answer frames that replace the regular answer of a register once.
+    uart_next_answer: dict[int, bytes] = field(default_factory=dict)
+    uart_requests: list[int] = field(default_factory=list)
     can_writes: list[SimCanFrame] = field(default_factory=list)
     on_can_write: Callable[[int, tuple[int, ...], bytes], None] | None = None
 
@@ -121,14 +128,19 @@ class HeatPump:
         """Answer a complete UART request."""
         if self.uart_protocol == "I":
             if len(request) != 4 or request[:2] != b"\x03\x40":
-                return UART_NAK
+                return self.uart_foreign_reply or b""
             register = request[2]
         else:
             if len(request) != 3 or request[0] != 0x02:
-                return UART_NAK
+                return self.uart_foreign_reply or b""
             register = request[1]
         if uart_checksum(request[:-1]) != request[-1]:
             return UART_NAK
+        self.uart_requests.append(register)
+        if register in self.uart_silent:
+            return b""
+        if register in self.uart_next_answer:
+            return self.uart_next_answer.pop(register)
         if register not in self.uart_registers:
             return UART_NAK
         payload = self.uart_registers[register]
@@ -140,3 +152,10 @@ class HeatPump:
         if register in self.uart_bad_checksum:
             checksum ^= 0xFF
         return frame + bytes((checksum,))
+
+    def set_uart_frame(self, frame: bytes) -> None:
+        """Answer the register of a complete answer frame with its payload."""
+        if self.uart_protocol == "I":
+            self.uart_registers[frame[1]] = frame[3:-1]
+        else:
+            self.uart_registers[frame[0]] = frame[1:-1]

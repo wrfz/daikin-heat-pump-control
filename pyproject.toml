@@ -185,6 +185,7 @@ split-on-trailing-comma = false
 "**/*.py" = ["TID252"]
 # Tests and the simulator are not packages HA may load
 "tests/**" = ["INP001", "SLF001", "S108"]
+"scripts/**" = ["INP001"]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 25

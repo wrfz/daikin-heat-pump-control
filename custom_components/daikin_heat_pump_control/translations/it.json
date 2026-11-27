@@ -110,8 +110,26 @@
       "bivalence_function": {
         "name": "Funzione di bivalenza"
       },
+      "buh1": {
+        "name": "Resistenza elettrica stadio 1"
+      },
+      "buh2": {
+        "name": "Resistenza elettrica stadio 2"
+      },
+      "buh_bsh": {
+        "name": "Resistenza elettrica accumulo"
+      },
+      "circulation_pump": {
+        "name": "Pompa di circolazione"
+      },
       "connected": {
         "name": "Connessione"
+      },
+      "defrost_operation": {
+        "name": "Sbrinamento"
+      },
+      "dhw_priority": {
+        "name": "Priorità acqua calda"
       },
       "energy_saving_mode": {
         "name": "Modalità risparmio energetico"
@@ -119,11 +137,26 @@
       "external_temp_sensor": {
         "name": "Sensore esterno temperatura esterna"
       },
+      "flow_switch": {
+        "name": "Flussostato"
+      },
+      "press_eq": {
+        "name": "Equalizzazione pressione"
+      },
+      "startup_control": {
+        "name": "Controllo avviamento"
+      },
       "status_kesselpumpe": {
         "name": "Pompa caldaia"
       },
       "status_kompressor": {
         "name": "Compressore"
+      },
+      "thermostat": {
+        "name": "Termostato"
+      },
+      "water_pump": {
+        "name": "Pompa acqua"
       }
     },
     "button": {
@@ -508,6 +541,20 @@
       }
     },
     "sensor": {
+      "3_way_valve": {
+        "name": "Valvola a 3 vie",
+        "state": {
+          "heating": "Riscaldamento",
+          "hot_water": "Acqua calda"
+        }
+      },
+      "4_way_valve": {
+        "name": "Valvola a 4 vie",
+        "state": {
+          "cooling": "Raffrescamento",
+          "heating": "Riscaldamento"
+        }
+      },
       "bivalence_temperature": {
         "name": "Temperatura di bivalenza"
       },
@@ -547,6 +594,18 @@
       },
       "dhw_mixer_position": {
         "name": "Posizione miscelatore ACS"
+      },
+      "dhw_setpoint": {
+        "name": "Setpoint acqua calda"
+      },
+      "dhw_temp": {
+        "name": "Temperatura acqua calda"
+      },
+      "discharge_pressure": {
+        "name": "Alta pressione"
+      },
+      "discharge_superheat": {
+        "name": "Surriscaldamento mandata"
       },
       "ehs_for_ch": {
         "name": "Energia EHS riscaldamento"
@@ -635,6 +694,9 @@
       "esphome_version": {
         "name": "Versione ESPHome"
       },
+      "exch_temp": {
+        "name": "Temperatura scambiatore lamellare"
+      },
       "ext": {
         "name": "Stato Smart Grid",
         "state": {
@@ -644,6 +706,12 @@
           "sg3": "SG3 - ACS 70 °C",
           "sgn": "SGN - modalità normale"
         }
+      },
+      "exv": {
+        "name": "Valvola di espansione"
+      },
+      "fan_speed": {
+        "name": "Velocità ventola"
       },
       "flow_rate": {
         "name": "Portata"
@@ -656,6 +724,24 @@
       },
       "heap_max_block": {
         "name": "Blocco libero più grande"
+      },
+      "heat_sink_temp": {
+        "name": "Temperatura dissipatore"
+      },
+      "indoor_units_connected": {
+        "name": "Unità interne collegate"
+      },
+      "indoor_units_max": {
+        "name": "Unità interne massime"
+      },
+      "inv_freq": {
+        "name": "Velocità compressore"
+      },
+      "inv_prim_current": {
+        "name": "Corrente primaria inverter"
+      },
+      "inv_sec_current": {
+        "name": "Corrente secondaria inverter"
       },
       "ip_address": {
         "name": "Indirizzo IP"
@@ -673,6 +759,30 @@
           "standby": "Standby"
         }
       },
+      "outdoor_4_way_valves": {
+        "name": "Unità esterna valvole a 4 vie"
+      },
+      "outdoor_crankcase_heaters": {
+        "name": "Unità esterna riscaldatori carter"
+      },
+      "outdoor_expansion_valves": {
+        "name": "Unità esterna valvole di espansione"
+      },
+      "outdoor_fans": {
+        "name": "Unità esterna ventilatori"
+      },
+      "outdoor_inv_compressors": {
+        "name": "Unità esterna compressori inverter"
+      },
+      "outdoor_solenoid_valves": {
+        "name": "Unità esterna elettrovalvole"
+      },
+      "outdoor_std_compressors": {
+        "name": "Unità esterna compressori a velocità fissa"
+      },
+      "outdoor_temp": {
+        "name": "Temperatura aria esterna"
+      },
       "qboh": {
         "name": "Energia EHS ACS"
       },
@@ -681,6 +791,9 @@
       },
       "qdhw": {
         "name": "Energia ACS"
+      },
+      "refrigerant_pressure": {
+        "name": "Pressione refrigerante"
       },
       "reset_reason": {
         "name": "Motivo del reset"
@@ -691,8 +804,17 @@
       "runtime_pump": {
         "name": "Tempo di funzionamento pompa"
       },
+      "saturation_temp": {
+        "name": "Temperatura di saturazione"
+      },
       "ssid": {
         "name": "SSID"
+      },
+      "subcooling": {
+        "name": "Sottoraffreddamento"
+      },
+      "supply_setpoint": {
+        "name": "Setpoint di mandata"
       },
       "system_time": {
         "name": "Ora di sistema"
@@ -702,6 +824,9 @@
       },
       "t_hs": {
         "name": "Temperatura generatore di calore"
+      },
+      "t_liq": {
+        "name": "Temperatura linea liquido"
       },
       "t_room": {
         "name": "Temperatura ambiente"
@@ -718,6 +843,9 @@
       "tdhw2": {
         "name": "Temperatura acqua calda 2"
       },
+      "temp_after_compr": {
+        "name": "Temperatura dopo il compressore"
+      },
       "temperature_outside": {
         "name": "Temperatura esterna"
       },
@@ -726,6 +854,12 @@
       },
       "temperature_spread_raw": {
         "name": "Delta termico (grezzo)"
+      },
+      "tgt_cond_temp": {
+        "name": "Temperatura di condensazione target"
+      },
+      "tgt_evap_temp": {
+        "name": "Temperatura di evaporazione target"
       },
       "thermal_power": {
         "name": "Potenza termica"
@@ -748,6 +882,9 @@
       "tv": {
         "name": "TV"
       },
+      "tv_bh": {
+        "name": "TVBH"
+      },
       "tv_max": {
         "name": "TV max."
       },
@@ -760,8 +897,40 @@
       "tvbh_tr_delta": {
         "name": "Delta TVBH-TR"
       },
+      "uart_mode_of_operating": {
+        "name": "Stato operativo",
+        "state": {
+          "auto": "Auto",
+          "auto_cool": "Auto raffrescamento",
+          "auto_heat": "Auto riscaldamento",
+          "aux": "Ausiliario",
+          "cooling": "Raffrescamento",
+          "cooling_hot_water": "Raffrescamento + acqua calda",
+          "cooling_storage": "Accumulo di freddo",
+          "dry": "Deumidificazione",
+          "fan_only": "Solo ventola",
+          "heating": "Riscaldamento",
+          "heating_hot_water": "Riscaldamento + acqua calda",
+          "heating_storage": "Accumulo di calore",
+          "hot_water": "Produzione di acqua calda",
+          "standby": "Standby",
+          "stored_thermal_cooling_1": "Accumulo termico raffrescamento 1",
+          "stored_thermal_cooling_2": "Accumulo termico raffrescamento 2",
+          "stored_thermal_cooling_3": "Accumulo termico raffrescamento 3",
+          "stored_thermal_cooling_4": "Accumulo termico raffrescamento 4",
+          "stored_thermal_heating_1": "Accumulo termico riscaldamento 1",
+          "stored_thermal_heating_2": "Accumulo termico riscaldamento 2",
+          "stored_thermal_heating_3": "Accumulo termico riscaldamento 3",
+          "stored_thermal_heating_4": "Accumulo termico riscaldamento 4",
+          "unknown": "Sconosciuto",
+          "ventilation": "Ventilazione"
+        }
+      },
       "uart_overflows": {
         "name": "Overflow buffer UART"
+      },
+      "voltage": {
+        "name": "Tensione"
       },
       "vorlauf_soll_tv_delta": {
         "name": "Delta setpoint di mandata-TV"

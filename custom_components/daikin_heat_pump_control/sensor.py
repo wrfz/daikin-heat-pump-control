@@ -1,7 +1,7 @@
 """Sensors of the Daikin Heat Pump Control integration."""
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime
 from typing import Any, override
 
@@ -27,8 +27,10 @@ from .bridge.node import BridgeNode
 from .can.table import CAN_VALUES, CanValue, Platform
 from .const import Bus
 from .coordinator import COMPUTED_DISABLED_BY_DEFAULT, ERROR_CODE, WRITES_TODAY
-from .entity import BridgeEntity, CanEntity, enum_or_none
+from .entity import BridgeEntity, CanEntity, UartEntity, enum_or_none
 from .runtime import DaikinConfigEntry
+from .uart.table import Platform as UartPlatform
+from .uart_coordinator import UartCoordinator, uart_entities
 
 PARALLEL_UPDATES = 0
 
@@ -266,6 +268,18 @@ WRITES_TODAY_SENSOR = SensorEntityDescription(
     entity_category=EntityCategory.DIAGNOSTIC,
 )
 
+UART_COMPUTED_SENSORS: dict[str, SensorEntityDescription] = {
+    description.key: description
+    for description in (
+        _power("thermal_power"),
+        _power("thermal_power_raw"),
+        _delta("temperature_spread"),
+        _delta("temperature_spread_raw"),
+        _delta("subcooling"),
+        _delta("discharge_superheat"),
+    )
+}
+
 CAN_SENSORS: tuple[SensorEntityDescription, ...] = (
     *(
         _can_description(value)
@@ -296,7 +310,46 @@ async def async_setup_entry(
             for description in CAN_SENSORS
         )
         entities.append(WritesTodaySensor(coordinator, WRITES_TODAY_SENSOR))
+    if (uart := entry.runtime_data.uart) is not None:
+        entities.extend(
+            UartSensor(uart, description) for description in uart_sensors(uart)
+        )
     async_add_entities(entities)
+
+
+def uart_sensors(coordinator: UartCoordinator) -> list[SensorEntityDescription]:
+    """Return the sensors the outdoor unit offers in the protocol in use."""
+    protocol = coordinator.protocol
+    descriptions: list[SensorEntityDescription] = []
+    for key, enabled in uart_entities(coordinator.unit, protocol).items():
+        if key in UART_COMPUTED_SENSORS:
+            descriptions.append(
+                replace(
+                    UART_COMPUTED_SENSORS[key], entity_registry_enabled_default=enabled
+                )
+            )
+            continue
+        value = coordinator.values[key].value
+        if value.platform is UartPlatform.BINARY_SENSOR:
+            continue
+        enum = value.platform is UartPlatform.ENUM
+        assert protocol is not None
+        descriptions.append(
+            SensorEntityDescription(
+                key=key,
+                translation_key=value.translation_key or key,
+                device_class=SensorDeviceClass.ENUM
+                if enum
+                else enum_or_none(SensorDeviceClass, value.device_class),
+                options=value.option_keys(protocol) if enum else None,
+                native_unit_of_measurement=value.unit,
+                state_class=enum_or_none(SensorStateClass, value.state_class),
+                suggested_display_precision=value.precision,
+                entity_category=enum_or_none(EntityCategory, value.category),
+                entity_registry_enabled_default=enabled,
+            )
+        )
+    return descriptions
 
 
 class CanSensor(CanEntity, SensorEntity):
@@ -343,6 +396,17 @@ class WritesTodaySensor(CanEntity, SensorEntity):
     def last_reset(self) -> datetime:
         """Return the start of the current day."""
         return dt_util.start_of_local_day()
+
+
+class UartSensor(UartEntity, SensorEntity):
+    """Sensor of a value of the indoor unit."""
+
+    @property
+    @override
+    def native_value(self) -> StateType:
+        """Return the value."""
+        state = self.uart_state
+        return None if isinstance(state, bool) else state
 
 
 class BridgeSensor(BridgeEntity, SensorEntity):

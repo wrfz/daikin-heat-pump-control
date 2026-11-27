@@ -110,8 +110,26 @@
       "bivalence_function": {
         "name": "Bivalence function"
       },
+      "buh1": {
+        "name": "Backup heater stage 1"
+      },
+      "buh2": {
+        "name": "Backup heater stage 2"
+      },
+      "buh_bsh": {
+        "name": "Backup heater hot water tank"
+      },
+      "circulation_pump": {
+        "name": "Circulation pump"
+      },
       "connected": {
         "name": "Connection"
+      },
+      "defrost_operation": {
+        "name": "Defrost"
+      },
+      "dhw_priority": {
+        "name": "Hot water priority"
       },
       "energy_saving_mode": {
         "name": "Energy saving mode"
@@ -119,11 +137,26 @@
       "external_temp_sensor": {
         "name": "External outside temperature sensor"
       },
+      "flow_switch": {
+        "name": "Flow switch"
+      },
+      "press_eq": {
+        "name": "Pressure equalization"
+      },
+      "startup_control": {
+        "name": "Startup control"
+      },
       "status_kesselpumpe": {
         "name": "Boiler pump"
       },
       "status_kompressor": {
         "name": "Compressor"
+      },
+      "thermostat": {
+        "name": "Thermostat"
+      },
+      "water_pump": {
+        "name": "Water pump"
       }
     },
     "button": {
@@ -508,6 +541,20 @@
       }
     },
     "sensor": {
+      "3_way_valve": {
+        "name": "3-way valve",
+        "state": {
+          "heating": "Heating",
+          "hot_water": "Hot water"
+        }
+      },
+      "4_way_valve": {
+        "name": "4-way valve",
+        "state": {
+          "cooling": "Cooling",
+          "heating": "Heating"
+        }
+      },
       "bivalence_temperature": {
         "name": "Bivalence temperature"
       },
@@ -547,6 +594,18 @@
       },
       "dhw_mixer_position": {
         "name": "Hot water mixer position"
+      },
+      "dhw_setpoint": {
+        "name": "Hot water setpoint"
+      },
+      "dhw_temp": {
+        "name": "Hot water temperature"
+      },
+      "discharge_pressure": {
+        "name": "High pressure"
+      },
+      "discharge_superheat": {
+        "name": "Discharge superheat"
       },
       "ehs_for_ch": {
         "name": "Backup heater energy heating"
@@ -635,6 +694,9 @@
       "esphome_version": {
         "name": "ESPHome version"
       },
+      "exch_temp": {
+        "name": "Fin heat exchanger temperature"
+      },
       "ext": {
         "name": "Smart Grid state",
         "state": {
@@ -644,6 +706,12 @@
           "sg3": "SG3 - hot water 70 °C",
           "sgn": "SGN - normal mode"
         }
+      },
+      "exv": {
+        "name": "Expansion valve"
+      },
+      "fan_speed": {
+        "name": "Fan speed"
       },
       "flow_rate": {
         "name": "Flow rate"
@@ -656,6 +724,24 @@
       },
       "heap_max_block": {
         "name": "Largest free block"
+      },
+      "heat_sink_temp": {
+        "name": "Heat sink temperature"
+      },
+      "indoor_units_connected": {
+        "name": "Indoor units connected"
+      },
+      "indoor_units_max": {
+        "name": "Indoor units maximum"
+      },
+      "inv_freq": {
+        "name": "Compressor speed"
+      },
+      "inv_prim_current": {
+        "name": "Inverter primary current"
+      },
+      "inv_sec_current": {
+        "name": "Inverter secondary current"
       },
       "ip_address": {
         "name": "IP address"
@@ -673,6 +759,30 @@
           "standby": "Standby"
         }
       },
+      "outdoor_4_way_valves": {
+        "name": "Outdoor unit 4-way valves"
+      },
+      "outdoor_crankcase_heaters": {
+        "name": "Outdoor unit crankcase heaters"
+      },
+      "outdoor_expansion_valves": {
+        "name": "Outdoor unit expansion valves"
+      },
+      "outdoor_fans": {
+        "name": "Outdoor unit fans"
+      },
+      "outdoor_inv_compressors": {
+        "name": "Outdoor unit inverter compressors"
+      },
+      "outdoor_solenoid_valves": {
+        "name": "Outdoor unit solenoid valves"
+      },
+      "outdoor_std_compressors": {
+        "name": "Outdoor unit fixed-speed compressors"
+      },
+      "outdoor_temp": {
+        "name": "Outdoor air temperature"
+      },
       "qboh": {
         "name": "Backup heater energy hot water"
       },
@@ -681,6 +791,9 @@
       },
       "qdhw": {
         "name": "Hot water energy"
+      },
+      "refrigerant_pressure": {
+        "name": "Refrigerant pressure"
       },
       "reset_reason": {
         "name": "Reset reason"
@@ -691,8 +804,17 @@
       "runtime_pump": {
         "name": "Pump runtime"
       },
+      "saturation_temp": {
+        "name": "Saturation temperature"
+      },
       "ssid": {
         "name": "SSID"
+      },
+      "subcooling": {
+        "name": "Subcooling"
+      },
+      "supply_setpoint": {
+        "name": "Flow setpoint"
       },
       "system_time": {
         "name": "System time"
@@ -702,6 +824,9 @@
       },
       "t_hs": {
         "name": "Heat generator temperature"
+      },
+      "t_liq": {
+        "name": "Liquid line temperature"
       },
       "t_room": {
         "name": "Room temperature"
@@ -718,6 +843,9 @@
       "tdhw2": {
         "name": "Hot water temperature 2"
       },
+      "temp_after_compr": {
+        "name": "Temperature after compressor"
+      },
       "temperature_outside": {
         "name": "Outside temperature"
       },
@@ -726,6 +854,12 @@
       },
       "temperature_spread_raw": {
         "name": "Temperature spread (raw)"
+      },
+      "tgt_cond_temp": {
+        "name": "Target condensation temperature"
+      },
+      "tgt_evap_temp": {
+        "name": "Target evaporation temperature"
       },
       "thermal_power": {
         "name": "Thermal power"
@@ -748,6 +882,9 @@
       "tv": {
         "name": "TV"
       },
+      "tv_bh": {
+        "name": "TVBH"
+      },
       "tv_max": {
         "name": "TV max."
       },
@@ -760,8 +897,40 @@
       "tvbh_tr_delta": {
         "name": "TVBH-TR delta"
       },
+      "uart_mode_of_operating": {
+        "name": "Operating state",
+        "state": {
+          "auto": "Auto",
+          "auto_cool": "Auto cooling",
+          "auto_heat": "Auto heating",
+          "aux": "Auxiliary",
+          "cooling": "Cooling",
+          "cooling_hot_water": "Cooling + hot water",
+          "cooling_storage": "Cooling storage",
+          "dry": "Dehumidification",
+          "fan_only": "Fan only",
+          "heating": "Heating",
+          "heating_hot_water": "Heating + hot water",
+          "heating_storage": "Heat storage",
+          "hot_water": "Hot water production",
+          "standby": "Standby",
+          "stored_thermal_cooling_1": "Stored thermal cooling 1",
+          "stored_thermal_cooling_2": "Stored thermal cooling 2",
+          "stored_thermal_cooling_3": "Stored thermal cooling 3",
+          "stored_thermal_cooling_4": "Stored thermal cooling 4",
+          "stored_thermal_heating_1": "Stored thermal heating 1",
+          "stored_thermal_heating_2": "Stored thermal heating 2",
+          "stored_thermal_heating_3": "Stored thermal heating 3",
+          "stored_thermal_heating_4": "Stored thermal heating 4",
+          "unknown": "Unknown",
+          "ventilation": "Ventilation"
+        }
+      },
       "uart_overflows": {
         "name": "UART buffer overflows"
+      },
+      "voltage": {
+        "name": "Voltage"
       },
       "vorlauf_soll_tv_delta": {
         "name": "Flow setpoint-TV delta"

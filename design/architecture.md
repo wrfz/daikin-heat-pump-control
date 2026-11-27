@@ -175,7 +175,8 @@ custom_components/daikin_heat_pump_control/
   uart/          Protokoll I/S, Erkennung, Rahmen-Parser, Konverter, Entity-Tabelle (Daten),
                  Dampfdrucktabellen (Daten)
   logic/         berechnete Werte, Glättung, Fehlererkennung, Abtauoptimierung, Warmwasser-Taste
-  coordinator.py Zustand aller Werte, Verteilung an die Entities
+  coordinator.py Zustand der CAN-Werte, Verteilung an die Entities, Schreiben
+  uart_coordinator.py  Zustand der UART-Werte, Protokollerkennung, Kältekreiswerte
   sensor.py, binary_sensor.py, number.py, select.py, switch.py, button.py
   websocket.py   API für Panel und Card
   frontend/      gebautes JS + SVG-Layouts (aus frontend-src/, eingecheckt)
@@ -241,10 +242,33 @@ testbar.
 
 - 9600 8E1, Prüfsumme = Komplement der Byte-Summe.
 - Protokoll I (`03 40 <reg> <crc>`, Antwort mit Längenbyte) und S (`02 <reg> <crc>`, feste Längen),
-  automatische Erkennung wie die Komponente (Probe 0x60 I, dann 0x53 S, Rückfall I), NAK `15 EA`.
+  NAK `15 EA` (beendet die offene Anfrage als Fehlschlag).
+- Protokollwahl: Option automatisch / I / S. Automatisch: Erkennung wie die Komponente (Probe 0x60 I,
+  2 s, dann 0x53 S, 2 s). Das Ergebnis wird getrennt von der Option im Eintrag gespeichert
+  (`uart_detected_protocol`), der Eintrag lädt einmal neu; danach gibt es nur die Entities des
+  erkannten Protokolls, überzählige UART-Entities werden aus der Registry entfernt. Vor der ersten
+  erfolgreichen Erkennung gibt es keine UART-Wert-Entities (nur die Bridge-Diagnose). Ohne Antwort auf
+  beide Proben fragt die Integration mit I weiter (Rückfall, nicht gespeichert); die erste gültige
+  I-Antwort gilt als Erkennung. Erneut erkannt wird beim Ändern der UART-Optionen (das gespeicherte
+  Ergebnis wird gelöscht) und wenn das gespeicherte Protokoll dauerhaft nicht mehr antwortet (alle
+  abgefragten Register ausgefallen, siehe unten; höchstens alle 10 min): ein anderes Ergebnis wird
+  gespeichert, der Eintrag lädt neu, einmal Warnung im Log.
 - Alle Entities (32 Schlüssel, 11 binär, 3 Text) mit den Varianten je Außengerät und S-Layouts;
   Konverter: Ganzzahl LE/BE, Bits, Nibble, Zieltemperaturen (/256 auf 0,1 abgeschnitten).
-- Einheiten richtig: Durchfluss L/h, Kältemittel-/Hochdruck bar (bisher fälschlich °C).
+- Geräteprofile (Daten, kein Code): je Außengerät Kältemittel, Lüfterfaktor und je Wertegruppe
+  (Register bzw. Teil eines Registers) der Status `confirmed` (durch echte Frames belegt → Entity
+  angelegt und aktiv), `unconfirmed` (laut Protokoll vorhanden, aber für diese Baureihe nicht belegt →
+  angelegt, standardmäßig deaktiviert) oder `absent` (gibt es nicht → nicht angelegt, z. B. 0x62 auf
+  RRLQ006CAV3, Druck in 0x20 und 4-Wege-Ventil auf ERGA E). Weitere Geräte brauchen nur einen
+  Tabelleneintrag. Werte des Innengeräts (0x60, 0x61, S-Register) sind für alle Außengeräte belegt.
+  Thermische Leistung roh/geglättet gibt es nur, wenn das Profil den Durchfluss hat (aktiv wie dieser).
+  `discharge_pressure` (dieselben Bytes wie der Kältemitteldruck aus 0x62) entfällt dort, wo der
+  Kältemitteldruck schon aus 0x62 kommt (ERGA E).
+- Einheiten richtig: Kältemittel-/Hochdruck bar (bisher fälschlich °C). Durchfluss: 0x62 Byte 9–10
+  liefert l/min ×10 (Register-Beschreibungen der Daikin-Geräte; echter ERGA-E-Frame 14,8 l/min ≈ CAN
+  868 L/h an derselben Anlage); die Integration rechnet in L/h um (×60), gleiche Einheit wie der
+  CAN-Durchfluss, die Leistungsformel bleibt dieselbe. Das Display der HPSU zeigt den RoCon-Wert
+  (CAN 0x01DA) in L/h.
 - Sättigungstemperatur aus dem Kältemitteldruck (absolut = gemessen + 1,01325 bar), R32 bzw. R410A je
   Außengerät. Tabelle: zur Entwicklungszeit mit CoolProp (freie Stoffwert-Bibliothek, Referenz-
   Zustandsgleichungen) in 0,1-K-Schritten erzeugt (`scripts/`, Ergebnis als Datendatei, zur Laufzeit
@@ -252,7 +276,11 @@ testbar.
   1-K-Tabelle: Abweichung höchstens so groß wie deren Interpolationsfehler. Ist CoolProp nicht nutzbar,
   wird die bisherige Tabelle als Daten übernommen.
 - Abfrage: eine offene Anfrage, verloren nach 3 s, jedes Register 5 s nach der letzten gültigen
-  Antwort erneut, das am längsten nicht gesendete zuerst.
+  Antwort erneut, das am längsten nicht gesendete zuerst. Abgefragt werden nur Register, die eine
+  aktive Entity (oder eine Berechnung für eine aktive Entity) braucht. Nach 3 Fehlschlägen in Folge
+  (NAK, keine Antwort, Prüfsummenfehler) gilt ein Register als ausgefallen: es wird nur noch alle
+  10 min angefragt, seine Werte sind `unavailable`, einmal Warnung im Log (Info, sobald es wieder
+  antwortet), Zustand in der Diagnose.
 - Berechnet: thermische Leistung roh/geglättet, Spreizung roh/geglättet, Unterkühlung und
   Heißgas-Überhitzung (nur im Heizbetrieb mit laufendem Verdichter, je neuem Außengeräte-Frame).
 
@@ -468,6 +496,10 @@ Tests und Frontend-Build.
 | Zähler Schreibvorgänge | alle gesendeten Schreib-Frames, auch Logik und `send_raw_can` |
 | `send_raw_can` | erste passende Antwort (gleiches Register), höchstens 3 s |
 | Heizkurvenadaption schreiben | zurückgestellt bis zum Test an der Anlage (Teil 6) |
+| Durchfluss UART | 0x62 liefert l/min ×10; umgerechnet in L/h wie CAN |
+| UART-Werte je Gerät | Geräteprofile als Daten: belegt → aktiv, unbelegt → angelegt und deaktiviert, fehlt → nicht angelegt |
+| UART ohne Antwort | nach 3 Fehlschlägen nur noch alle 10 min, Werte `unavailable`, einmal Warnung |
+| UART-Protokoll automatisch | Ergebnis gespeichert, einmal neu laden, nur passende Entities; neu erkennen bei Optionsänderung oder dauerhaftem Ausfall |
 
 ## 14. Umsetzung in Teilen (je Teil eine Session)
 

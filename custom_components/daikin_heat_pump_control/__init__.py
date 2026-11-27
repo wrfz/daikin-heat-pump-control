@@ -5,7 +5,7 @@ from functools import partial
 import logging
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
@@ -16,12 +16,15 @@ from homeassistant.helpers import (
 from homeassistant.helpers.typing import ConfigType
 
 from .bridge.client import BridgeAuthError, BridgeConnectionError
-from .bridge.node import BridgeNode, CanChannel
+from .bridge.node import BridgeNode, CanChannel, UartChannel
 from .const import (
     BUS_CONF,
     CONF_NODE_NAME,
     CONF_NODES,
     CONF_NOISE_PSK,
+    CONF_OUTDOOR_UNIT,
+    CONF_UART_DETECTED_PROTOCOL,
+    CONF_UART_PROTOCOL,
     DEFAULT_PORT,
     DOMAIN,
     ISSUE_NO_BRIDGE_FIRMWARE,
@@ -38,11 +41,14 @@ from .entity import (
     async_update_bridge_device,
     bridge_device_identifier,
     bus_device_identifier,
-    can_unique_id,
+    bus_unique_id,
 )
 from .runtime import DaikinConfigEntry, DaikinRuntimeData
 from .services import async_setup_services
 from .storage import CanStorage
+from .uart.protocol import Protocol
+from .uart.table import outdoor_unit
+from .uart_coordinator import UartCoordinator, resolve_protocol, uart_entities
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -135,13 +141,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaikinConfigEntry) -> bo
         can = CanCoordinator(
             hass,
             channel,
-            active=_active_can_keys(hass, entry),
+            active=_active_keys(hass, entry, Bus.CAN, entity_defaults()),
             intervals=polling_intervals(entry.options),
             storage=storage,
             settings=error_settings(entry.options),
         )
         entry.async_on_unload(can.async_start())
-    entry.runtime_data = DaikinRuntimeData(nodes=nodes, channels=channels, can=can)
+    uart = None
+    if isinstance(channel := channels.get(Bus.UART), UartChannel):
+        uart = _create_uart(hass, entry, channel)
+        entry.async_on_unload(uart.async_start())
+    entry.runtime_data = DaikinRuntimeData(
+        nodes=nodes, channels=channels, can=can, uart=uart
+    )
     _async_update_devices(hass, entry)
     _async_remove_stale_issues(hass, entry)
 
@@ -160,22 +172,66 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaikinConfigEntry) -> bo
     return True
 
 
-def _active_can_keys(hass: HomeAssistant, entry: DaikinConfigEntry) -> set[str]:
-    """Return the keys of the enabled CAN entities.
+def _active_keys(
+    hass: HomeAssistant, entry: DaikinConfigEntry, bus: Bus, defaults: dict[str, bool]
+) -> set[str]:
+    """Return the keys of the enabled entities of a bus.
 
     Entities not registered yet count as their default; values that no
     enabled entity needs are not polled. Enabling an entity reloads the entry.
     """
     registered: dict[str, bool] = {}
-    prefix = can_unique_id(entry, "")
+    prefix = bus_unique_id(entry, bus, "")
     for entity in er.async_entries_for_config_entry(er.async_get(hass), entry.entry_id):
         if entity.unique_id.startswith(prefix):
             registered[entity.unique_id.removeprefix(prefix)] = not entity.disabled
-    return {
-        key
-        for key, default in entity_defaults().items()
-        if registered.get(key, default)
-    }
+    return {key for key, default in defaults.items() if registered.get(key, default)}
+
+
+def _create_uart(
+    hass: HomeAssistant, entry: DaikinConfigEntry, channel: UartChannel
+) -> UartCoordinator:
+    """Create the UART coordinator for the configured unit and protocol."""
+    unit = outdoor_unit(entry.options.get(CONF_OUTDOOR_UNIT))
+    protocol, may_detect = resolve_protocol(
+        entry.options.get(CONF_UART_PROTOCOL),
+        entry.data.get(CONF_UART_DETECTED_PROTOCOL),
+    )
+    entities = uart_entities(unit, protocol)
+    if protocol is not None:
+        _async_remove_other_entities(hass, entry, Bus.UART, set(entities))
+
+    @callback
+    def _on_detected(detected: Protocol) -> None:
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_UART_DETECTED_PROTOCOL: detected.value}
+        )
+        hass.config_entries.async_schedule_reload(entry.entry_id)
+
+    return UartCoordinator(
+        hass,
+        channel,
+        unit=unit,
+        protocol=protocol,
+        may_detect=may_detect,
+        active=_active_keys(hass, entry, Bus.UART, entities),
+        on_detected=_on_detected,
+    )
+
+
+def _async_remove_other_entities(
+    hass: HomeAssistant, entry: DaikinConfigEntry, bus: Bus, keys: set[str]
+) -> None:
+    """Remove the entities of a bus that the current configuration does not offer."""
+    registry = er.async_get(hass)
+    prefix = bus_unique_id(entry, bus, "")
+    for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
+        if (
+            entity.unique_id.startswith(prefix)
+            and entity.unique_id.removeprefix(prefix) not in keys
+        ):
+            _LOGGER.debug("Removing entity %s", entity.entity_id)
+            registry.async_remove(entity.entity_id)
 
 
 def _async_update_devices(hass: HomeAssistant, entry: DaikinConfigEntry) -> None:

@@ -15,6 +15,8 @@ CONF_CAN_NODE: Final = "can_node"
 CONF_UART_NODE: Final = "uart_node"
 CONF_OUTDOOR_UNIT: Final = "outdoor_unit"
 CONF_UART_PROTOCOL: Final = "uart_protocol"
+# Protocol found by the automatic detection (entry data, not an option).
+CONF_UART_DETECTED_PROTOCOL: Final = "uart_detected_protocol"
 
 ESPHOME_DOMAIN: Final = "esphome"
 ESPHOME_CONF_NOISE_PSK: Final = "noise_psk"
