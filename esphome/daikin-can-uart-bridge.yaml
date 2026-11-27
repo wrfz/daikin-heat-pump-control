@@ -16,7 +16,7 @@ substitutions:
 external_components:
   - source:
       type: git
-      url: https://github.com/wrfz/DaikinHeatPumpControl
+      url: https://github.com/wrfz/daikin-heat-pump-control
       ref: main
       path: esphome/components
     components: [daikin_bridge]
