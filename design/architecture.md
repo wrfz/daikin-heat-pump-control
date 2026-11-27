@@ -152,7 +152,7 @@ Weitere Wege und Regeln:
 
 Options-Flow: Knoten neu zuordnen, Außengerät/Protokoll, Abfrageintervalle (global und je Gruppe),
 Offsets für die Fehlererkennung (`tv`, `tvbh`, `tr`), Grenzwerte der Spreizungsprüfung, Panel in der
-Seitenleiste an/aus.
+Seitenleiste an/aus, Dashboard (externe Werte, Info-Box; Abschnitt 10).
 
 Abfrageintervalle (CAN): jede Entity der Tabelle gehört zu einer Gruppe – Messwerte (Temperaturen,
 Druck, Durchfluss, Pumpe, Ventile), Zustände (binäre Werte, Betriebsart, Fehlercode, SG-Zustand),
@@ -178,9 +178,12 @@ custom_components/daikin_heat_pump_control/
   coordinator.py Zustand der CAN-Werte, Verteilung an die Entities, Schreiben
   uart_coordinator.py  Zustand der UART-Werte, Protokollerkennung, Kältekreiswerte
   sensor.py, binary_sensor.py, number.py, select.py, switch.py, button.py
+  dashboard.py   Wert-IDs des Dashboards (Tabelle) und ihre Entities
+  panel.py       statischer Pfad, Modul im Frontend, Panel in der Seitenleiste
   websocket.py   API für Panel und Card
   frontend/      gebautes JS + SVG-Layouts (aus frontend-src/, eingecheckt)
-frontend-src/    TypeScript/Lit: Card, Panel, Editor, gemeinsame Darstellung
+frontend-src/    TypeScript/Lit: Card, Panel, Editor, gemeinsame Darstellung (src/), SVG-Layouts
+                 (layouts/, beim Build kopiert), Vitest (test/)
 esphome/         Bridge-Firmware (Packages, Beispiele, components/daikin_bridge)
 scripts/         Erzeugung der Dampfdrucktabellen (nur Entwicklung)
 tests/           pytest-homeassistant, Simulator unter tests/sim/, E2E unter tests/e2e/
@@ -378,16 +381,99 @@ Während der Tests wechselt der Nutzer zwischen Bridge-Firmware und bisheriger F
   Modul im Frontend (`add_extra_js_url`) – die Card ist damit ohne Lovelace-Ressource verfügbar.
 - **Panel** in der Seitenleiste (abschaltbar im Options-Flow), **Card** `custom:daikin-heat-pump-card`
   für eigene Dashboards; beide nutzen dieselbe Darstellung. Der Nutzer wählt, was er nutzt.
-- Entities automatisch: WebSocket-Befehl `daikin_heat_pump_control/entities` liefert Schlüssel →
-  entity_id (unabhängig von Sprache und Umbenennungen). Einzelne Werte lassen sich überschreiben
-  (Card: in der Card-Konfiguration; Panel: gespeichert in der Integration über einen WebSocket-Befehl).
-  Externe Werte ohne Bus (COP, elektrische Leistung, Raum-Ist, Raum-Soll, Heißgas am Kondensator,
-  Heizstab-Leistung) nur über diese Zuordnung.
-- Inhalt wie heute: Schema mit allen Werten, Info-Box (sortierbar), Animationen (Lüfter, Verdichter,
+- Keine Entity-Zuordnung in Card oder Panel: alles Inhaltliche wird zentral in der Integration
+  eingestellt, damit jede Ansicht dasselbe zeigt.
+  - Bus-Werte automatisch: WebSocket-Befehl `daikin_heat_pump_control/entities` liefert Wert-ID →
+    entity_id (unabhängig von Sprache und Umbenennungen), dazu die externen Werte und die Info-Box.
+  - Wert-IDs nach Bedeutung, ohne Bus (`tv`, `tr`, `error_code`, `cop`, …); sie stehen in den
+    SVG-Attributen `data-run-map`/`data-temp-vars` und in der WebSocket-Antwort, die Element-IDs der
+    SVGs bleiben. Liefern CAN und UART denselben Wert, gilt CAN; UART nur, wenn es den Wert per CAN
+    nicht gibt oder kein CAN eingerichtet ist (fest, keine Einstellung).
+  - Externe Werte ohne Bus (COP, elektrische Leistung, Raum-Ist, Raum-Soll, Heißgas am Kondensator,
+    Heizstab-Leistung): Options-Flow, Schritt „Dashboard“, je Wert ein Entity-Selector (Domain und
+    Geräteklasse eingeschränkt).
+  - Info-Box (welche Werte, Reihenfolge): ebenfalls im Options-Flow, Schritt „Dashboard“.
+- Card-Editor nur für die Darstellung: Layout hell/dunkel/petrol oder automatisch nach Dark-Mode,
+  Hintergrund/Box/Text.
+- Inhalt wie heute: Schema mit allen Werten, Info-Box, Animationen (Lüfter, Verdichter,
   Pumpe, Kältemittel- und Wasserfluss, 4-Wege-Ventil, Mischer/Bypass-Klappen), Farben nach Temperatur,
   Layouts hell/dunkel/petrol, Hintergrund/Box/Text anpassbar, Klick → More-Info.
 - Logik über Zustandsschlüssel (`heating`, `cooling`, …) statt Texte, Anzeige über die HA-Übersetzung;
-  Fehlercode rot bei Fehler; Layout optional automatisch nach Dark-Mode; Texte de/en/fr/it.
+  Fehlercode rot bei Fehler; Texte de/en/fr/it.
+
+Umsetzung (Teil 5):
+
+- Wert-IDs: eine Datentabelle in Python (`dashboard.py`, Wert-ID → CAN-Schlüssel, UART-Schlüssel); „CAN
+  zuerst“ ergibt sich daraus. Paare nach Bedeutung englisch benannt:
+
+  | Wert-ID | CAN | UART |
+  |---|---|---|
+  | `temperature_outside` | `temperature_outside` (RoCon-Fühler) | `outdoor_temp` (Luftfühler Außengerät) |
+  | `ta2` | `ta2` | – |
+  | `tv` / `tr` / `tvbh` | `tv` / `tr` / `tvbh` | `tv` / `tr` / `tv_bh` |
+  | `target_supply_temperature` | `target_supply_temperature` | `supply_setpoint` |
+  | `temperature_spread` | `temperature_spread` (geglättet; die rohe ist standardmäßig aus) | `temperature_spread` |
+  | `thermal_power` | `thermal_power` (wie bisher geglättet) | `thermal_power` |
+  | `flow_rate` / `circulation_pump` | `flow_rate` / `circulation_pump` | `flow_rate` / `circulation_pump` |
+  | `pump_running` | `status_kesselpumpe` | `water_pump` |
+  | `compressor_running` | `status_kompressor` | – |
+  | `water_pressure` | `water_pressure` | – |
+  | `hot_water_temperature` | `tdhw1` | `dhw_temp` |
+  | `hot_water_setpoint` | `target_hot_water_temperature_1` | `dhw_setpoint` |
+  | `dhw_mixer_position` / `bypass_valve` | `dhw_mixer_position` / `bypass_valve` | – |
+  | `error_code` / `operating_mode` | `error_code` / `operating_mode` | – |
+  | `mode_of_operating` | `mode_of_operating` | `mode_of_operating` |
+  | `liquid_temperature` | `tliq` | `t_liq` |
+  | `expansion_valve`, `four_way_valve`, `pressure_equalization`, `evaporator_temperature`, `hot_gas_temperature`, `discharge_superheat`, `subcooling`, `saturation_temperature`, `refrigerant_pressure`, `fan_speed`, `compressor_speed` | – | `exv`, `4_way_valve`, `press_eq`, `exch_temp`, `temp_after_compr`, `discharge_superheat`, `subcooling`, `saturation_temp`, `refrigerant_pressure`, `fan_speed`, `inv_freq` |
+
+  Externe Werte: `cop`, `electric_power`, `room_temperature`, `room_setpoint`, `hot_gas_condenser`,
+  `backup_heater_power`. Info-Box zur Auswahl: `error_code`, `operating_mode`, `mode_of_operating`,
+  `thermal_power`, `electric_power`, `cop`, `room_temperature`, `room_setpoint` (Standard: alle, in
+  dieser Reihenfolge).
+- Quelle eines Werts: die CAN-Entity, wenn sie in der Registry steht und nicht deaktiviert ist
+  (`hidden` zählt als vorhanden), sonst die UART-Entity unter derselben Bedingung, sonst fehlt der Wert
+  in der Antwort und das Schema zeigt ihn nicht. Kein Umschalten zur Laufzeit: eine `unavailable`
+  CAN-Entity bleibt die Quelle. Der Befehl liest die Registry bei jedem Aufruf; Card und Panel fragen
+  beim Verbinden und bei `entity_registry_updated` neu an.
+- WebSocket-Befehle (nur mit geladenem Eintrag, sonst Fehler `not_loaded`):
+  - `daikin_heat_pump_control/entities` → `{"entities": {Wert-ID: entity_id}, "info": [Wert-IDs]}`
+    (externe Werte sind in `entities` enthalten; `info` = gewählte Info-Zeilen in Reihenfolge);
+  - `daikin_heat_pump_control/panel_config` → `{"config": {…}}` (Darstellung des Panels, leer = Standard);
+  - `daikin_heat_pump_control/panel_config/set` (nur Admins) mit `config`; geprüft wie die
+    Card-Darstellung.
+- SVG-Layouts als `frontend/daikin_glass_{light,dark,petrol}.svg`: die Wert-Rechtecke tragen
+  `data-value="<Wert-ID>"`, die Symbole mit More-Info `data-more-info="<Wert-ID>"`, `data-run-map` und
+  `data-temp-vars` nennen Wert-IDs, das 4-Wege-Ventil vergleicht mit `heating`/`cooling`. Rechtecke
+  ohne `data-value` (zweite Zeile für den UART-Wert) bleiben leer und werden wie fehlende Werte
+  ausgeblendet. Ein Test prüft: jede Wert-ID kommt in jedem SVG vor und umgekehrt.
+- Darstellung (Card und Panel gleich): Layout `auto` (Standard; hell/dunkel nach `hass.themes.darkMode`),
+  `light`, `dark`, `petrol`; `background {show, color [r,g,b], opacity 0–100}`, `box {fill, fill_opacity,
+  border, border_opacity}`, `text {value_color, label_color}`. Gespeichert werden nur Abweichungen vom
+  Layout. Der Card-Editor (ha-form) bearbeitet genau diese Felder.
+- Panel: `panel_custom.async_register_panel`, URL `daikin-heat-pump`, Icon `mdi:heat-pump`, Titel in
+  der Systemsprache (`hass.config.language`: Wärmepumpe / Heat pump / Pompe à chaleur / Pompa di
+  calore, sonst Heat pump; ändert sich erst nach Neuladen des Eintrags), `require_admin=False`.
+  Registriert beim Einrichten des Eintrags, wenn die Option `show_panel` (Standard an) gesetzt ist,
+  entfernt beim Entladen. Ein Zahnrad (nur Admins) öffnet den Card-Editor in einem Dialog; die
+  Darstellung des Panels gilt für alle Nutzer und liegt im Store
+  `daikin_heat_pump_control.<entry_id>.panel` (wird mit dem Eintrag entfernt).
+- Bereitstellung: statischer Pfad `/daikin_heat_pump_control/frontend` (in `async_setup`, einmal je
+  HA-Start), `add_extra_js_url` mit `frontend/daikin-heat-pump.js?v=<Manifest-Version>`; die SVGs werden
+  neben dem Modul mit derselben Version geladen.
+- Options-Flow: Einstieg ist ein Menü mit „Bus und Abfrage“ (bisheriges Formular) und „Dashboard“
+  (`show_panel`, je externer Wert ein Entity-Selector mit Domain/Geräteklasse, Info-Box als
+  `SelectSelector` mit `multiple` im Dropdown-Modus; Reihenfolge = Reihenfolge der Auswahl, weil
+  core 2026.11 `reorder` im SelectSelector-Schema nicht erlaubt – offen: auf `reorder` umstellen,
+  sobald core es erlaubt). Jeder Punkt speichert für sich und übernimmt die
+  übrigen Optionen unverändert.
+- Texte: Zustände, Optionen, Einheiten und Entity-Namen aus HA (`hass.formatEntityState` usw.); im
+  Bundle (`frontend-src/src/translations/{de,en,fr,it}.json`) nur Schema-Beschriftungen,
+  Info-Präfixe und die Texte von Editor und Panel. Sprache aus `hass.locale.language`
+  (`de-CH` → `de`), Rückfall `en`.
+- Build: Vite im Library-Modus, ein ES-Modul `frontend/daikin-heat-pump.js` ohne Hash, Lit
+  mitgebündelt; Node-Version in `frontend-src/.nvmrc` und `package.json` (`engines`), Lockfile
+  eingecheckt. CI-Job `frontend`: `npm ci`, Lint (ESLint, Prettier), Vitest, Build, danach
+  `git diff --exit-code` auf `frontend/`.
 
 ## 11. Tests (ohne Hardware)
 
@@ -499,6 +585,12 @@ Tests und Frontend-Build.
 | Durchfluss UART | 0x62 liefert l/min ×10; umgerechnet in L/h wie CAN |
 | UART-Werte je Gerät | Geräteprofile als Daten: belegt → aktiv, unbelegt → angelegt und deaktiviert, fehlt → nicht angelegt |
 | UART ohne Antwort | nach 3 Fehlschlägen nur noch alle 10 min, Werte `unavailable`, einmal Warnung |
+| Dashboard-Konfiguration | zentral im Options-Flow (externe Werte, Info-Box); Card-Editor nur Darstellung |
+| Wert-IDs Dashboard | nach Bedeutung ohne Bus (`tv`, `cop`); CAN vor UART, fest; deaktivierte Entity zählt als fehlend |
+| Panel | `daikin-heat-pump`, Titel in der Systemsprache, Darstellung im Store für alle Nutzer, Zahnrad nur Admins |
+| Options-Flow | Menü „Bus und Abfrage“ / „Dashboard“, jeder Punkt speichert für sich |
+| Reihenfolge Info-Box | Reihenfolge der Auswahl (SelectSelector `multiple`, Dropdown); `reorder`, sobald core es erlaubt (offen) |
+| Frontend-Build | Vite, ein ES-Modul ohne Hash, `?v=<Version>`, Build eingecheckt und in CI geprüft |
 | UART-Protokoll automatisch | Ergebnis gespeichert, einmal neu laden, nur passende Entities; neu erkennen bei Optionsänderung oder dauerhaftem Ausfall |
 
 ## 14. Umsetzung in Teilen (je Teil eine Session)

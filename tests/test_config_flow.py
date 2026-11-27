@@ -12,7 +12,15 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from helpers import DOMAIN, MAC_BOTH, MAC_CAN, MAC_UART, daikin_entry, esphome_entry
+from helpers import (
+    DOMAIN,
+    MAC_BOTH,
+    MAC_CAN,
+    MAC_UART,
+    daikin_entry,
+    esphome_entry,
+    options_step,
+)
 from sim.esp import (
     FIRMWARE_LEGACY_CAN,
     FIRMWARE_LEGACY_UART,
@@ -499,8 +507,7 @@ async def test_options(hass: HomeAssistant, uart_esp: SimulatedEsp) -> None:
     entry = daikin_entry(hass, uart=uart_esp)
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    assert result["step_id"] == "init"
+    result = await options_step(hass, entry, "bus")
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], {"outdoor_unit": "ERGA04EAV3", "uart_protocol": "s"}
     )
@@ -517,8 +524,7 @@ async def test_options_polling_intervals(
     entry = daikin_entry(
         hass, can=can_esp, options={"scan_interval": 30, "interval_counter": 600}
     )
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    assert result["step_id"] == "init"
+    result = await options_step(hass, entry, "bus")
     fields = {str(key) for key in result["data_schema"].schema}
     assert fields == {
         "scan_interval",
@@ -551,6 +557,6 @@ async def test_options_polling_intervals(
 async def test_options_both_buses(hass: HomeAssistant, both_esp: SimulatedEsp) -> None:
     """With both buses the form holds the intervals and the UART settings."""
     entry = daikin_entry(hass, can=both_esp, uart=both_esp)
-    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await options_step(hass, entry, "bus")
     fields = {str(key) for key in result["data_schema"].schema}
     assert {"scan_interval", "outdoor_unit", "uart_protocol"} <= fields

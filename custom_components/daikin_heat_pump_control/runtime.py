@@ -7,6 +7,7 @@ from homeassistant.config_entries import ConfigEntry
 from .bridge.node import BridgeNode, BusChannel
 from .const import Bus
 from .coordinator import CanCoordinator
+from .storage import PanelStorage
 from .uart_coordinator import UartCoordinator
 
 
@@ -16,6 +17,7 @@ class DaikinRuntimeData:
 
     nodes: dict[str, BridgeNode]
     channels: dict[Bus, BusChannel]
+    panel: PanelStorage
     can: CanCoordinator | None = None
     uart: UartCoordinator | None = None
 

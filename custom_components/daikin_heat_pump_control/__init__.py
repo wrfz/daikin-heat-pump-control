@@ -43,12 +43,14 @@ from .entity import (
     bus_device_identifier,
     bus_unique_id,
 )
+from .panel import async_register_panel, async_setup_frontend
 from .runtime import DaikinConfigEntry, DaikinRuntimeData
 from .services import async_setup_services
-from .storage import CanStorage
+from .storage import CanStorage, PanelStorage
 from .uart.protocol import Protocol
 from .uart.table import outdoor_unit
 from .uart_coordinator import UartCoordinator, resolve_protocol, uart_entities
+from .websocket import async_setup_websocket
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -98,8 +100,10 @@ async def _async_stop_nodes(nodes: dict[str, BridgeNode]) -> None:
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the services of the integration."""
+    """Set up the services, the WebSocket API and the frontend module."""
     async_setup_services(hass)
+    async_setup_websocket(hass)
+    await async_setup_frontend(hass)
     return True
 
 
@@ -151,8 +155,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaikinConfigEntry) -> bo
     if isinstance(channel := channels.get(Bus.UART), UartChannel):
         uart = _create_uart(hass, entry, channel)
         entry.async_on_unload(uart.async_start())
+    panel = PanelStorage(hass, entry.entry_id)
+    await panel.async_load()
     entry.runtime_data = DaikinRuntimeData(
-        nodes=nodes, channels=channels, can=can, uart=uart
+        nodes=nodes, channels=channels, panel=panel, can=can, uart=uart
     )
     _async_update_devices(hass, entry)
     _async_remove_stale_issues(hass, entry)
@@ -164,6 +170,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaikinConfigEntry) -> bo
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_on_hass_stop)
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    await async_register_panel(hass, entry)
     for node in nodes.values():
         entry.async_on_unload(
             node.async_add_listener(partial(async_update_bridge_device, node))
@@ -269,6 +276,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: DaikinConfigEntry) -> b
 async def async_remove_entry(hass: HomeAssistant, entry: DaikinConfigEntry) -> None:
     """Remove the stored state of a removed config entry."""
     await CanStorage(hass, entry.entry_id).async_remove()
+    await PanelStorage(hass, entry.entry_id).async_remove()
 
 
 async def async_remove_config_entry_device(

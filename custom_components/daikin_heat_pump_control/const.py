@@ -101,6 +101,16 @@ CONF_MAX_SPREAD_TVBH_TV: Final = "max_spread_tvbh_tv"
 CONF_MAX_SPREAD_TVBH_TR: Final = "max_spread_tvbh_tr"
 DEFAULT_MAX_SPREAD: Final = 0.3
 
+# Dashboard (panel and card).
+CONF_SHOW_PANEL: Final = "show_panel"
+CONF_INFO_ROWS: Final = "info_rows"
+CONF_EXTERNAL_PREFIX: Final = "external_"
+PANEL_URL_PATH: Final = "daikin-heat-pump"
+PANEL_ICON: Final = "mdi:heat-pump"
+PANEL_ELEMENT: Final = "daikin-heat-pump-panel"
+FRONTEND_URL: Final = f"/{DOMAIN}/frontend"
+FRONTEND_MODULE: Final = "daikin-heat-pump.js"
+
 # Service to send a raw CAN frame.
 SERVICE_SEND_RAW_CAN: Final = "send_raw_can"
 ATTR_DATA: Final = "data"

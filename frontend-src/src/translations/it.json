@@ -1,0 +1,77 @@
+{
+  "label": {
+    "temperature_outside": "TA",
+    "ta2": "TA2",
+    "expansion_valve": "EEV",
+    "liquid": "Condensato",
+    "circulation_pump": "Pompa circ.",
+    "flow_rate": "Portata",
+    "return_flow": "Ritorno",
+    "evaporator": "Evaporatore",
+    "hot_gas": "Gas caldo",
+    "condensing": "Condensazione",
+    "hot_gas_condenser": "Gas caldo",
+    "spread": "ΔT",
+    "flow": "Mandata",
+    "flow_setpoint": "Impostata",
+    "pressure": "Pressione",
+    "flow_bh": "Mandata BH",
+    "fan": "Ventilatore",
+    "compressor": "Compressore",
+    "storage": "Serbatoio",
+    "storage_setpoint": "Impostata",
+    "backup_heater": "Resistenza"
+  },
+  "info": {
+    "error_code": "Codice errore:",
+    "operating_mode": "Modalità:",
+    "mode_of_operating": "Funzionamento:",
+    "thermal_power": "Potenza termica:",
+    "electric_power": "Potenza elettrica:",
+    "cop": "COP:",
+    "room_temperature": "Ambiente:",
+    "room_setpoint": "Ambiente impostata:"
+  },
+  "prefix": {
+    "subcooling": "SR",
+    "discharge_superheat": "SS"
+  },
+  "state": {
+    "unavailable": "N/D",
+    "not_loaded": "Daikin Heat Pump Control non è configurato o non è caricato.",
+    "load_error": "Impossibile caricare la dashboard."
+  },
+  "editor": {
+    "layout": "Layout",
+    "layout_auto": "Automatico (modalità scura)",
+    "layout_light": "Vetro, chiaro",
+    "layout_dark": "Vetro, scuro",
+    "layout_petrol": "Vetro, petrolio",
+    "background": "Sfondo",
+    "show": "Mostra sfondo",
+    "color": "Colore",
+    "opacity": "Opacità",
+    "box": "Riquadri",
+    "fill": "Riempimento",
+    "fill_opacity": "Opacità riempimento",
+    "border": "Bordo",
+    "border_opacity": "Opacità bordo",
+    "text": "Testo",
+    "value_color": "Valori",
+    "label_color": "Etichette",
+    "reset": "Ripristina il layout",
+    "hint": "Valori, entità esterne e riquadro informazioni si impostano nelle opzioni dell'integrazione (Dashboard)."
+  },
+  "panel": {
+    "title": "Pompa di calore",
+    "settings": "Aspetto",
+    "save": "Salva",
+    "cancel": "Annulla",
+    "save_error": "Impossibile salvare l'aspetto.",
+    "all_users": "L'aspetto del pannello vale per tutti gli utenti."
+  },
+  "card": {
+    "name": "Pompa di calore Daikin",
+    "description": "Schema della pompa di calore con tutti i valori dell'integrazione Daikin Heat Pump Control."
+  }
+}

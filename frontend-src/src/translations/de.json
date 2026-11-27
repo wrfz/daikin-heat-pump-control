@@ -1,0 +1,77 @@
+{
+  "label": {
+    "temperature_outside": "TA",
+    "ta2": "TA2",
+    "expansion_valve": "EEV",
+    "liquid": "Kondensat",
+    "circulation_pump": "Umwälzpumpe",
+    "flow_rate": "Durchfluss",
+    "return_flow": "Rücklauf",
+    "evaporator": "Verdampfer",
+    "hot_gas": "Heißgas",
+    "condensing": "Kondensation",
+    "hot_gas_condenser": "Heißgas",
+    "spread": "Spreizung",
+    "flow": "Vorlauf",
+    "flow_setpoint": "Vorlauf-Soll",
+    "pressure": "Druck",
+    "flow_bh": "Vorlauf BH",
+    "fan": "Lüfter",
+    "compressor": "Verdichter",
+    "storage": "Speicher",
+    "storage_setpoint": "Soll",
+    "backup_heater": "Heizstab"
+  },
+  "info": {
+    "error_code": "Fehlercode:",
+    "operating_mode": "Modus:",
+    "mode_of_operating": "Betriebsart:",
+    "thermal_power": "Therm. Leistung:",
+    "electric_power": "El. Leistung:",
+    "cop": "COP:",
+    "room_temperature": "Raum-Ist:",
+    "room_setpoint": "Raum-Soll:"
+  },
+  "prefix": {
+    "subcooling": "UK",
+    "discharge_superheat": "ÜH"
+  },
+  "state": {
+    "unavailable": "n. v.",
+    "not_loaded": "Daikin Heat Pump Control ist nicht eingerichtet oder nicht geladen.",
+    "load_error": "Das Dashboard konnte nicht geladen werden."
+  },
+  "editor": {
+    "layout": "Layout",
+    "layout_auto": "Automatisch (Dark-Mode)",
+    "layout_light": "Glas, hell",
+    "layout_dark": "Glas, dunkel",
+    "layout_petrol": "Glas, Petrol",
+    "background": "Hintergrund",
+    "show": "Hintergrund anzeigen",
+    "color": "Farbe",
+    "opacity": "Deckkraft",
+    "box": "Boxen",
+    "fill": "Füllung",
+    "fill_opacity": "Deckkraft Füllung",
+    "border": "Rahmen",
+    "border_opacity": "Deckkraft Rahmen",
+    "text": "Text",
+    "value_color": "Werte",
+    "label_color": "Beschriftungen",
+    "reset": "Auf das Layout zurücksetzen",
+    "hint": "Werte, externe Entities und die Info-Box werden in den Optionen der Integration eingestellt (Dashboard)."
+  },
+  "panel": {
+    "title": "Wärmepumpe",
+    "settings": "Darstellung",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "save_error": "Die Darstellung konnte nicht gespeichert werden.",
+    "all_users": "Die Darstellung des Panels gilt für alle Nutzer."
+  },
+  "card": {
+    "name": "Daikin Wärmepumpe",
+    "description": "Schema der Wärmepumpe mit allen Werten der Integration Daikin Heat Pump Control."
+  }
+}

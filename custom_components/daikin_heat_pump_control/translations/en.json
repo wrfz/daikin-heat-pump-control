@@ -1024,7 +1024,7 @@
   },
   "options": {
     "step": {
-      "init": {
+      "bus": {
         "data": {
           "interval_counter": "Interval counters",
           "interval_measurement": "Interval measurements",
@@ -1053,6 +1053,37 @@
           "tvbh_offset": "Correction of TVBH for the valve checks of the error code.",
           "uart_protocol": "Protocol of the indoor unit; automatic detection works for most devices."
         },
+        "title": "Buses and polling"
+      },
+      "dashboard": {
+        "data": {
+          "external_backup_heater_power": "Backup heater power",
+          "external_cop": "COP",
+          "external_electric_power": "Electric power",
+          "external_hot_gas_condenser": "Hot gas at the condenser",
+          "external_room_setpoint": "Room setpoint",
+          "external_room_temperature": "Room temperature",
+          "info_rows": "Info box",
+          "show_panel": "Panel in the sidebar"
+        },
+        "data_description": {
+          "external_backup_heater_power": "Power sensor of the backup heater.",
+          "external_cop": "Sensor with the coefficient of performance.",
+          "external_electric_power": "Power sensor of the heat pump.",
+          "external_hot_gas_condenser": "Temperature sensor at the condenser inlet.",
+          "external_room_setpoint": "Entity with the room setpoint.",
+          "external_room_temperature": "Temperature sensor of the room.",
+          "info_rows": "Rows of the info box in the order of the selection.",
+          "show_panel": "Shows the heat pump dashboard as a page in the sidebar."
+        },
+        "description": "Values from other entities and the rows of the info box, used by the panel and every card.",
+        "title": "Dashboard"
+      },
+      "init": {
+        "menu_options": {
+          "bus": "Buses and polling",
+          "dashboard": "Dashboard"
+        },
         "title": "Options"
       }
     }
@@ -1062,6 +1093,18 @@
       "options": {
         "keep": "Keep the current node",
         "use_new": "Use the new bridge"
+      }
+    },
+    "info_rows": {
+      "options": {
+        "error_code": "Error code",
+        "operating_mode": "Operating mode",
+        "mode_of_operating": "Mode of operating",
+        "thermal_power": "Thermal power",
+        "electric_power": "Electric power",
+        "cop": "COP",
+        "room_temperature": "Room temperature",
+        "room_setpoint": "Room setpoint"
       }
     },
     "uart_protocol": {

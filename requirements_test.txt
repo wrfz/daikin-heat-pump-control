@@ -1,6 +1,8 @@
 homeassistant==2026.11.3
 pytest-homeassistant==2026.11.3
 aioesphomeapi==46.25.0
+# Needed to set up the frontend, panel_custom and http dependencies.
+home-assistant-frontend==20261028.8
 pytest-cov
 pytest-timeout
 ruff==0.17.6

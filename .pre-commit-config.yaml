@@ -19,3 +19,15 @@ repos:
         language: system
         files: ^custom_components/daikin_heat_pump_control/(strings\.json|translations/en\.json)$
         pass_filenames: false
+      - id: frontend-lint
+        name: frontend lint (ESLint, Prettier)
+        entry: npm --prefix frontend-src run lint
+        language: system
+        files: ^frontend-src/
+        pass_filenames: false
+      - id: frontend-build
+        name: frontend build is checked in
+        entry: npm --prefix frontend-src run build
+        language: system
+        files: ^frontend-src/
+        pass_filenames: false

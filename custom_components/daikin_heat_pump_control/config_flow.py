@@ -20,6 +20,10 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
+    BooleanSelector,
+    EntitySelector,
+    EntitySelectorConfig,
+    EntityWithDeviceFilterSelectorConfig,
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
@@ -46,6 +50,8 @@ from .can.table import Group
 from .const import (
     BUS_CONF,
     CONF_CAN_NODE,
+    CONF_EXTERNAL_PREFIX,
+    CONF_INFO_ROWS,
     CONF_MAX_SPREAD_TVBH_TR,
     CONF_MAX_SPREAD_TVBH_TV,
     CONF_NODE_NAME,
@@ -53,6 +59,7 @@ from .const import (
     CONF_NOISE_PSK,
     CONF_OUTDOOR_UNIT,
     CONF_SCAN_INTERVAL,
+    CONF_SHOW_PANEL,
     CONF_TR_OFFSET,
     CONF_TV_OFFSET,
     CONF_TVBH_OFFSET,
@@ -73,6 +80,7 @@ from .const import (
     UartProtocol,
 )
 from .coordinator import group_option
+from .dashboard import EXTERNAL_VALUES, INFO_VALUES, external_option, info_rows
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -746,13 +754,53 @@ def _error_check_schema(options: Mapping[str, Any]) -> dict[Any, Any]:
     return fields
 
 
+def _dashboard_schema(options: Mapping[str, Any]) -> dict[Any, Any]:
+    """Return the panel switch, the external values and the info box."""
+    fields: dict[Any, Any] = {
+        probatio.Required(
+            CONF_SHOW_PANEL, default=options.get(CONF_SHOW_PANEL, True)
+        ): BooleanSelector()
+    }
+    for value in EXTERNAL_VALUES:
+        key = external_option(value)
+        filters = [
+            EntityWithDeviceFilterSelectorConfig(
+                domain=domain, device_class=value.device_class
+            )
+            if value.device_class is not None and domain == "sensor"
+            else EntityWithDeviceFilterSelectorConfig(domain=domain)
+            for domain in value.domains
+        ]
+        fields[
+            probatio.Optional(key, description={"suggested_value": options.get(key)})
+        ] = EntitySelector(EntitySelectorConfig(filter=filters))
+    fields[probatio.Required(CONF_INFO_ROWS, default=info_rows(options))] = (
+        SelectSelector(
+            SelectSelectorConfig(
+                options=list(INFO_VALUES),
+                multiple=True,
+                # The order of the selection is the order of the rows.
+                mode=SelectSelectorMode.DROPDOWN,
+                translation_key=CONF_INFO_ROWS,
+            )
+        )
+    )
+    return fields
+
+
 class DaikinOptionsFlow(OptionsFlowWithReload):
     """Options of the integration."""
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Show the options."""
+        """Show the parts of the options."""
+        return self.async_show_menu(step_id="init", menu_options=["bus", "dashboard"])
+
+    async def async_step_bus(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Show the options of the buses and the polling."""
         options = self.config_entry.options
         data = self.config_entry.data
         if user_input is not None:
@@ -778,4 +826,20 @@ class DaikinOptionsFlow(OptionsFlowWithReload):
             fields.update(_error_check_schema(options))
         if data.get(CONF_UART_NODE) is not None:
             fields.update(_uart_schema(options).schema)
-        return self.async_show_form(step_id="init", data_schema=probatio.Schema(fields))
+        return self.async_show_form(step_id="bus", data_schema=probatio.Schema(fields))
+
+    async def async_step_dashboard(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Show the options of the panel and the card."""
+        options = self.config_entry.options
+        if user_input is not None:
+            kept = {
+                k: v
+                for k, v in options.items()
+                if not k.startswith(CONF_EXTERNAL_PREFIX)
+            }
+            return self.async_create_entry(data={**kept, **user_input})
+        return self.async_show_form(
+            step_id="dashboard", data_schema=probatio.Schema(_dashboard_schema(options))
+        )

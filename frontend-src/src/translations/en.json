@@ -1,0 +1,77 @@
+{
+  "label": {
+    "temperature_outside": "TA",
+    "ta2": "TA2",
+    "expansion_valve": "EEV",
+    "liquid": "Liquid",
+    "circulation_pump": "Circulation pump",
+    "flow_rate": "Flow rate",
+    "return_flow": "Return",
+    "evaporator": "Evaporator",
+    "hot_gas": "Hot gas",
+    "condensing": "Condensing",
+    "hot_gas_condenser": "Hot gas",
+    "spread": "Spread",
+    "flow": "Flow",
+    "flow_setpoint": "Setpoint",
+    "pressure": "Pressure",
+    "flow_bh": "Flow BH",
+    "fan": "Fan",
+    "compressor": "Compressor",
+    "storage": "Tank",
+    "storage_setpoint": "Setpoint",
+    "backup_heater": "Backup heater"
+  },
+  "info": {
+    "error_code": "Error code:",
+    "operating_mode": "Mode:",
+    "mode_of_operating": "Operation:",
+    "thermal_power": "Thermal power:",
+    "electric_power": "Electric power:",
+    "cop": "COP:",
+    "room_temperature": "Room:",
+    "room_setpoint": "Room setpoint:"
+  },
+  "prefix": {
+    "subcooling": "SC",
+    "discharge_superheat": "SH"
+  },
+  "state": {
+    "unavailable": "N/A",
+    "not_loaded": "Daikin Heat Pump Control is not set up or not loaded.",
+    "load_error": "The dashboard could not be loaded."
+  },
+  "editor": {
+    "layout": "Layout",
+    "layout_auto": "Automatic (dark mode)",
+    "layout_light": "Glass, light",
+    "layout_dark": "Glass, dark",
+    "layout_petrol": "Glass, petrol",
+    "background": "Background",
+    "show": "Show background",
+    "color": "Colour",
+    "opacity": "Opacity",
+    "box": "Boxes",
+    "fill": "Fill",
+    "fill_opacity": "Fill opacity",
+    "border": "Border",
+    "border_opacity": "Border opacity",
+    "text": "Text",
+    "value_color": "Values",
+    "label_color": "Labels",
+    "reset": "Reset to the layout",
+    "hint": "Values, external entities and the info box are set in the options of the integration (Dashboard)."
+  },
+  "panel": {
+    "title": "Heat pump",
+    "settings": "Appearance",
+    "save": "Save",
+    "cancel": "Cancel",
+    "save_error": "The appearance could not be saved.",
+    "all_users": "The appearance of the panel applies to all users."
+  },
+  "card": {
+    "name": "Daikin heat pump",
+    "description": "Schematic of the heat pump with all values of the Daikin Heat Pump Control integration."
+  }
+}

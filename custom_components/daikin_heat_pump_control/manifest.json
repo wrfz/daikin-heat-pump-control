@@ -12,6 +12,9 @@
   ],
   "config_flow": true,
   "dependencies": [
+    "frontend",
+    "http",
+    "panel_custom",
     "zeroconf"
   ],
   "documentation": "https://github.com/wrfz/daikin-heat-pump-control",

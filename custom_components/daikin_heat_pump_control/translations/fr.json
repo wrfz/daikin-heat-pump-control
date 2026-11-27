@@ -1024,7 +1024,7 @@
   },
   "options": {
     "step": {
-      "init": {
+      "bus": {
         "data": {
           "interval_counter": "Intervalle compteurs",
           "interval_measurement": "Intervalle mesures",
@@ -1053,6 +1053,37 @@
           "tvbh_offset": "Correction de TVBH pour les contrôles des vannes du code d'erreur.",
           "uart_protocol": "Protocole de l'unité intérieure ; la détection automatique convient à la plupart des appareils."
         },
+        "title": "Bus et interrogation"
+      },
+      "dashboard": {
+        "data": {
+          "external_backup_heater_power": "Puissance de l'appoint électrique",
+          "external_cop": "COP",
+          "external_electric_power": "Puissance électrique",
+          "external_hot_gas_condenser": "Gaz chaud au condenseur",
+          "external_room_setpoint": "Consigne ambiante",
+          "external_room_temperature": "Température ambiante",
+          "info_rows": "Encadré d'informations",
+          "show_panel": "Panneau dans la barre latérale"
+        },
+        "data_description": {
+          "external_backup_heater_power": "Capteur de puissance de l'appoint électrique.",
+          "external_cop": "Capteur du coefficient de performance.",
+          "external_electric_power": "Capteur de puissance de la pompe à chaleur.",
+          "external_hot_gas_condenser": "Capteur de température à l'entrée du condenseur.",
+          "external_room_setpoint": "Entité de la consigne ambiante.",
+          "external_room_temperature": "Capteur de température de la pièce.",
+          "info_rows": "Lignes de l'encadré dans l'ordre de la sélection.",
+          "show_panel": "Affiche le tableau de bord de la pompe à chaleur comme page dans la barre latérale."
+        },
+        "description": "Valeurs d'autres entités et lignes de l'encadré d'informations, pour le panneau et chaque carte.",
+        "title": "Tableau de bord"
+      },
+      "init": {
+        "menu_options": {
+          "bus": "Bus et interrogation",
+          "dashboard": "Tableau de bord"
+        },
         "title": "Options"
       }
     }
@@ -1062,6 +1093,18 @@
       "options": {
         "keep": "Conserver le nœud actuel",
         "use_new": "Utiliser le nouveau bridge"
+      }
+    },
+    "info_rows": {
+      "options": {
+        "error_code": "Code d'erreur",
+        "operating_mode": "Mode de fonctionnement",
+        "mode_of_operating": "Type de fonctionnement",
+        "thermal_power": "Puissance thermique",
+        "electric_power": "Puissance électrique",
+        "cop": "COP",
+        "room_temperature": "Température ambiante",
+        "room_setpoint": "Consigne ambiante"
       }
     },
     "uart_protocol": {

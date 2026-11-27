@@ -15,6 +15,7 @@ from helpers import (
     DOMAIN,
     ENTRY_ID,
     daikin_entry,
+    options_step,
     run_bus,
     state_of as _state,
     wait_for_state,
@@ -525,13 +526,13 @@ async def test_options_change_detects_again(
 ) -> None:
     """Changing the UART options forgets the detected protocol."""
     entry = await _setup(hass, uart_esp, protocol="auto", detected="i")
-    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await options_step(hass, entry, "bus")
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], {"outdoor_unit": "RRLQ008CAV3", "uart_protocol": "auto"}
     )
     await hass.async_block_till_done()
     assert entry.data["uart_detected_protocol"] == "i"
-    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await options_step(hass, entry, "bus")
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], {"outdoor_unit": "RRLQ006CAV3", "uart_protocol": "auto"}
     )

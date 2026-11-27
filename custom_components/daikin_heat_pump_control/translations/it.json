@@ -1024,7 +1024,7 @@
   },
   "options": {
     "step": {
-      "init": {
+      "bus": {
         "data": {
           "interval_counter": "Intervallo contatori",
           "interval_measurement": "Intervallo misure",
@@ -1053,6 +1053,37 @@
           "tvbh_offset": "Correzione di TVBH per i controlli delle valvole del codice errore.",
           "uart_protocol": "Protocollo dell'unità interna; il rilevamento automatico funziona per la maggior parte dei dispositivi."
         },
+        "title": "Bus e interrogazione"
+      },
+      "dashboard": {
+        "data": {
+          "external_backup_heater_power": "Potenza della resistenza",
+          "external_cop": "COP",
+          "external_electric_power": "Potenza elettrica",
+          "external_hot_gas_condenser": "Gas caldo al condensatore",
+          "external_room_setpoint": "Temperatura ambiente impostata",
+          "external_room_temperature": "Temperatura ambiente",
+          "info_rows": "Riquadro informazioni",
+          "show_panel": "Pannello nella barra laterale"
+        },
+        "data_description": {
+          "external_backup_heater_power": "Sensore di potenza della resistenza.",
+          "external_cop": "Sensore del coefficiente di prestazione.",
+          "external_electric_power": "Sensore di potenza della pompa di calore.",
+          "external_hot_gas_condenser": "Sensore di temperatura all'ingresso del condensatore.",
+          "external_room_setpoint": "Entità con la temperatura ambiente impostata.",
+          "external_room_temperature": "Sensore di temperatura della stanza.",
+          "info_rows": "Righe del riquadro nell'ordine della selezione.",
+          "show_panel": "Mostra la dashboard della pompa di calore come pagina nella barra laterale."
+        },
+        "description": "Valori da altre entità e righe del riquadro informazioni, per il pannello e ogni scheda.",
+        "title": "Dashboard"
+      },
+      "init": {
+        "menu_options": {
+          "bus": "Bus e interrogazione",
+          "dashboard": "Dashboard"
+        },
         "title": "Opzioni"
       }
     }
@@ -1062,6 +1093,18 @@
       "options": {
         "keep": "Mantieni il nodo attuale",
         "use_new": "Usa il nuovo bridge"
+      }
+    },
+    "info_rows": {
+      "options": {
+        "error_code": "Codice errore",
+        "operating_mode": "Modalità di funzionamento",
+        "mode_of_operating": "Tipo di funzionamento",
+        "thermal_power": "Potenza termica",
+        "electric_power": "Potenza elettrica",
+        "cop": "COP",
+        "room_temperature": "Temperatura ambiente",
+        "room_setpoint": "Temperatura ambiente impostata"
       }
     },
     "uart_protocol": {

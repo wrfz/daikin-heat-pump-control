@@ -87,6 +87,17 @@ def daikin_entry(
     return entry
 
 
+async def options_step(hass: HomeAssistant, entry: MockConfigEntry, step: str) -> Any:
+    """Open the options and choose a part of the menu."""
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["step_id"] == "init"
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": step}
+    )
+    assert result["step_id"] == step
+    return result
+
+
 async def wait_for_state(
     hass: HomeAssistant, entity_id: str, state: str, timeout: float = 5
 ) -> None:

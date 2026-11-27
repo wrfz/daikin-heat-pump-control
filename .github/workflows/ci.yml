@@ -60,6 +60,33 @@ jobs:
           PYTHONPATH=packages/hassfest ../.venv/bin/python -m script.hassfest
           --integration-path ../repo/custom_components/daikin_heat_pump_control
 
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend-src
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: frontend-src/.nvmrc
+          cache: npm
+          cache-dependency-path: frontend-src/package-lock.json
+      - name: Install
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Test
+        run: npm test
+      - name: Build
+        run: npm run build
+      - name: Build is checked in
+        working-directory: .
+        run: |
+          git status --porcelain custom_components/daikin_heat_pump_control/frontend
+          git diff --exit-code custom_components/daikin_heat_pump_control/frontend
+          test -z "$(git status --porcelain custom_components/daikin_heat_pump_control/frontend)"
+
   hacs:
     runs-on: ubuntu-latest
     steps:

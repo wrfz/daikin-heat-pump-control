@@ -97,3 +97,33 @@ class CanStorage:
             "optimized_defrosting": self.optimized_defrosting,
             "writes_today": self.writes_by_key(),
         }
+
+
+class _PanelData(TypedDict):
+    config: dict[str, Any]
+
+
+class PanelStorage:
+    """Appearance of the panel, shared by all users."""
+
+    def __init__(self, hass: HomeAssistant, entry_id: str) -> None:
+        """Initialize the storage of a config entry."""
+        self._store: Store[_PanelData] = Store(
+            hass, STORAGE_VERSION, f"{DOMAIN}.{entry_id}.panel"
+        )
+        self.config: dict[str, Any] = {}
+
+    async def async_load(self) -> None:
+        """Load the stored appearance."""
+        data = await self._store.async_load()
+        if data is not None and isinstance(data.get("config"), dict):
+            self.config = data["config"]
+
+    async def async_save(self, config: dict[str, Any]) -> None:
+        """Store a new appearance."""
+        self.config = config
+        await self._store.async_save({"config": config})
+
+    async def async_remove(self) -> None:
+        """Remove the stored appearance."""
+        await self._store.async_remove()

@@ -1024,7 +1024,7 @@
   },
   "options": {
     "step": {
-      "init": {
+      "bus": {
         "data": {
           "interval_counter": "Intervall Zähler",
           "interval_measurement": "Intervall Messwerte",
@@ -1053,6 +1053,37 @@
           "tvbh_offset": "Korrektur von TVBH für die Ventilprüfungen des Fehlercodes.",
           "uart_protocol": "Protokoll des Innengeräts; die automatische Erkennung passt für die meisten Geräte."
         },
+        "title": "Bus und Abfrage"
+      },
+      "dashboard": {
+        "data": {
+          "external_backup_heater_power": "Heizstab-Leistung",
+          "external_cop": "COP",
+          "external_electric_power": "Elektrische Leistung",
+          "external_hot_gas_condenser": "Heißgas am Kondensator",
+          "external_room_setpoint": "Raum-Soll",
+          "external_room_temperature": "Raum-Ist",
+          "info_rows": "Info-Box",
+          "show_panel": "Panel in der Seitenleiste"
+        },
+        "data_description": {
+          "external_backup_heater_power": "Leistungssensor des Heizstabs.",
+          "external_cop": "Sensor mit der Leistungszahl.",
+          "external_electric_power": "Leistungssensor der Wärmepumpe.",
+          "external_hot_gas_condenser": "Temperatursensor am Eingang des Kondensators.",
+          "external_room_setpoint": "Entity mit dem Raum-Soll.",
+          "external_room_temperature": "Temperatursensor des Raums.",
+          "info_rows": "Zeilen der Info-Box in der Reihenfolge der Auswahl.",
+          "show_panel": "Zeigt das Dashboard der Wärmepumpe als Seite in der Seitenleiste."
+        },
+        "description": "Werte aus anderen Entities und die Zeilen der Info-Box; gilt für das Panel und jede Card.",
+        "title": "Dashboard"
+      },
+      "init": {
+        "menu_options": {
+          "bus": "Bus und Abfrage",
+          "dashboard": "Dashboard"
+        },
         "title": "Optionen"
       }
     }
@@ -1062,6 +1093,18 @@
       "options": {
         "keep": "Bisherigen Knoten behalten",
         "use_new": "Neue Bridge verwenden"
+      }
+    },
+    "info_rows": {
+      "options": {
+        "error_code": "Fehlercode",
+        "operating_mode": "Betriebsmodus",
+        "mode_of_operating": "Betriebsart",
+        "thermal_power": "Thermische Leistung",
+        "electric_power": "Elektrische Leistung",
+        "cop": "COP",
+        "room_temperature": "Raum-Ist",
+        "room_setpoint": "Raum-Soll"
       }
     },
     "uart_protocol": {
