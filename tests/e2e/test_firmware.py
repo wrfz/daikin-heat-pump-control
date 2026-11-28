@@ -218,6 +218,8 @@ async def test_probe_and_info(node: tuple[CanEndpoint, UartEndpoint]) -> None:
     assert identity.info.uart is not None
     assert identity.info.uart.buffer == 1024
     assert identity.info.bridge_version == "2.0.0"
+    # Set by the component, not by the YAML.
+    assert identity.project_version == "2.0.0"
 
 
 async def test_can_exchange_and_quiet_time(
@@ -380,6 +382,7 @@ async def test_uart_exchange(node: tuple[CanEndpoint, UartEndpoint]) -> None:
 
 
 SEND_EVERY_10S = "interval:\n  - interval: 10s\n    then:\n      - {}\n"
+PROJECT = '  name: daikin-host\n  project:\n    name: x.y\n    version: "9.9.9"\n'
 ON_FRAME = (
     "    can_id: 0x680\n    on_frame:\n      - can_id: 0x180\n"
     "        then:\n          - logger.log: frame\n"
@@ -392,6 +395,11 @@ ON_FRAME = (
         (None, SEND_EVERY_10S.format("canbus.send: [0x31]"), False),
         (None, SEND_EVERY_10S.format("uart.write: [0x03]"), False),
         (("    can_id: 0x680\n", ON_FRAME), "", True),
+        (
+            ("  name: daikin-host\n", PROJECT),
+            "",
+            False,
+        ),
     ],
 )
 def test_no_other_sender(
@@ -415,7 +423,10 @@ def test_no_other_sender(
     output = result.stdout + result.stderr
     assert (result.returncode == 0) is valid, output
     if not valid:
-        assert "nothing else may send on it" in output
+        assert (
+            "nothing else may send on it" in output
+            or "sets 'esphome: project:'" in output
+        )
 
 
 @pytest.fixture(autouse=True)

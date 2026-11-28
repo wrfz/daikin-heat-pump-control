@@ -7,6 +7,8 @@
 #include <string>
 #include <vector>
 
+#include "esphome/components/api/api_server.h"
+#include "esphome/components/api/user_services.h"
 #include "esphome/components/json/json_util.h"
 #include "esphome/core/component.h"
 #include "esphome/core/defines.h"
@@ -101,8 +103,37 @@ struct UartPiece {
 };
 #endif
 
+class DaikinBridge;
+
+/// An API action of the bridge that answers with a JSON document. The
+/// component registers its actions itself, so the YAML holds none.
+class BridgeAction : public api::UserServiceDescriptor {
+ public:
+  using Handler = void (*)(DaikinBridge *bridge, const api::ExecuteServiceRequest &req, JsonObject root);
+  struct Arg {
+    const char *name;
+    api::enums::ServiceArgType type;
+  };
+
+  BridgeAction(DaikinBridge *bridge, const char *name, std::vector<Arg> args, Handler handler);
+
+  api::ListEntitiesServicesResponse encode_list_service_response() override;
+  bool execute_service(const api::ExecuteServiceRequest &req) override;
+  bool execute_service(const api::ExecuteServiceRequest &req, uint32_t action_call_id) override;
+
+ protected:
+  DaikinBridge *bridge_;
+  const char *name_;
+  std::vector<Arg> args_;
+  Handler handler_;
+  uint32_t key_;
+};
+
 class DaikinBridge : public Component {
  public:
+  /// Register the API actions of the configured buses.
+  void register_actions();
+
   void setup() override;
   void loop() override;
   void dump_config() override;

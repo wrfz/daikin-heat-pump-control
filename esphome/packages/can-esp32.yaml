@@ -1,9 +1,0 @@
-# CAN transceiver on the ESP32 TWAI controller, 20 kbit/s.
-# Substitutions: can_tx_pin, can_rx_pin.
-canbus:
-  - platform: esp32_can
-    id: daikin_can
-    tx_pin: ${can_tx_pin}
-    rx_pin: ${can_rx_pin}
-    can_id: 0x680
-    bit_rate: 20kbps

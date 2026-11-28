@@ -8,22 +8,8 @@ import pytest
 import helpers  # noqa: F401  # sets up the import path
 
 ROOT = Path(__file__).resolve().parent.parent
-ESPHOME = ROOT / "esphome"
-EXAMPLES = sorted(ESPHOME.glob("daikin-*-bridge.yaml"))
+EXAMPLES = sorted((ROOT / "examples").glob("daikin-*-bridge.yaml"))
 REPOSITORY = "https://github.com/wrfz/daikin-heat-pump-control"
-
-
-def _component_version() -> str:
-    text = (ESPHOME / "components" / "daikin_bridge" / "__init__.py").read_text()
-    match = re.search(r'^BRIDGE_VERSION = "([^"]+)"$', text, re.MULTILINE)
-    assert match
-    return match.group(1)
-
-
-def test_project_version_is_component_version() -> None:
-    """The project version of the firmware is the version of the component."""
-    text = (ESPHOME / "packages" / "board-esp32.yaml").read_text()
-    assert f'version: "{_component_version()}"' in text
 
 
 def test_examples_present() -> None:
@@ -36,14 +22,23 @@ def test_examples_present() -> None:
 
 
 @pytest.mark.parametrize("example", EXAMPLES, ids=lambda path: path.name)
-def test_example_uses_one_version(example: Path) -> None:
-    """Component and packages come from the repository at the same ref."""
+def test_example_is_complete(example: Path) -> None:
+    """An example holds the whole node; only the component comes from the repository."""
     text = example.read_text()
-    assert re.search(r"^  bridge_ref: \S+$", text, re.MULTILINE)
-    assert text.count(f"url: {REPOSITORY}") == 2
-    assert text.count("ref: ${bridge_ref}") == 2
+    for section in ("esphome", "esp32", "wifi", "api", "ota", "daikin_bridge"):
+        assert re.search(rf"^{section}:", text, re.MULTILINE), section
+    # The component sets the project name and version itself.
+    assert "project:" not in text
+    assert f"url: {REPOSITORY}" in text
+    assert "packages:" not in text
     assert "!include" not in text
-    files = re.findall(r"^      - (esphome/packages/\S+\.yaml)$", text, re.MULTILINE)
-    assert files
-    for file in files:
-        assert (ROOT / file).is_file(), file
+    # The component registers the actions itself.
+    assert "actions:" not in text
+    buses = {
+        "can": "canbus_id: daikin_can" in text,
+        "uart": "uart_id: daikin_uart" in text,
+    }
+    assert buses == {
+        "can": "-can-" in example.name,
+        "uart": "uart" in example.name,
+    }

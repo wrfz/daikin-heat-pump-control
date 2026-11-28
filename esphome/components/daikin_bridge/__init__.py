@@ -2,8 +2,12 @@
 
 The component has no protocol knowledge. It buffers received data, sends
 data handed over by the integration (CAN frames only after the bus was quiet
-for a while) and reports diagnostic values. The API actions that call it are
-declared in the YAML packages.
+for a while) and reports diagnostic values. It registers its API actions
+itself, so they always match the component.
+
+The ESPHome project (name and version) is set by the component from the
+configured buses, so the node is recognised and always reports the version
+of the component it runs.
 
 Several clients may use the bridge; only the master sends. No other component
 may send on the buses of the bridge, which the final validation checks.
@@ -32,6 +36,13 @@ CONF_QUIET_TIME = "quiet_time"
 DOMAIN = "daikin_bridge"
 # Components that talk to the heat pump themselves.
 CONFLICTING_COMPONENTS = ("daikin_rotex_can", "daikin_rotex_uart")
+# API actions the component registers itself.
+ACTIONS = (
+    "daikin_bridge_info",
+    "daikin_bridge_claim",
+    "daikin_can_exchange",
+    "daikin_uart_exchange",
+)
 # Actions that send on a bus, with the key that names the bus.
 SEND_ACTIONS = {"canbus.send": CONF_CANBUS_ID, "uart.write": CONF_ID}
 
@@ -86,6 +97,17 @@ def _bus_users(node, bus_id, path):
 def _final_validate(config):
     """Reject other components that send to the heat pump on this ESP."""
     full_config = fv.full_config.get()
+    if "project" in full_config.get("esphome", {}):
+        raise cv.Invalid(
+            "The Daikin bridge sets 'esphome: project:' itself; remove it from "
+            "your configuration."
+        )
+    for action in full_config.get("api", {}).get("actions", []):
+        if action.get("action") in ACTIONS:
+            raise cv.Invalid(
+                f"The API action '{action['action']}' comes with the Daikin bridge "
+                "component; remove it from the 'api:' section."
+            )
     for component in CONFLICTING_COMPONENTS:
         if component in full_config:
             raise cv.Invalid(
@@ -115,6 +137,16 @@ async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
     cg.add_define("DAIKIN_BRIDGE_VERSION", BRIDGE_VERSION)
+    buses = "_".join(bus for bus in (CONF_CAN, CONF_UART) if bus in config)
+    project = f"wrfz.daikin_{buses}_bridge"
+    cg.add_define("ESPHOME_PROJECT_NAME", project)
+    cg.add_define("ESPHOME_PROJECT_VERSION", BRIDGE_VERSION)
+    cg.add_define("ESPHOME_PROJECT_VERSION_30", BRIDGE_VERSION[:29])
+    # The component registers its actions with responses at the API server.
+    cg.add_define("USE_API_USER_DEFINED_ACTIONS")
+    cg.add_define("USE_API_CUSTOM_SERVICES")
+    cg.add_define("USE_API_USER_DEFINED_ACTION_RESPONSES")
+    cg.add_define("USE_API_USER_DEFINED_ACTION_RESPONSES_JSON")
     if can_config := config.get(CONF_CAN):
         cg.add_define("USE_DAIKIN_BRIDGE_CAN")
         bus = await cg.get_variable(can_config[CONF_CANBUS_ID])
@@ -127,3 +159,5 @@ async def to_code(config):
         bus = await cg.get_variable(uart_config[CONF_UART_ID])
         cg.add(var.set_uart(bus))
         cg.add(var.set_uart_buffer_size(uart_config[CONF_BUFFER_SIZE]))
+    # After the API server set its own actions (its code runs first).
+    cg.add(var.register_actions())

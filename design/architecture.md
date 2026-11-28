@@ -88,19 +88,19 @@ Aktionen der Bridge (Namen vorläufig):
 - Verbindungsabbruch: die Werte werden `unavailable`, Wiederverbindung mit Backoff; laufende Schreib-
   wünsche verfallen und werden im Log gemeldet.
 
-Die Bridge-Firmware wird im Repo mitgeliefert: ESPHome-YAML plus eine kleine externe Komponente
+Die Bridge-Firmware wird im Repo mitgeliefert: eine kleine externe Komponente
 `esphome/components/daikin_bridge` (C++), eingebunden über `external_components` (aus dem
-GitHub-Repo, lokal per `type: local`). Die Komponente kennt kein Protokoll; sie enthält nur
-Ringpuffer, Zeitregel, die Aktionen und die Diagnose. Sie nutzt die Standard-Schnittstellen
-`canbus::Canbus` und `uart::UARTComponent`; für den Host-Test werden diese durch eine
-Socket-Anbindung an den Simulator ersetzt (Abschnitt 11). Packages (dünn) `bridge-base` (Board,
-WLAN, API, Komponente), `bridge-can`, `bridge-uart` und daraus die Beispiele
+GitHub-Repo, Branch oder Release-Tag), und unter `examples/` drei vollständige YAMLs
 `daikin-can-bridge.yaml`, `daikin-uart-bridge.yaml` und `daikin-can-uart-bridge.yaml` (beide Busse
-auf einem ESP). Der Nutzer kopiert nur das Beispiel; Komponente und Packages lädt ESPHome aus dem
-GitHub-Repo, beide mit demselben Stand (Substitution `bridge_ref`, Branch oder Release-Tag), damit sie
-immer zusammenpassen. Die Projektversion der Firmware ist die Version der Komponente. Bei beiden Bussen laufen die Aktionen unabhängig voneinander (eigene Puffer, eigene
-Zeitregeln). Die Firmware enthält keine Sensoren für HA; Diagnosewerte liefert sie über
-`daikin_bridge_info`.
+auf einem ESP) mit Board, WLAN, API, OTA, Bus-Hardware und `daikin_bridge:`. Der Nutzer kopiert eine
+davon und passt sie an. Die Komponente kennt kein Protokoll; sie enthält nur Ringpuffer, Zeitregel,
+die Aktionen und die Diagnose. Ihre API-Aktionen registriert sie selbst; in der YAML stehen keine,
+damit YAML und Komponente nicht auseinanderlaufen können (eigene Aktionen mit diesen Namen lehnt
+die Prüfung der Konfiguration ab, andere Aktionen des Nutzers bleiben möglich). Sie nutzt die
+Standard-Schnittstellen `canbus::Canbus` und `uart::UARTComponent`; für den Host-Test werden diese
+durch eine Socket-Anbindung an den Simulator ersetzt (Abschnitt 11). Bei beiden Bussen laufen die
+Aktionen unabhängig voneinander (eigene Puffer, eigene Zeitregeln). Die Firmware enthält keine
+Sensoren für HA; Diagnosewerte liefert sie über `daikin_bridge_info`.
 
 Datenformat (JSON in `response_data`, Zeitstempel `t` in ms seit Start des ESP, 32 Bit mit Überlauf):
 - `daikin_can_exchange(frames: string[])`: je Frame `"<id hex>#<daten hex>"`, z. B.
@@ -116,8 +116,9 @@ Datenformat (JSON in `response_data`, Zeitstempel `t` in ms seit Start des ESP, 
   "heap_free": n, "heap_max_block": n, "reset_reason": text, "wifi": {"rssi", "ssid", "ip"},
   "can": {"buffer", "overflows", "state", "tx_errors", "rx_errors", "arbitration_lost",
   "bus_off"}, "uart": {"buffer", "overflows"}}`. Eigene Erweiterungen des Nutzers (z. B. ein
-Relais für Smart Grid) bleiben in seiner YAML und damit in der ESPHome-Integration. Die Firmware setzt
-`esphome.project` zur Erkennung: `wrfz.daikin_can_bridge`, `wrfz.daikin_uart_bridge`,
+Relais für Smart Grid) bleiben in seiner YAML und damit in der ESPHome-Integration. Die Komponente setzt
+das ESPHome-Projekt selbst (Name aus den Bussen, Version = Version der Komponente; ein eigenes
+`esphome: project:` lehnt die Prüfung ab): `wrfz.daikin_can_bridge`, `wrfz.daikin_uart_bridge`,
 `wrfz.daikin_can_uart_bridge` (in HA nur auf der ESPHome-Geräteseite als Hersteller/Modell sichtbar,
 nicht in Entity-Namen).
 
@@ -206,7 +207,8 @@ custom_components/daikin_heat_pump_control/
   frontend/      gebautes JS + SVG-Layouts (aus frontend-src/, eingecheckt)
 frontend-src/    TypeScript/Lit: Card, Panel, Editor, gemeinsame Darstellung (src/), SVG-Layouts
                  (layouts/, beim Build kopiert), Vitest (test/)
-esphome/         Bridge-Firmware (Packages, Beispiele, components/daikin_bridge)
+esphome/         Bridge-Komponente (components/daikin_bridge)
+examples/        vollständige Bridge-YAMLs (CAN, UART, beide)
 scripts/         Erzeugung der Dampfdrucktabellen (nur Entwicklung)
 tests/           pytest-homeassistant, Simulator unter tests/sim/, E2E unter tests/e2e/
 design/          dieses Dokument
@@ -599,7 +601,7 @@ Tests und Frontend-Build.
 | Tests | gegen simulierte Wärmepumpe und simulierte ESPs, Mocks nur wo nötig |
 | Qualität | Quality Scale Platinum, Muster nach aktuellem HA core/frontend |
 | Projektname der Firmware | `wrfz.daikin_can_bridge` / `wrfz.daikin_uart_bridge` / `wrfz.daikin_can_uart_bridge` |
-| Firmware | YAML-Packages + kleine Komponente `daikin_bridge` (ohne Protokollwissen) |
+| Firmware | kleine Komponente `daikin_bridge` (ohne Protokollwissen, registriert ihre Aktionen selbst) + vollständige Beispiel-YAMLs unter `examples/` |
 | Einrichtung | ESPHome-Einträge, Zeroconf (gefiltert) und manuelle Eingabe; ein Eintrag, Knoten per MAC |
 | Repo-Aufbau | Standard `custom_components/<domain>/`, Releases über Tags, kein Zip |
 | Test-Umgebung | `pytest-homeassistant==2026.11.3` (offizieller Nachfolger von `pytest-homeassistant-custom-component`, das ab 2026.11 nicht mehr funktioniert) |

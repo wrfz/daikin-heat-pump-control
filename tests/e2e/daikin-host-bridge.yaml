@@ -1,5 +1,5 @@
 # Bridge firmware on the ESPHome host platform for the end-to-end tests. The
-# packages are the real ones; only the buses are replaced: CAN via UDP to the
+# component is the real one; only the buses are replaced: CAN via UDP to the
 # simulator, UART via a pseudo terminal opened by the test.
 # The UART port must be a two-level path (ESPHome rule); the test links it
 # to the pseudo terminal.
@@ -11,9 +11,6 @@ substitutions:
 
 esphome:
   name: daikin-host
-  project:
-    name: wrfz.daikin_can_uart_bridge
-    version: "2.0.0"
 
 host:
   mac_address: "02:00:00:da:1c:01"
@@ -47,7 +44,8 @@ uart:
     port: ${uart_port}
     baud_rate: 9600
 
-packages:
-  core: !include ../../esphome/packages/bridge-core.yaml
-  bridge_can: !include ../../esphome/packages/bridge-can.yaml
-  bridge_uart: !include ../../esphome/packages/bridge-uart.yaml
+daikin_bridge:
+  can:
+    canbus_id: daikin_can
+  uart:
+    uart_id: daikin_uart

@@ -304,7 +304,11 @@ async def test_outdated_bridge_firmware(
     # After flashing the current firmware the issue goes away.
     can_esp.set_firmware("bridge")
     await can_esp.drop_connections()
-    await _run(hass, freezer, OtherInstance(can_esp), 3)
+    channel = entry.runtime_data.channels["can"]
+    for _ in range(50):
+        await _run(hass, freezer, OtherInstance(can_esp), 0.2)
+        if channel.available:
+            break
     assert (
         issue_registry.async_get_issue(DOMAIN, "bridge_firmware_outdated_aabbcc000001")
         is None

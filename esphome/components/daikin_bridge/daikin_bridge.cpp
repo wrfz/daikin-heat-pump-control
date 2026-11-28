@@ -96,6 +96,79 @@ static const char *reset_reason_text() {
 }
 #endif
 
+static std::string arg_string(const api::ExecuteServiceArgument &arg) {
+  return std::string(arg.string_.c_str(), arg.string_.size());
+}
+
+BridgeAction::BridgeAction(DaikinBridge *bridge, const char *name, std::vector<Arg> args, Handler handler)
+    : bridge_(bridge), name_(name), args_(std::move(args)), handler_(handler), key_(fnv1_hash(name)) {}
+
+api::ListEntitiesServicesResponse BridgeAction::encode_list_service_response() {
+  api::ListEntitiesServicesResponse msg;
+  msg.name = ProgmemStringRef(StringRef(this->name_));
+  msg.key = this->key_;
+  msg.supports_response = api::enums::SUPPORTS_RESPONSE_ONLY;
+  msg.args.init(this->args_.size());
+  for (const auto &arg : this->args_) {
+    auto &item = msg.args.emplace_back();
+    item.name = ProgmemStringRef(StringRef(arg.name));
+    item.type = arg.type;
+  }
+  return msg;
+}
+
+bool BridgeAction::execute_service(const api::ExecuteServiceRequest &req) {
+  // Every action of the bridge answers; without a response there is nothing to do.
+  return req.key == this->key_;
+}
+
+bool BridgeAction::execute_service(const api::ExecuteServiceRequest &req, uint32_t action_call_id) {
+  if (req.key != this->key_)
+    return false;
+  auto *server = api::global_api_server;
+  if (action_call_id == 0)
+    return true;
+  if (req.args.size() != this->args_.size()) {
+    server->send_action_response(action_call_id, false, StringRef("invalid arguments"));
+  } else {
+    json::JsonBuilder builder;
+    this->handler_(this->bridge_, req, builder.root());
+    auto buffer = builder.serialize();
+    server->send_action_response(action_call_id, true, StringRef(), reinterpret_cast<const uint8_t *>(buffer.data()),
+                                 buffer.size());
+  }
+  server->unregister_active_action_call(action_call_id);
+  return true;
+}
+
+void DaikinBridge::register_actions() {
+  auto *server = api::global_api_server;
+  using api::enums::SERVICE_ARG_TYPE_STRING;
+  using api::enums::SERVICE_ARG_TYPE_STRING_ARRAY;
+  server->register_user_service(new BridgeAction(  // NOLINT
+      this, "daikin_bridge_info", {},
+      [](DaikinBridge *bridge, const api::ExecuteServiceRequest &, JsonObject root) { bridge->info(root); }));
+  server->register_user_service(new BridgeAction(  // NOLINT
+      this, "daikin_bridge_claim", {{"client", SERVICE_ARG_TYPE_STRING}},
+      [](DaikinBridge *bridge, const api::ExecuteServiceRequest &req, JsonObject root) {
+        bridge->claim(arg_string(req.args[0]), root);
+      }));
+#ifdef USE_DAIKIN_BRIDGE_CAN
+  server->register_user_service(new BridgeAction(  // NOLINT
+      this, "daikin_can_exchange", {{"client", SERVICE_ARG_TYPE_STRING}, {"frames", SERVICE_ARG_TYPE_STRING_ARRAY}},
+      [](DaikinBridge *bridge, const api::ExecuteServiceRequest &req, JsonObject root) {
+        bridge->can_exchange(arg_string(req.args[0]), req.args[1].string_array, root);
+      }));
+#endif
+#ifdef USE_DAIKIN_BRIDGE_UART
+  server->register_user_service(new BridgeAction(  // NOLINT
+      this, "daikin_uart_exchange", {{"client", SERVICE_ARG_TYPE_STRING}, {"data", SERVICE_ARG_TYPE_STRING}},
+      [](DaikinBridge *bridge, const api::ExecuteServiceRequest &req, JsonObject root) {
+        bridge->uart_exchange(arg_string(req.args[0]), arg_string(req.args[1]), root);
+      }));
+#endif
+}
+
 void DaikinBridge::setup() {
 #ifdef USE_DAIKIN_BRIDGE_CAN
   this->canbus_->add_callback([this](uint32_t can_id, bool extended_id, bool rtr, const std::vector<uint8_t> &data) {
